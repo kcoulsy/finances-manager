@@ -64,3 +64,13 @@ function badExample() {
 }
 ```
 ````
+
+## General Guidelines
+
+### Prefer Server Components
+
+- **Default to Server Components**: Use server components by default unless you need client-side features
+- **Minimize Client Components**: Only mark components as `"use client"` when necessary
+- **Co-locate Client Code**: Keep client components small and co-located with server components
+
+See `.cursor/rules/prefer-server-components.mdc` for detailed guidelines on when to use server vs client components.

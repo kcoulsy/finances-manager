@@ -1,0 +1,120 @@
+---
+description: Prefer using server components over client components when possible
+globs: src/**/*.tsx
+alwaysApply: true
+---
+
+# Prefer Server Components
+
+This project prefers using **Server Components** over Client Components when possible to improve performance and reduce bundle size.
+
+## Key Principles
+
+1. **Default to Server Components**: Use server components by default unless you need client-side features
+2. **Minimize Client Components**: Only mark components as `"use client"` when necessary
+3. **Co-locate Client Code**: Keep client components small and co-located with server components
+
+## When to Use Server Components
+
+✅ Use server components for:
+- Data fetching directly from database
+- Rendering static content
+- Accessing headers, cookies, and other server-only APIs
+- Heavy dependencies that shouldn't be bundled in the client
+- Forms that only submit (not interactive fields)
+
+## When to Use Client Components
+
+✅ Use client components (`"use client"`) for:
+- Interactive UI with hooks (useState, useEffect, etc.)
+- Browser APIs (window, localStorage, etc.)
+- Event handlers (onClick, onChange, etc.)
+- React Query hooks and data mutations
+- Forms with real-time validation or dynamic fields
+- Third-party libraries that require client-side JavaScript
+
+## Patterns
+
+### Good: Server Component with Client Component for Interactive Parts
+
+```typescript
+// ✅ Good - Server component (default)
+import { ProjectsList } from "@/features/projects/components/projects-list";
+
+export default async function ProjectsPage() {
+  const projects = await getProjectsAction();
+  
+  return (
+    <div>
+      <h1>Projects</h1>
+      <ProjectsList initialProjects={projects} />
+    </div>
+  );
+}
+
+// ✅ Good - Client component only for interactive parts
+"use client";
+
+export function ProjectsList({ initialProjects }: { initialProjects: Project[] }) {
+  const { data: projects } = useProjects();
+  // Interactive logic here
+}
+```
+
+### Good: Server Component for Data Fetching
+
+```typescript
+// ✅ Good - Server component fetching data
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const result = await getProjectAction({ projectId: id });
+  
+  if (!result?.data?.success) {
+    return <div>Project not found</div>;
+  }
+  
+  return <ProjectDetail project={result.data.project} />;
+}
+```
+
+### Bad: Unnecessary Client Component
+
+```typescript
+// ❌ Bad - No need for client component if just rendering
+"use client";
+
+import { useProjects } from "../hooks/use-projects";
+
+export default function ProjectsPage() {
+  const { data } = useProjects();
+  return <div>{/* Just rendering, no interactivity */}</div>;
+}
+```
+
+## Component Structure
+
+1. **Page components**: Server components (fetch data, render)
+2. **List/Grid components**: Server components (receive props, render)
+3. **Form components**: Client components (interactive, use hooks)
+4. **Detail/View components**: Server components (receive data, render)
+
+## Migration Checklist
+
+When creating or refactoring components:
+
+- [ ] Start as server component (no `"use client"`)
+- [ ] Add `"use client"` only if you need:
+  - [ ] React hooks (useState, useEffect, etc.)
+  - [ ] Browser APIs
+  - [ ] Event handlers
+  - [ ] React Query mutations
+- [ ] Keep client components minimal and focused
+- [ ] Pass data from server components to client components as props
+- [ ] Use server actions for form submissions
+
+## Examples
+
+See these files for reference:
+- `src/app/(app)/dashboard/page.tsx` - Server component
+- `src/app/(app)/admin/users/page.tsx` - Server component
+- `src/features/projects/components/project-form.tsx` - Client component (needs hooks)

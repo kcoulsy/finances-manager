@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings } from "lucide-react";
+import { LayoutDashboard, Settings, FolderKanban } from "lucide-react";
 
 import {
   Sidebar,
@@ -24,6 +24,11 @@ const navItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Projects",
+    url: "/projects",
+    icon: FolderKanban,
   },
   {
     title: "Settings",
@@ -67,7 +72,7 @@ export function AppSidebar({ isAdmin = false, ...props }: AppSidebarProps) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url}
+                    isActive={pathname === item.url || (item.url !== "/dashboard" && pathname?.startsWith(`${item.url}/`))}
                   >
                     <Link href={item.url}>
                       <item.icon className="size-4" />

@@ -21,6 +21,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   userRoles     UserRole[]
+  projects      Project[]
 
   @@map("user")
 }
@@ -95,4 +96,17 @@ model Verification {
 
   @@index([identifier, value])
   @@map("verification")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("project")
 }
