@@ -146,12 +146,12 @@ export function UsersList() {
   ];
 
   return (
-    <Card>
+    <Card className="w-full max-w-full overflow-hidden">
       <CardHeader className="border-b">
         <CardTitle>All Users</CardTitle>
         <CardDescription>Manage users and their roles</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0 w-full min-w-0 overflow-hidden">
         <DataTable
           data={users}
           columns={columns}

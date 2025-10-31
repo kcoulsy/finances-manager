@@ -14,7 +14,7 @@ const CompactTable = React.forwardRef<
     <table
       ref={ref}
       className={cn(
-        "min-w-[1400px] w-full text-sm border-collapse",
+        "min-w-[1400px] text-sm border-collapse",
         className
       )}
       {...props}

@@ -16,10 +16,10 @@ export default async function AppLayout({
   return (
     <SidebarProvider>
       <AppSidebar isAdmin={isAdmin} />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <BreadcrumbProvider>
           <DashboardNav />
-          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8">
+          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 min-w-0 max-w-full overflow-hidden">
             {children}
           </div>
 

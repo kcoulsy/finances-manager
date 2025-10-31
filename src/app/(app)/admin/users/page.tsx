@@ -6,7 +6,7 @@ export default async function AdminUsersPage() {
   await requireRole(UserRole.ADMIN);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full min-w-0 max-w-full overflow-hidden">
       <div>
         <h1 className="text-3xl font-bold">Admin - Users</h1>
         <p className="text-muted-foreground mt-2">
