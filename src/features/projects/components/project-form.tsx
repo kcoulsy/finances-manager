@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useCreateProject } from "../hooks/use-create-project";
 import { useUpdateProject } from "../hooks/use-update-project";
 import { createProjectSchema, updateProjectSchema } from "../schemas/project.schema";
@@ -21,7 +20,6 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
-  const [success, setSuccess] = useState(false);
   const isEdit = !!projectId;
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
@@ -47,8 +45,7 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
       } else {
         await createProject.mutateAsync(data as CreateProjectInput);
       }
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      // Toast is shown automatically by the hooks via showToastFromAction
     } catch (error) {
       setError("root", {
         message: error instanceof Error ? error.message : "Failed to save project",
@@ -71,11 +68,6 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
           {errors.root && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
               {errors.root.message}
-            </div>
-          )}
-          {success && (
-            <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-              Project {isEdit ? "updated" : "created"} successfully!
             </div>
           )}
           <div className="space-y-2">
@@ -110,7 +102,7 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
             )}
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="mt-6">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (isEdit ? "Updating..." : "Creating...") : (isEdit ? "Update Project" : "Create Project")}
           </Button>

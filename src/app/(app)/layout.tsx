@@ -23,7 +23,7 @@ export default async function AppLayout({
             {children}
           </div>
 
-          <Toaster />
+          <Toaster richColors />
         </BreadcrumbProvider>
       </SidebarInset>
     </SidebarProvider>

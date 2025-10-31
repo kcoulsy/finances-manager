@@ -30,6 +30,11 @@ export const changePasswordAction = actionClient
       return {
         success: true,
         message: "Password changed successfully",
+        toast: {
+          message: "Password changed successfully",
+          type: "success",
+          description: "Your password has been updated.",
+        },
       };
     } catch (error) {
       console.error("Change password error:", error);

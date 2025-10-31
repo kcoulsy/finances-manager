@@ -2,44 +2,70 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { changePasswordAction } from "../actions/change-password.action";
 import { changePasswordSchema } from "../schemas/auth.schema";
 import type { ChangePasswordInput } from "../schemas/auth.schema";
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
 
 export function ChangePasswordForm() {
-  const [success, setSuccess] = useState(false);
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setError,
     reset,
   } = useForm<ChangePasswordInput>({
     resolver: zodResolver(changePasswordSchema),
   });
 
+  const {
+    execute,
+    status,
+  } = useActionWithToast(changePasswordAction, {
+    successToast: {
+      message: "Password changed successfully",
+      type: "success",
+      description: "Your password has been updated.",
+    },
+    onSuccess: ({ data }) => {
+      if (data?.success) {
+        reset();
+      }
+    },
+    onError: ({ error }) => {
+      // Set form error when there's a server error
+      if (error?.serverError) {
+        setError("root", {
+          message: typeof error.serverError === "string" ? error.serverError : String(error.serverError),
+        });
+      }
+      // Handle validation errors
+      if (error?.validationErrors && typeof error.validationErrors === "object") {
+        Object.entries(error.validationErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0 && typeof messages[0] === "string") {
+            setError(field as keyof ChangePasswordInput, {
+              type: "validation",
+              message: messages[0],
+            });
+          }
+        });
+      }
+    },
+  });
+
   const onSubmit = async (data: ChangePasswordInput) => {
-    const result = await changePasswordAction({
+    // Clear any previous root errors before submitting
+    if (errors.root) {
+      setError("root", { message: undefined });
+    }
+
+    await execute({
       currentPassword: data.currentPassword,
       newPassword: data.newPassword,
     });
-
-    if (result?.serverError) {
-      setError("root", {
-        message: result.serverError,
-      });
-      return;
-    }
-
-    if (result?.data?.success) {
-      setSuccess(true);
-      reset();
-      setTimeout(() => setSuccess(false), 3000);
-    }
   };
 
   return (
@@ -55,11 +81,6 @@ export function ChangePasswordForm() {
               {errors.root.message}
             </div>
           )}
-          {success && (
-            <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-              Password changed successfully!
-            </div>
-          )}
           <div className="space-y-2">
             <label htmlFor="currentPassword" className="text-sm font-medium">
               Current Password
@@ -67,7 +88,7 @@ export function ChangePasswordForm() {
             <PasswordInput
               id="currentPassword"
               placeholder="••••••••"
-              disabled={isSubmitting}
+              disabled={status === "executing"}
               aria-invalid={errors.currentPassword ? "true" : "false"}
               {...register("currentPassword")}
             />
@@ -82,7 +103,7 @@ export function ChangePasswordForm() {
             <PasswordInput
               id="newPassword"
               placeholder="••••••••"
-              disabled={isSubmitting}
+              disabled={status === "executing"}
               aria-invalid={errors.newPassword ? "true" : "false"}
               {...register("newPassword")}
             />
@@ -91,9 +112,9 @@ export function ChangePasswordForm() {
             )}
           </div>
         </CardContent>
-        <CardFooter>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Changing..." : "Change Password"}
+        <CardFooter className="mt-6">
+          <Button type="submit" disabled={status === "executing"}>
+            {status === "executing" ? "Changing..." : "Change Password"}
           </Button>
         </CardFooter>
       </form>

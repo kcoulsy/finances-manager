@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { deleteProjectAction } from "../actions/delete-project.action";
 import type { DeleteProjectInput } from "../schemas/project.schema";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useDeleteProject() {
   const queryClient = useQueryClient();
@@ -12,6 +13,9 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: async (data: DeleteProjectInput) => {
       const result = await deleteProjectAction(data);
+
+      // Show toast from action result (handles both errors and success toasts)
+      showToastFromAction(result);
 
       if (result?.serverError) {
         throw new Error(result.serverError);

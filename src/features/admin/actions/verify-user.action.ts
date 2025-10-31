@@ -50,6 +50,11 @@ export const verifyUserAction = actionClient
             name: ur.role.name,
           })),
         },
+        toast: {
+          message: "User verified successfully",
+          type: "success",
+          description: `"${updatedUser.name}" has been verified.`,
+        },
       };
     } catch (error) {
       console.error("Error verifying user:", error);

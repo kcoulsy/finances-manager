@@ -79,6 +79,11 @@ export const updateUserRolesAction = actionClient
             name: ur.role.name,
           })),
         },
+        toast: {
+          message: "User roles updated successfully",
+          type: "success",
+          description: `Roles for "${updatedUser.name}" have been updated.`,
+        },
       };
     } catch (error) {
       console.error("Error updating user roles:", error);

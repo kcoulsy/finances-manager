@@ -109,7 +109,7 @@ export function RegisterForm() {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="mt-6 flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Creating account..." : "Sign Up"}
           </Button>

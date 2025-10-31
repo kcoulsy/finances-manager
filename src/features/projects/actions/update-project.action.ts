@@ -64,6 +64,11 @@ export const updateProjectAction = actionClient
       return {
         success: true,
         project,
+        toast: {
+          message: "Project updated successfully",
+          type: "success",
+          description: `Project "${project.name}" has been updated.`,
+        },
       };
     } catch (error) {
       // Re-throw Next.js navigation errors (redirect/notFound) as-is

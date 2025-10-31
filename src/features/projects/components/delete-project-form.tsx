@@ -76,7 +76,7 @@ export function DeleteProjectForm({ projectId }: DeleteProjectFormProps) {
             </label>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="mt-6">
           <Button
             type="submit"
             variant="destructive"

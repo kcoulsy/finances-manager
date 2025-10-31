@@ -29,6 +29,11 @@ export const createProjectAction = actionClient
       return {
         success: true,
         project,
+        toast: {
+          message: "Project created successfully",
+          type: "success",
+          description: `Project "${project.name}" has been created.`,
+        },
       };
     } catch (error) {
       console.error("Create project error:", error);

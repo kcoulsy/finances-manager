@@ -7,6 +7,7 @@ import { useState } from "react";
 import { deleteAccountAction } from "../actions/delete-account.action";
 import { deleteAccountSchema } from "../schemas/auth.schema";
 import type { DeleteAccountInput } from "../schemas/auth.schema";
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
@@ -17,10 +18,44 @@ export function DeleteAccountForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setError,
   } = useForm<DeleteAccountInput>({
     resolver: zodResolver(deleteAccountSchema),
+  });
+
+  const {
+    execute,
+    status,
+  } = useActionWithToast(deleteAccountAction, {
+    errorToast: {
+      message: "Failed to delete account",
+      type: "error",
+    },
+    onError: ({ error }) => {
+      // Set form error when there's a server error
+      if (error?.serverError) {
+        setError("root", {
+          message: typeof error.serverError === "string" ? error.serverError : String(error.serverError),
+        });
+      }
+      // Handle validation errors
+      if (error?.validationErrors) {
+        Object.entries(error.validationErrors).forEach(([field, messages]) => {
+          if (messages && messages.length > 0) {
+            setError(field as keyof DeleteAccountInput, {
+              type: "validation",
+              message: messages[0],
+            });
+          }
+        });
+      }
+    },
+    onSuccess: () => {
+      // On success, redirect to login (action redirects, but this is a safety net)
+      router.push("/login?message=Account deleted successfully");
+      router.refresh();
+    },
   });
 
   const onSubmit = async (data: DeleteAccountInput) => {
@@ -31,19 +66,12 @@ export function DeleteAccountForm() {
       return;
     }
 
-    const result = await deleteAccountAction({ password: data.password });
-
-    if (result?.serverError) {
-      setError("root", {
-        message: result.serverError,
-      });
-      return;
+    // Clear any previous root errors before submitting
+    if (errors.root) {
+      setError("root", { message: undefined });
     }
 
-    if (result?.data?.success) {
-      router.push("/login?message=Account deleted successfully");
-      router.refresh();
-    }
+    await execute({ password: data.password });
   };
 
   return (
@@ -68,7 +96,7 @@ export function DeleteAccountForm() {
             <PasswordInput
               id="password"
               placeholder="Enter your password"
-              disabled={isSubmitting}
+              disabled={status === "executing"}
               aria-invalid={errors.password ? "true" : "false"}
               {...register("password")}
             />
@@ -85,7 +113,7 @@ export function DeleteAccountForm() {
               type="checkbox"
               checked={confirmDelete}
               onChange={(e) => setConfirmDelete(e.target.checked)}
-              disabled={isSubmitting}
+              disabled={status === "executing"}
               className="h-4 w-4 rounded border-gray-300"
             />
             <label htmlFor="confirmDelete" className="text-sm font-medium">
@@ -93,13 +121,13 @@ export function DeleteAccountForm() {
             </label>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="mt-6">
           <Button
             type="submit"
             variant="destructive"
-            disabled={isSubmitting || !confirmDelete}
+            disabled={status === "executing" || !confirmDelete}
           >
-            {isSubmitting ? "Deleting..." : "Delete Account"}
+            {status === "executing" ? "Deleting..." : "Delete Account"}
           </Button>
         </CardFooter>
       </form>

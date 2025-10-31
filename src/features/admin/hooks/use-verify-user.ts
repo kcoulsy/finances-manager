@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { verifyUserAction } from "../actions/verify-user.action";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useVerifyUser() {
   const queryClient = useQueryClient();
@@ -9,6 +10,9 @@ export function useVerifyUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const result = await verifyUserAction({ userId });
+
+      // Show toast from action result (handles both errors and success toasts)
+      showToastFromAction(result);
       
       if (result?.serverError) {
         throw new Error(result.serverError);

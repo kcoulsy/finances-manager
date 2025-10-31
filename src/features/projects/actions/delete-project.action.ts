@@ -61,6 +61,11 @@ export const deleteProjectAction = actionClient
       return {
         success: true,
         message: "Project deleted successfully",
+        toast: {
+          message: "Project deleted successfully",
+          type: "success",
+          description: `Project "${existingProject.name}" has been permanently deleted.`,
+        },
       };
     } catch (error) {
       // Re-throw Next.js navigation errors (redirect/notFound) as-is

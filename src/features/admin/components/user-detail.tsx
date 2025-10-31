@@ -186,26 +186,7 @@ export function UserDetail({ userId }: UserDetailProps) {
                   {updateUserRoles.isPending ? "Saving..." : "Save Roles"}
                 </Button>
               </div>
-              {updateUserRoles.isError && (
-                <p className="text-sm text-destructive">
-                  {updateUserRoles.error instanceof Error
-                    ? updateUserRoles.error.message
-                    : "Failed to update roles"}
-                </p>
-              )}
-              {updateUserRoles.isSuccess && (
-                <p className="text-sm text-green-600">Roles updated successfully</p>
-              )}
-              {verifyUser.isError && (
-                <p className="text-sm text-destructive">
-                  {verifyUser.error instanceof Error
-                    ? verifyUser.error.message
-                    : "Failed to verify user"}
-                </p>
-              )}
-              {verifyUser.isSuccess && (
-                <p className="text-sm text-green-600">User verified successfully</p>
-              )}
+              {/* Toast notifications are shown automatically via the hooks */}
             </>
           )}
         </CardContent>

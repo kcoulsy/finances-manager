@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUserRolesAction } from "../actions/update-user-roles.action";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useUpdateUserRoles() {
   const queryClient = useQueryClient();
@@ -9,6 +10,9 @@ export function useUpdateUserRoles() {
   return useMutation({
     mutationFn: async (data: { userId: string; roleIds: string[] }) => {
       const result = await updateUserRolesAction(data);
+
+      // Show toast from action result (handles both errors and success toasts)
+      showToastFromAction(result);
       
       if (result?.serverError) {
         throw new Error(result.serverError);

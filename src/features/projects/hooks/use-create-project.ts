@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createProjectAction } from "../actions/create-project.action";
 import type { CreateProjectInput } from "../schemas/project.schema";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
@@ -12,6 +13,9 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: async (data: CreateProjectInput) => {
       const result = await createProjectAction(data);
+
+      // Show toast from action result (handles both errors and success toasts)
+      showToastFromAction(result);
 
       if (result?.serverError) {
         throw new Error(result.serverError);
