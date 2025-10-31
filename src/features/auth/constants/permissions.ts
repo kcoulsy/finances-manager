@@ -5,24 +5,17 @@
 export const Permission = {
   Project: {
     ALL: "project:all",
-    CREATE: "project:create",
-    READ: "project:read",
+    VIEW: "project:view",
     UPDATE: "project:update",
-    DELETE: "project:delete",
-    MANAGE_MEMBERS: "project:manage_members",
   },
   User: {
     ALL: "user:all",
-    CREATE: "user:create",
-    READ: "user:read",
-    UPDATE: "user:update",
-    DELETE: "user:delete",
-    MANAGE_ROLES: "user:manage_roles",
+    VIEW: "user:view",
   },
   Admin: {
     ALL: "admin:all",
-    MANAGE_SYSTEM: "admin:manage_system",
-    VIEW_ANALYTICS: "admin:view_analytics",
+    VIEW_OWN: "admin:viewOwn",
+    VIEW_ANY: "admin:viewAny",
     USERS: {
       VIEW_ALL: "admin.users.viewAll",
       VIEW_SINGLE: "admin.users.viewSingle",
@@ -45,6 +38,8 @@ export type PermissionType =
 export const ROLE_PERMISSIONS: Record<string, PermissionType[]> = {
   ADMIN: [
     Permission.Admin.ALL,
+    Permission.Admin.VIEW_OWN,
+    Permission.Admin.VIEW_ANY,
     Permission.Admin.USERS.VIEW_ALL,
     Permission.Admin.USERS.VIEW_SINGLE,
     Permission.Admin.USERS.UPDATE_ROLES,
@@ -53,13 +48,13 @@ export const ROLE_PERMISSIONS: Record<string, PermissionType[]> = {
     Permission.User.ALL,
   ],
   MODERATOR: [
-    Permission.Project.READ,
+    Permission.Project.VIEW,
     Permission.Project.UPDATE,
-    Permission.User.READ,
+    Permission.User.VIEW,
   ],
   USER: [
-    Permission.Project.READ,
-    Permission.User.READ,
+    Permission.Project.VIEW,
+    Permission.Project.UPDATE,
+    Permission.User.VIEW,
   ],
 };
-

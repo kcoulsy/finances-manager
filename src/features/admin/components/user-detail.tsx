@@ -8,6 +8,7 @@ import { useUpdateUserRoles } from "../hooks/use-update-user-roles";
 import { useVerifyUser } from "../hooks/use-verify-user";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
+import { UserProjectsTable } from "./user-projects-table";
 
 interface UserDetailProps {
   userId: string;
@@ -209,6 +210,8 @@ export function UserDetail({ userId }: UserDetailProps) {
           )}
         </CardContent>
       </Card>
+
+      <UserProjectsTable userId={userId} />
     </div>
   );
 }

@@ -1,17 +1,19 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
 import { UserRole, type UserRoleType } from "../constants/roles";
 
 /**
  * Requires the current user to have a specific role
- * Throws an error if the user is not authenticated or doesn't have the required role
+ * Redirects to appropriate page if user doesn't have the required role
  *
  * @param requiredRole - The role that is required
  * @returns The authenticated user with their roles
- * @throws Error if user is not authenticated or doesn't have the required role
+ * @throws Redirects to unauthorized/404 page if user doesn't have the required role
  *
  * @example
  * ```ts
@@ -24,7 +26,7 @@ export async function requireRole(requiredRole: UserRoleType) {
   });
 
   if (!session?.user) {
-    throw new Error("Unauthorized: You must be logged in");
+    throw redirect("/login");
   }
 
   // Get user with their roles
@@ -40,7 +42,7 @@ export async function requireRole(requiredRole: UserRoleType) {
   });
 
   if (!user) {
-    throw new Error("User not found");
+    throw redirect("/unauthorized");
   }
 
   // Check if user has the required role
@@ -49,9 +51,12 @@ export async function requireRole(requiredRole: UserRoleType) {
   );
 
   if (!hasRole) {
-    throw new Error(
-      `Forbidden: This action requires the ${requiredRole} role`
-    );
+    // ADMIN role → 404, other roles → unauthorized
+    if (requiredRole === UserRole.ADMIN) {
+      throw notFound();
+    } else {
+      throw redirect(`/unauthorized`);
+    }
   }
 
   return {
@@ -59,4 +64,3 @@ export async function requireRole(requiredRole: UserRoleType) {
     roles: user.userRoles.map((ur) => ur.role.name as UserRoleType),
   };
 }
-
