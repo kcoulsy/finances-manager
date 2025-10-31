@@ -1,0 +1,263 @@
+---
+description: Guidelines for creating and organizing server actions using next-safe-action
+globs: src/features/**/actions/**/*.ts
+alwaysApply: true
+---
+
+# Server Actions Guidelines
+
+This project uses **next-safe-action** for type-safe Server Actions in Next.js App Router.
+
+## File Structure
+
+### Location
+- **Always** place actions in `features/[feature-name]/actions/`
+- File naming: `[action-name].action.ts`
+- Example: `features/auth/actions/login.action.ts`
+
+### Required Setup
+Every action file must start with:
+
+```typescript
+"use server";
+
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { [schema]Schema } from "../schemas/[feature].schema";
+import { headers } from "next/headers"; // Only if needed for auth
+
+export const [actionName]Action = actionClient
+  .inputSchema([schema]Schema)
+  .action(async ({ parsedInput }) => {
+    // Implementation
+  });
+```
+
+## Key Requirements
+
+### 1. "use server" Directive
+**Always** add `"use server"` at the top of action files:
+
+```typescript
+"use server";  // ← Required first line
+
+import { actionClient } from "@/features/shared/lib/actions/client";
+```
+
+### 2. Schema Method
+Use `.inputSchema()` (not `.schema()`):
+
+```typescript
+// ✅ Good
+export const loginAction = actionClient
+  .inputSchema(loginSchema)
+  .action(async ({ parsedInput }) => {
+    // ...
+  });
+
+// ❌ Bad
+export const loginAction = actionClient
+  .schema(loginSchema)  // Wrong method name
+  .action(async ({ parsedInput }) => {
+    // ...
+  });
+```
+
+### 3. Error Handling
+Always wrap server-side API calls in try/catch:
+
+```typescript
+export const loginAction = actionClient
+  .inputSchema(loginSchema)
+  .action(async ({ parsedInput }) => {
+    try {
+      const response = await auth.api.signInEmail({
+        body: {
+          email: parsedInput.email,
+          password: parsedInput.password,
+        },
+        headers: await headers(),
+      });
+
+      return {
+        success: true,
+        user: response.user,
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to sign in"
+      );
+    }
+  });
+```
+
+### 4. Headers Usage
+When using `headers()` from `next/headers`:
+- Only call it inside the action function (not at module level)
+- Use `await headers()` when passing to better-auth APIs
+- Only import if actually needed
+
+```typescript
+// ✅ Good
+import { headers } from "next/headers";
+
+export const loginAction = actionClient
+  .inputSchema(loginSchema)
+  .action(async ({ parsedInput }) => {
+    const response = await auth.api.signInEmail({
+      body: { email: parsedInput.email, password: parsedInput.password },
+      headers: await headers(),  // Called inside action
+    });
+  });
+
+// ❌ Bad - Don't call at module level
+import { headers } from "next/headers";
+const headersInstance = await headers();  // This will fail!
+```
+
+### 5. Schema Location
+- Feature-specific schemas: `features/[feature-name]/schemas/`
+- Import path: `../schemas/[feature].schema.ts`
+
+```typescript
+// ✅ Good
+import { loginSchema } from "../schemas/auth.schema";
+
+// ❌ Bad - Don't import from shared unless truly shared
+import { loginSchema } from "@/features/shared/lib/validations/auth.schema";
+```
+
+## Action Patterns
+
+### Authentication Actions
+For actions that require authentication, check session first:
+
+```typescript
+export const changePasswordAction = actionClient
+  .inputSchema(changePasswordSchema)
+  .action(async ({ parsedInput }) => {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+
+    // Rest of implementation
+  });
+```
+
+### Database Actions
+When working with Prisma, use the shared client:
+
+```typescript
+import { db } from "@/features/shared/lib/db/client";
+
+export const getUserAction = actionClient
+  .inputSchema(getUserSchema)
+  .action(async ({ parsedInput }) => {
+    const user = await db.user.findUnique({
+      where: { id: parsedInput.userId },
+    });
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return { user };
+  });
+```
+
+### Better-Auth API Calls
+Better-auth API methods return data directly (not wrapped in `data`):
+
+```typescript
+// ✅ Good - Response has user directly
+const response = await auth.api.signInEmail({
+  body: { email, password },
+  headers: await headers(),
+});
+
+return {
+  success: true,
+  user: response.user,  // Direct access
+};
+
+// ❌ Bad - Don't use response.data.user
+return {
+  success: true,
+  user: response.data.user,  // Wrong - data doesn't exist
+};
+```
+
+## Client Component Usage
+
+Actions are called from client components:
+
+```typescript
+"use client";
+
+import { loginAction } from "@/features/auth/actions/login.action";
+
+export function LoginForm() {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const result = await loginAction({
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    });
+
+    // Handle result
+    if (result?.serverError) {
+      // Handle error
+    }
+
+    if (result?.data?.success) {
+      // Handle success
+    }
+  };
+}
+```
+
+## Return Values
+
+### Success Response
+Always return a consistent structure:
+
+```typescript
+return {
+  success: true,
+  message?: string,  // Optional success message
+  data?: any,        // Optional data
+};
+```
+
+### Error Handling
+- Use try/catch for all async operations
+- Log errors for debugging
+- Throw meaningful error messages
+
+```typescript
+try {
+  // Operation
+  return { success: true, data };
+} catch (error) {
+  console.error("Action error:", error);
+  throw new Error(
+    error instanceof Error ? error.message : "Operation failed"
+  );
+}
+```
+
+## Best Practices
+
+1. **Keep actions focused**: One action per file, one responsibility
+2. **Validate input**: Always use Zod schemas
+3. **Handle errors gracefully**: Always wrap in try/catch
+4. **Log errors**: Use console.error for debugging
+5. **Type safety**: Let TypeScript infer types from schemas
+6. **Server-only**: Never import client-side code in actions
+7. **Consistent naming**: Use descriptive action names ending with "Action"

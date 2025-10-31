@@ -1,0 +1,121 @@
+---
+description: Guidelines for organizing the project following the feature-based modular architecture
+globs: src/**/*
+alwaysApply: true
+---
+
+# Directory Structure Guidelines
+
+This project follows a feature-based, modular architecture pattern. All code should be organized according to these principles.
+
+## Core Structure
+
+### Features Directory (`src/features/`)
+
+All business logic is organized into self-contained features:
+
+```
+features/
+├── shared/                    # Shared feature utilities
+│   ├── hooks/                 # Shared React hooks
+│   ├── components/             # Shared/global components
+│   │   ├── ui/                # shadcn components
+│   │   ├── layout/            # Layout components
+│   │   ├── forms/             # Reusable form components
+│   │   └── providers/         # Context providers
+│   ├── lib/                   # Shared utilities and configurations
+│   │   ├── db/                # Prisma client
+│   │   ├── auth/              # Better-auth configuration
+│   │   ├── actions/           # next-safe-action setup
+│   │   ├── utils/             # General utilities
+│   │   ├── constants/         # App-wide constants
+│   │   ├── validations/       # Shared Zod schemas
+│   │   └── types/             # Shared TypeScript types
+│   └── styles/                # Global styles
+│
+└── [feature-name]/            # Feature modules
+    ├── components/            # Feature-specific UI components
+    ├── hooks/                 # Feature-specific hooks
+    ├── lib/                   # Feature-specific utilities
+    ├── actions/               # Server actions (using next-safe-action)
+    └── schemas/               # Zod schemas for this feature
+```
+
+### App Directory (`src/app/`)
+
+Next.js App Router routes and API endpoints:
+
+```
+app/
+├── (auth)/                    # Route groups for authentication
+├── (dashboard)/               # Protected dashboard routes
+├── api/                       # API routes
+│   └── routes/                # REST API routes if needed
+├── layout.tsx
+├── page.tsx
+└── globals.css
+```
+
+## Key Principles
+
+### 1. Feature-based Organization
+- Each feature is self-contained with its own:
+  - Components
+  - Hooks
+  - Actions
+  - Schemas
+- Features should NOT depend on other features directly
+- Shared code goes in `features/shared/`
+
+### 2. Actions Location
+- **Always** place server actions in `features/[feature-name]/actions/`
+- Never place actions in `app/api/actions/`
+- Each action file should be named descriptively: `[action-name].action.ts`
+
+### 3. Schemas Location
+- Zod schemas belong in `features/[feature-name]/schemas/`
+- Shared schemas go in `features/shared/lib/validations/`
+
+### 4. Components Location
+- Feature-specific components: `features/[feature-name]/components/`
+- Shared/global components: `features/shared/components/`
+- UI components (shadcn): `features/shared/components/ui/`
+
+### 5. Shared Utilities
+- Database client: `features/shared/lib/db/client.ts`
+- Auth configuration: `features/shared/lib/auth/config.ts`
+- Action client: `features/shared/lib/actions/client.ts`
+- General utilities: `features/shared/lib/utils/`
+
+## Examples
+
+### Good: Feature-based Structure
+```typescript
+// src/features/auth/actions/login.action.ts
+"use server";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { loginSchema } from "../schemas/auth.schema";
+
+export const loginAction = actionClient
+  .inputSchema(loginSchema)
+  .action(async ({ parsedInput }) => {
+    // Implementation
+  });
+```
+
+### Bad: Actions in Wrong Location
+```typescript
+// ❌ Don't put actions here
+// src/app/api/actions/auth/login.ts
+
+// ❌ Don't mix features
+// src/features/auth/actions/user-profile.action.ts
+```
+
+## Benefits
+
+- **Low Coupling**: Features depend on shared utilities, not each other
+- **High Cohesion**: Related code lives together
+- **Easy Testing**: Features can be tested in isolation
+- **Team Collaboration**: Teams can work on different features simultaneously
+- **Maintainability**: Clear separation makes code easier to understand and modify

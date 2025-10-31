@@ -1,7 +1,5 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-
-import { mcp } from "better-auth/plugins";
 import { db } from "../db/client";
 
 export const auth = betterAuth({
@@ -13,6 +11,11 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  user: {
+    deleteUser: {
+      enabled: true,
+    },
+  },
   plugins: [
     // mcp({
     //   loginPage: "/sign-in", // path to your login page
