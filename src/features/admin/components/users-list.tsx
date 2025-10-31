@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useUsers } from "../hooks/use-users";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
+import {
+  CompactTable,
+  CompactTableHeader,
+  CompactTableBody,
+  CompactTableRow,
+  CompactTableHead,
+  CompactTableCell,
+} from "@/features/shared/components/ui/compact-table";
 
 export function UsersList() {
   const { data: users, isLoading, error } = useUsers();
@@ -32,61 +40,59 @@ export function UsersList() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="border-b">
         <CardTitle>All Users</CardTitle>
         <CardDescription>Manage users and their roles</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {!users || users.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No users found</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-4 font-medium">Name</th>
-                  <th className="text-left p-4 font-medium">Email</th>
-                  <th className="text-left p-4 font-medium">Roles</th>
-                  <th className="text-left p-4 font-medium">Verified</th>
-                  <th className="text-left p-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">{user.name}</td>
-                    <td className="p-4">{user.email}</td>
-                    <td className="p-4">
-                      <div className="flex gap-2 flex-wrap">
-                        {user.roles.length === 0 ? (
-                          <span className="text-muted-foreground text-sm">No roles</span>
-                        ) : (
-                          user.roles.map((role) => (
-                            <span
-                              key={role}
-                              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary"
-                            >
-                              {role}
-                            </span>
-                          ))
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`text-sm ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}>
-                        {user.emailVerified ? "Yes" : "No"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/admin/users/${user.id}`}>View / Edit</Link>
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CompactTable>
+            <CompactTableHeader className="border-b border-border">
+              <CompactTableRow>
+                <CompactTableHead>Name</CompactTableHead>
+                <CompactTableHead>Email</CompactTableHead>
+                <CompactTableHead>Roles</CompactTableHead>
+                <CompactTableHead>Verified</CompactTableHead>
+                <CompactTableHead>Actions</CompactTableHead>
+              </CompactTableRow>
+            </CompactTableHeader>
+            <CompactTableBody>
+              {users.map((user) => (
+                <CompactTableRow key={user.id}>
+                  <CompactTableCell className="font-medium">{user.name}</CompactTableCell>
+                  <CompactTableCell>{user.email}</CompactTableCell>
+                  <CompactTableCell>
+                    <div className="flex gap-2 flex-wrap">
+                      {user.roles.length === 0 ? (
+                        <span className="text-muted-foreground text-xs">No roles</span>
+                      ) : (
+                        user.roles.map((role) => (
+                          <span
+                            key={role}
+                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary"
+                          >
+                            {role}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </CompactTableCell>
+                  <CompactTableCell>
+                    <span className={`text-xs ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}>
+                      {user.emailVerified ? "Yes" : "No"}
+                    </span>
+                  </CompactTableCell>
+                  <CompactTableCell>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/admin/users/${user.id}`}>View / Edit</Link>
+                    </Button>
+                  </CompactTableCell>
+                </CompactTableRow>
+              ))}
+            </CompactTableBody>
+          </CompactTable>
         )}
       </CardContent>
     </Card>
