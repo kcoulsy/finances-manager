@@ -23,13 +23,20 @@ export const Permission = {
     ALL: "admin:all",
     MANAGE_SYSTEM: "admin:manage_system",
     VIEW_ANALYTICS: "admin:view_analytics",
+    USERS: {
+      VIEW_ALL: "admin.users.viewAll",
+      VIEW_SINGLE: "admin.users.viewSingle",
+      UPDATE_ROLES: "admin.users.updateRoles",
+      VERIFY: "admin.users.verify",
+    },
   },
 } as const;
 
 export type PermissionType =
   | (typeof Permission.Project)[keyof typeof Permission.Project]
   | (typeof Permission.User)[keyof typeof Permission.User]
-  | (typeof Permission.Admin)[keyof typeof Permission.Admin];
+  | (typeof Permission.Admin)[keyof typeof Permission.Admin]
+  | (typeof Permission.Admin.USERS)[keyof typeof Permission.Admin.USERS];
 
 /**
  * Maps roles to their permissions
@@ -38,6 +45,10 @@ export type PermissionType =
 export const ROLE_PERMISSIONS: Record<string, PermissionType[]> = {
   ADMIN: [
     Permission.Admin.ALL,
+    Permission.Admin.USERS.VIEW_ALL,
+    Permission.Admin.USERS.VIEW_SINGLE,
+    Permission.Admin.USERS.UPDATE_ROLES,
+    Permission.Admin.USERS.VERIFY,
     Permission.Project.ALL,
     Permission.User.ALL,
   ],

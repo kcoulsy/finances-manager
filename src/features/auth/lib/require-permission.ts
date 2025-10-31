@@ -80,13 +80,29 @@ function checkWildcardPermission(
   userPermissions: Set<PermissionType>,
   requiredPermission: PermissionType
 ): boolean {
-  // Extract the resource from the permission (e.g., "project" from "project:read")
-  const resource = requiredPermission.split(":")[0];
-  const wildcardPermission = `${resource}:all` as PermissionType;
+  // Convert permission to string
+  const permissionString = String(requiredPermission);
+  
+  // Handle dot-separated permissions (e.g., "admin.users.viewAll")
+  const parts = permissionString.split(".");
+  if (parts.length >= 2 && parts[0] === "admin" && parts[1] === "users") {
+    // For admin.users.* permissions, check for admin:all
+    if (userPermissions.has("admin:all" as PermissionType)) {
+      return true;
+    }
+    return false;
+  }
+  
+  // Handle colon-separated permissions (e.g., "project:read")
+  const colonParts = permissionString.split(":");
+  if (colonParts.length === 2) {
+    const resource = colonParts[0];
+    const wildcardPermission = `${resource}:all` as PermissionType;
 
-  // Check if user has the wildcard permission
-  if (userPermissions.has(wildcardPermission)) {
-    return true;
+    // Check if user has the wildcard permission
+    if (userPermissions.has(wildcardPermission)) {
+      return true;
+    }
   }
 
   // Check if user has admin:all (admins have all permissions)
@@ -96,4 +112,3 @@ function checkWildcardPermission(
 
   return false;
 }
-
