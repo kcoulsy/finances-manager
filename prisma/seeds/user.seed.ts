@@ -38,19 +38,19 @@ async function seedUsers() {
     {
       name: "Admin User",
       email: "admin@admin.com",
-      password: "admin123456",
+      password: "password",
       roles: [UserRole.ADMIN],
     },
     {
       name: "Moderator User",
-      email: "moderator@example.com",
-      password: "moderator123456",
+      email: "mod@mod.com",
+      password: "password",
       roles: [UserRole.MODERATOR],
     },
     {
       name: "Regular User",
-      email: "user@example.com",
-      password: "user123456",
+      email: "user@user.com",
+      password: "password",
       roles: [UserRole.USER],
     },
   ];

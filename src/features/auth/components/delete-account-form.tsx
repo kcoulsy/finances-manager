@@ -1,36 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { deleteAccountAction } from "../actions/delete-account.action";
+import { deleteAccountSchema } from "../schemas/auth.schema";
+import type { DeleteAccountInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
 
 export function DeleteAccountForm() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<DeleteAccountInput>({
+    resolver: zodResolver(deleteAccountSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: DeleteAccountInput) => {
     if (!confirmDelete) {
-      setError("Please confirm deletion by checking the box");
+      setError("root", {
+        message: "Please confirm deletion by checking the box",
+      });
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const password = formData.get("password") as string;
-
-    const result = await deleteAccountAction({ password });
+    const result = await deleteAccountAction({ password: data.password });
 
     if (result?.serverError) {
-      setError(result.serverError);
-      setIsLoading(false);
+      setError("root", {
+        message: result.serverError,
+      });
       return;
     }
 
@@ -48,11 +54,11 @@ export function DeleteAccountForm() {
           Permanently delete your account and all associated data. This action cannot be undone.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {error && (
+          {errors.root && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -61,11 +67,14 @@ export function DeleteAccountForm() {
             </label>
             <PasswordInput
               id="password"
-              name="password"
               placeholder="Enter your password"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.password ? "true" : "false"}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
             <p className="text-xs text-muted-foreground">
               Enter your password to confirm account deletion
             </p>
@@ -76,7 +85,7 @@ export function DeleteAccountForm() {
               type="checkbox"
               checked={confirmDelete}
               onChange={(e) => setConfirmDelete(e.target.checked)}
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="h-4 w-4 rounded border-gray-300"
             />
             <label htmlFor="confirmDelete" className="text-sm font-medium">
@@ -88,13 +97,12 @@ export function DeleteAccountForm() {
           <Button
             type="submit"
             variant="destructive"
-            disabled={isLoading || !confirmDelete}
+            disabled={isSubmitting || !confirmDelete}
           >
-            {isLoading ? "Deleting..." : "Delete Account"}
+            {isSubmitting ? "Deleting..." : "Delete Account"}
           </Button>
         </CardFooter>
       </form>
     </Card>
   );
 }
-

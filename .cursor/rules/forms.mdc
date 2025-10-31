@@ -1,0 +1,399 @@
+---
+description: Guidelines for handling forms with react-hook-form and server actions
+globs: src/features/**/*form*.tsx
+alwaysApply: true
+---
+
+# Form Handling Guidelines
+
+This project uses **react-hook-form** with **zod resolvers** for form validation and **next-safe-action** for server actions. All forms should follow this pattern.
+
+## Required Dependencies
+
+- `react-hook-form` - Form state management
+- `@hookform/resolvers` - Zod resolver integration
+- `zod` - Schema validation (already installed)
+
+## Form Structure
+
+### Location
+- Forms belong in `features/[feature-name]/components/`
+- Form schemas belong in `features/[feature-name]/schemas/`
+- Form actions belong in `features/[feature-name]/actions/`
+
+### Required Setup
+Every form component must:
+
+1. Use `useForm` hook with `zodResolver`
+2. Import the corresponding schema
+3. Handle form submission with server actions
+4. Display field-level and root errors
+5. Handle loading/submitting states
+
+## Basic Form Pattern
+
+```typescript
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { [actionName]Action } from "../actions/[action-name].action";
+import { [schemaName]Schema } from "../schemas/[feature].schema";
+import type { [SchemaName]Input } from "../schemas/[feature].schema";
+import { Button } from "@/features/shared/components/ui/button";
+import { Input } from "@/features/shared/components/ui/input";
+
+export function [ComponentName]Form() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    reset, // Optional - use when form should reset on success
+  } = useForm<[SchemaName]Input>({
+    resolver: zodResolver([schemaName]Schema),
+  });
+
+  const onSubmit = async (data: [SchemaName]Input) => {
+    const result = await [actionName]Action(data);
+
+    if (result?.serverError) {
+      setError("root", {
+        message: result.serverError,
+      });
+      return;
+    }
+
+    if (result?.data?.success) {
+      // Handle success
+      reset(); // Optional - reset form on success
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+}
+```
+
+## Key Requirements
+
+### 1. useForm Hook Setup
+Always use `zodResolver` with the form schema:
+
+```typescript
+// ✅ Good
+const {
+  register,
+  handleSubmit,
+  formState: { errors, isSubmitting },
+  setError,
+} = useForm<LoginInput>({
+  resolver: zodResolver(loginSchema),
+});
+
+// ❌ Bad - Missing zodResolver
+const {
+  register,
+  handleSubmit,
+} = useForm();
+```
+
+### 2. Form Submission Handler
+Always use `handleSubmit` from react-hook-form:
+
+```typescript
+// ✅ Good
+const onSubmit = async (data: LoginInput) => {
+  const result = await loginAction(data);
+  // Handle result
+};
+
+return <form onSubmit={handleSubmit(onSubmit)}>...</form>;
+
+// ❌ Bad - Using manual event handler
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const formData = new FormData(e.currentTarget);
+  // ...
+};
+```
+
+### 3. Field Registration
+Use `register()` to connect form fields:
+
+```typescript
+// ✅ Good
+<Input
+  id="email"
+  type="email"
+  disabled={isSubmitting}
+  aria-invalid={errors.email ? "true" : "false"}
+  {...register("email")}
+/>
+{errors.email && (
+  <p className="text-sm text-destructive">{errors.email.message}</p>
+)}
+
+// ❌ Bad - Manual value management
+const [email, setEmail] = useState("");
+<Input
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+/>
+```
+
+### 4. Error Handling
+Display both field-level and root errors:
+
+```typescript
+// Root errors (from server actions)
+{errors.root && (
+  <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+    {errors.root.message}
+  </div>
+)}
+
+// Field-level errors (from validation)
+{errors.email && (
+  <p className="text-sm text-destructive">{errors.email.message}</p>
+)}
+```
+
+### 5. Loading States
+Use `isSubmitting` from `formState`:
+
+```typescript
+// ✅ Good
+<Button type="submit" disabled={isSubmitting}>
+  {isSubmitting ? "Submitting..." : "Submit"}
+</Button>
+
+// ❌ Bad - Manual loading state
+const [isLoading, setIsLoading] = useState(false);
+```
+
+## Integration with Server Actions
+
+Forms should call server actions directly with validated data. See [server-actions.mdc](./server-actions.mdc) for server action guidelines.
+
+```typescript
+const onSubmit = async (data: LoginInput) => {
+  // Data is already validated by zod via resolver
+  const result = await loginAction(data);
+
+  if (result?.serverError) {
+    setError("root", {
+      message: result.serverError,
+    });
+    return;
+  }
+
+  if (result?.data?.success) {
+    // Handle success (e.g., redirect, show message)
+    router.push("/dashboard");
+  }
+};
+```
+
+## Form Field Patterns
+
+### Text Input
+```typescript
+<div className="space-y-2">
+  <label htmlFor="email" className="text-sm font-medium">
+    Email
+  </label>
+  <Input
+    id="email"
+    type="email"
+    placeholder="you@example.com"
+    disabled={isSubmitting}
+    aria-invalid={errors.email ? "true" : "false"}
+    {...register("email")}
+  />
+  {errors.email && (
+    <p className="text-sm text-destructive">{errors.email.message}</p>
+  )}
+</div>
+```
+
+### Password Input
+```typescript
+<div className="space-y-2">
+  <label htmlFor="password" className="text-sm font-medium">
+    Password
+  </label>
+  <PasswordInput
+    id="password"
+    placeholder="••••••••"
+    disabled={isSubmitting}
+    aria-invalid={errors.password ? "true" : "false"}
+    {...register("password")}
+  />
+  {errors.password && (
+    <p className="text-sm text-destructive">{errors.password.message}</p>
+  )}
+</div>
+```
+
+### Checkbox (for confirmations)
+```typescript
+<div className="flex items-center space-x-2">
+  <input
+    id="confirm"
+    type="checkbox"
+    checked={confirmValue}
+    onChange={(e) => setConfirmValue(e.target.checked)}
+    disabled={isSubmitting}
+    className="h-4 w-4 rounded border-gray-300"
+  />
+  <label htmlFor="confirm" className="text-sm font-medium">
+    I understand
+  </label>
+</div>
+```
+
+## Success Handling
+
+### Form Reset
+Reset form after successful submission when appropriate:
+
+```typescript
+const {
+  reset,
+  // ...
+} = useForm<ChangePasswordInput>({
+  resolver: zodResolver(changePasswordSchema),
+});
+
+const onSubmit = async (data: ChangePasswordInput) => {
+  const result = await changePasswordAction(data);
+
+  if (result?.data?.success) {
+    setSuccess(true);
+    reset(); // Clear form fields
+    setTimeout(() => setSuccess(false), 3000);
+  }
+};
+```
+
+### Navigation After Success
+```typescript
+const router = useRouter();
+
+const onSubmit = async (data: LoginInput) => {
+  const result = await loginAction(data);
+
+  if (result?.data?.success) {
+    router.push("/dashboard");
+    router.refresh();
+  }
+};
+```
+
+## Type Safety
+
+Always use TypeScript types inferred from schemas:
+
+```typescript
+// ✅ Good - Type inferred from schema
+import type { LoginInput } from "../schemas/auth.schema";
+
+const {
+  register,
+  handleSubmit,
+  formState: { errors, isSubmitting },
+} = useForm<LoginInput>({
+  resolver: zodResolver(loginSchema),
+});
+
+// ❌ Bad - Manual type definition
+interface FormData {
+  email: string;
+  password: string;
+}
+```
+
+## Common Patterns
+
+### Success Message Display
+```typescript
+const [success, setSuccess] = useState(false);
+
+const onSubmit = async (data: FormInput) => {
+  const result = await submitAction(data);
+  
+  if (result?.data?.success) {
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  }
+};
+
+// In JSX
+{success && (
+  <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+    Success message!
+  </div>
+)}
+```
+
+### Conditional Form Fields
+```typescript
+const watchConfirm = watch("confirmDelete");
+
+<Button
+  type="submit"
+  disabled={isSubmitting || !watchConfirm}
+>
+  Submit
+</Button>
+```
+
+### Setting Values Programmatically
+```typescript
+const { setValue } = useForm<FormInput>({
+  resolver: zodResolver(formSchema),
+});
+
+useEffect(() => {
+  const token = searchParams.get("token");
+  if (token) {
+    setValue("token", token);
+  }
+}, [searchParams, setValue]);
+```
+
+## Best Practices
+
+1. **Always use zodResolver**: Ensures client and server validation match
+2. **Type inference**: Let TypeScript infer types from schemas
+3. **Error display**: Show both field-level and root errors
+4. **Loading states**: Use `isSubmitting` instead of manual loading state
+5. **Accessibility**: Include `aria-invalid` for error states
+6. **Server actions**: Call actions directly with validated form data
+7. **Form reset**: Reset form after success when appropriate
+8. **No manual state**: Avoid `useState` for form fields - use `register()`
+9. **No FormData**: Don't extract values manually - react-hook-form handles it
+10. **Consistent structure**: Follow the same pattern across all forms
+
+## Examples
+
+See existing forms for reference:
+- `src/features/auth/components/login-form.tsx`
+- `src/features/auth/components/register-form.tsx`
+- `src/features/auth/components/change-password-form.tsx`
+- `src/features/auth/components/delete-account-form.tsx`
+
+## Integration with Server Actions
+
+When creating forms that submit to server actions:
+
+1. Create the Zod schema in `features/[feature]/schemas/`
+2. Create the server action in `features/[feature]/actions/` (see [server-actions.mdc](./server-actions.mdc))
+3. Create the form component using react-hook-form pattern above
+4. Call the server action in the `onSubmit` handler with validated data
+
+The form data is automatically validated before submission, ensuring type safety and reducing server-side errors.

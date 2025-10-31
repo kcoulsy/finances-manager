@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/features/shared/lib/auth/client";
+import { loginSchema } from "../schemas/auth.schema";
+import type { LoginInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { Input } from "@/features/shared/components/ui/input";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
@@ -10,27 +13,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export function LoginForm() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
+  const onSubmit = async (data: LoginInput) => {
     try {
       const result = await signIn.email({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result.error) {
-        setError(result.error.message || "Failed to sign in");
-        setIsLoading(false);
+        setError("root", {
+          message: result.error.message || "Failed to sign in",
+        });
         return;
       }
 
@@ -39,8 +41,9 @@ export function LoginForm() {
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
-      setIsLoading(false);
+      setError("root", {
+        message: err instanceof Error ? err.message : "Failed to sign in",
+      });
     }
   };
 
@@ -50,11 +53,11 @@ export function LoginForm() {
         <CardTitle>Sign In</CardTitle>
         <CardDescription>Enter your credentials to access your account</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {error && (
+          {errors.root && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -63,12 +66,15 @@ export function LoginForm() {
             </label>
             <Input
               id="email"
-              name="email"
               type="email"
               placeholder="you@example.com"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.email ? "true" : "false"}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
@@ -76,16 +82,19 @@ export function LoginForm() {
             </label>
             <PasswordInput
               id="password"
-              name="password"
               placeholder="••••••••"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.password ? "true" : "false"}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in..." : "Sign In"}
           </Button>
           <div className="text-sm text-center">
             <a href="/forgot-password" className="text-primary hover:underline">
@@ -103,4 +112,3 @@ export function LoginForm() {
     </Card>
   );
 }
-

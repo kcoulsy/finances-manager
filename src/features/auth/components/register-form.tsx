@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/features/shared/lib/auth/client";
+import { registerSchema } from "../schemas/auth.schema";
+import type { RegisterInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { Input } from "@/features/shared/components/ui/input";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
@@ -10,29 +13,27 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export function RegisterForm() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
+  const onSubmit = async (data: RegisterInput) => {
     try {
       const result = await signUp.email({
-        name,
-        email,
-        password,
+        name: data.name,
+        email: data.email,
+        password: data.password,
       });
 
       if (result.error) {
-        setError(result.error.message || "Failed to register");
-        setIsLoading(false);
+        setError("root", {
+          message: result.error.message || "Failed to register",
+        });
         return;
       }
 
@@ -41,8 +42,9 @@ export function RegisterForm() {
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to register");
-      setIsLoading(false);
+      setError("root", {
+        message: err instanceof Error ? err.message : "Failed to register",
+      });
     }
   };
 
@@ -52,11 +54,11 @@ export function RegisterForm() {
         <CardTitle>Create Account</CardTitle>
         <CardDescription>Enter your information to create a new account</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {error && (
+          {errors.root && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -65,12 +67,15 @@ export function RegisterForm() {
             </label>
             <Input
               id="name"
-              name="name"
               type="text"
               placeholder="John Doe"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.name ? "true" : "false"}
+              {...register("name")}
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
@@ -78,12 +83,15 @@ export function RegisterForm() {
             </label>
             <Input
               id="email"
-              name="email"
               type="email"
               placeholder="you@example.com"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.email ? "true" : "false"}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
@@ -91,16 +99,19 @@ export function RegisterForm() {
             </label>
             <PasswordInput
               id="password"
-              name="password"
               placeholder="••••••••"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.password ? "true" : "false"}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Sign Up"}
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account..." : "Sign Up"}
           </Button>
           <div className="text-sm text-center">
             Already have an account?{" "}
@@ -113,4 +124,3 @@ export function RegisterForm() {
     </Card>
   );
 }
-

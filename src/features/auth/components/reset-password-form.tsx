@@ -1,8 +1,12 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { resetPasswordAction } from "../actions/reset-password.action";
+import { resetPasswordSchema } from "../schemas/auth.schema";
+import type { ResetPasswordInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
@@ -10,34 +14,39 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    setValue,
+  } = useForm<ResetPasswordInput>({
+    resolver: zodResolver(resetPasswordSchema),
+  });
 
   useEffect(() => {
     const tokenParam = searchParams.get("token");
     if (!tokenParam) {
-      setError("Invalid or missing reset token");
+      setError("token", {
+        message: "Invalid or missing reset token",
+      });
     } else {
       setToken(tokenParam);
+      setValue("token", tokenParam);
     }
-  }, [searchParams]);
+  }, [searchParams, setError, setValue]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: ResetPasswordInput) => {
     if (!token) return;
 
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const newPassword = formData.get("newPassword") as string;
-
-    const result = await resetPasswordAction({ token, newPassword });
+    const result = await resetPasswordAction({ token, newPassword: data.newPassword });
 
     if (result?.serverError) {
-      setError(result.serverError);
-      setIsLoading(false);
+      setError("root", {
+        message: result.serverError,
+      });
       return;
     }
 
@@ -68,11 +77,11 @@ export function ResetPasswordForm() {
         <CardTitle>Reset Password</CardTitle>
         <CardDescription>Enter your new password below.</CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
-          {error && (
+          {errors.root && (
             <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
+              {errors.root.message}
             </div>
           )}
           <div className="space-y-2">
@@ -81,16 +90,19 @@ export function ResetPasswordForm() {
             </label>
             <PasswordInput
               id="newPassword"
-              name="newPassword"
               placeholder="••••••••"
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              aria-invalid={errors.newPassword ? "true" : "false"}
+              {...register("newPassword")}
             />
+            {errors.newPassword && (
+              <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isLoading || !token}>
-            {isLoading ? "Resetting..." : "Reset Password"}
+          <Button type="submit" className="w-full" disabled={isSubmitting || !token}>
+            {isSubmitting ? "Resetting..." : "Reset Password"}
           </Button>
           <div className="text-sm text-center">
             <a href="/login" className="text-primary hover:underline">
@@ -102,4 +114,3 @@ export function ResetPasswordForm() {
     </Card>
   );
 }
-
