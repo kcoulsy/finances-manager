@@ -2,6 +2,7 @@ import { Separator } from "@/features/shared/components/ui/separator";
 import { SidebarTrigger } from "@/features/shared/components/ui/sidebar";
 import { UserNav } from "./user-nav";
 import { AppBreadcrumbs } from "./app-breadcrumbs";
+import { NotificationIcon } from "@/features/notifications/components/notification-icon";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { logger } from "../../lib/logger";
 
@@ -16,6 +17,7 @@ export async function DashboardNav() {
       <div className="flex flex-1 items-center gap-4">
         <AppBreadcrumbs />
         <div className="flex flex-1 items-center justify-end gap-4">
+          <NotificationIcon />
           <UserNav
             user={{
               name: session.user.name,

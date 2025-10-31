@@ -261,3 +261,231 @@ try {
 5. **Type safety**: Let TypeScript infer types from schemas
 6. **Server-only**: Never import client-side code in actions
 7. **Consistent naming**: Use descriptive action names ending with "Action"
+
+## Middleware and Toast Notifications
+
+This project includes middleware for automatic error handling and toast notifications using Sonner.
+
+### Error Handling Middleware (Automatic)
+
+The error handling middleware is automatically applied to all actions via `actionClient`. When an action throws an error, it's automatically caught and formatted. The error message is available in `result.serverError` on the client side.
+
+### Returning Toast Details from Actions
+
+Actions can return toast configuration in their return value:
+
+```typescript
+"use server";
+
+import { actionClient } from "@/features/shared/lib/actions/client";
+
+export const createItemAction = actionClient
+  .inputSchema(createItemSchema)
+  .action(async ({ parsedInput }) => {
+    // ... create item logic ...
+
+    return {
+      success: true,
+      item: newItem,
+      toast: {
+        message: "Item created successfully",
+        type: "success",
+        description: `Item "${newItem.name}" has been created`,
+        duration: 3000, // optional
+      },
+    };
+  });
+```
+
+### Toast Configuration
+
+```typescript
+type ToastConfig = {
+  message: string;                    // Required: Toast message
+  type?: "success" | "error" | "info" | "warning"; // Optional: Toast type (default: "success")
+  description?: string;                // Optional: Additional description
+  duration?: number;                  // Optional: Duration in milliseconds
+};
+```
+
+### Client-Side Usage
+
+#### Option 1: Using `useActionWithToast` (Recommended)
+
+This is the recommended approach using next-safe-action's built-in `useAction` hook with callbacks. It provides automatic toast handling and better integration with the framework.
+
+```typescript
+"use client";
+
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { createItemAction } from "../actions/create-item.action";
+import type { CreateItemInput } from "../schemas/item.schema";
+
+export function CreateItemForm() {
+  // Automatically handles toasts via onSuccess/onError callbacks
+  const { execute, status, result } = useActionWithToast(createItemAction);
+
+  const handleSubmit = async (data: CreateItemInput) => {
+    await execute(data);
+    // Toasts are automatically shown via callbacks
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+      <button type="submit" disabled={status === "executing"}>
+        {status === "executing" ? "Creating..." : "Create Item"}
+      </button>
+    </form>
+  );
+}
+```
+
+With custom toast messages:
+
+```typescript
+"use client";
+
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { createItemAction } from "../actions/create-item.action";
+
+export function CreateItemForm() {
+  const { execute, status } = useActionWithToast(createItemAction, {
+    successToast: {
+      message: "Item created successfully!",
+      type: "success",
+      description: "Your item has been created.",
+    },
+    errorToast: {
+      message: "Failed to create item",
+      type: "error",
+    },
+  });
+
+  // Or disable toasts entirely
+  const { execute, status } = useActionWithToast(createItemAction, {
+    showToasts: false, // No automatic toasts
+  });
+}
+```
+
+Using next-safe-action's `useAction` directly with callbacks:
+
+```typescript
+"use client";
+
+import { useAction } from "next-safe-action/hooks";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { toast } from "sonner";
+import { createItemAction } from "../actions/create-item.action";
+
+export function CreateItemForm() {
+  const { execute, status } = useAction(createItemAction, {
+    onSuccess: ({ data }) => {
+      // Show toast from action result
+      showToastFromAction({ data });
+      
+      // Or custom logic
+      toast.success("Item created!");
+    },
+    onError: ({ error }) => {
+      // error is an object with serverError property
+      // Show error toast (error object is compatible with ActionResult)
+      showToastFromAction(error);
+      
+      // Or access serverError directly
+      if (error.serverError) {
+        toast.error(error.serverError);
+      }
+    },
+  });
+
+  // ...
+}
+```
+
+#### Option 2: Using the utility function
+
+```typescript
+"use client";
+
+import { handleActionWithToast } from "@/features/shared/lib/actions/toast";
+import { createItemAction } from "../actions/create-item.action";
+
+export function CreateItemForm() {
+  const handleSubmit = async (data: CreateItemInput) => {
+    const result = await createItemAction(data);
+    
+    // Automatically shows toast if there's an error or toast config in result
+    handleActionWithToast(result);
+    
+    // Or provide a custom toast
+    handleActionWithToast(result, {
+      message: "Custom success message",
+      type: "success",
+    });
+  };
+}
+```
+
+#### Option 3: Manual handling
+
+```typescript
+"use client";
+
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { createItemAction } from "../actions/create-item.action";
+
+export function CreateItemForm() {
+  const handleSubmit = async (data: CreateItemInput) => {
+    const result = await createItemAction(data);
+    
+    // Show toast from result (handles both errors and success toasts)
+    showToastFromAction(result);
+    
+    // Handle the result
+    if (result?.serverError) {
+      // Error toast was already shown
+      return;
+    }
+    
+    if (result?.data?.success) {
+      // Success toast was shown if configured in action
+    }
+  };
+}
+```
+
+### Error Handling with Toasts
+
+Errors are automatically caught by the middleware and made available in `result.serverError`. The client-side utilities automatically show error toasts for server errors.
+
+```typescript
+// In action - errors are automatically caught
+export const someAction = actionClient
+  .inputSchema(someSchema)
+  .action(async ({ parsedInput }) => {
+    if (!condition) {
+      throw new Error("Something went wrong"); // This will be caught
+    }
+    return { success: true };
+  });
+
+// On client - error toast is shown automatically
+const result = await someAction(data);
+// If error occurred, result.serverError contains the message
+// and showToastFromAction will display it automatically
+handleActionWithToast(result);
+```
+
+### Middleware Files
+
+- `src/features/shared/lib/actions/middleware.ts` - Error handling middleware
+- `src/features/shared/lib/actions/toast.ts` - Toast utility functions
+- `src/features/shared/lib/actions/use-action-with-toast.ts` - React hook using next-safe-action's `useAction` with callbacks (Recommended)
+- `src/features/shared/lib/actions/use-action-toast.ts` - Legacy hook for backwards compatibility
+
+### Reference
+
+For more information on next-safe-action hooks and callbacks, see:
+- [next-safe-action hook callbacks documentation](https://next-safe-action.dev/docs/execute-actions/hooks/hook-callbacks)

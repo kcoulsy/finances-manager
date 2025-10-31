@@ -1,6 +1,7 @@
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
+import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -51,6 +52,16 @@ export default async function DashboardPage() {
             <Button asChild variant="outline" className="w-full">
               <Link href="/settings">Change Password</Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Test Notifications</CardTitle>
+            <CardDescription>Send yourself a test notification</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TestNotificationButton />
           </CardContent>
         </Card>
       </div>

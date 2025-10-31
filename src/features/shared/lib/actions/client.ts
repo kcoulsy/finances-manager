@@ -1,5 +1,6 @@
 import { createSafeActionClient } from "next-safe-action";
+import { errorToastMiddleware } from "./middleware";
 
 export const actionClient = createSafeActionClient({
-  // You can add middleware here if needed
+  handleServerError: errorToastMiddleware,
 });

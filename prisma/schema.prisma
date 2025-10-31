@@ -22,6 +22,7 @@ model User {
   sessions      Session[]
   userRoles     UserRole[]
   projects      Project[]
+  notifications Notification[]
 
   @@map("user")
 }
@@ -109,4 +110,21 @@ model Project {
 
   @@index([userId])
   @@map("project")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  subtitle  String?
+  detail    String?
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, read])
+  @@map("notification")
 }

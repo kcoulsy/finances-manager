@@ -4,6 +4,7 @@ import { BreadcrumbProvider } from "@/features/shared/components/layout/breadcru
 import { SidebarInset, SidebarProvider } from "@/features/shared/components/ui/sidebar";
 import { hasRole } from "@/features/shared/lib/auth/has-role";
 import { UserRole } from "@/features/auth/constants/roles";
+import { Toaster } from "sonner";
 
 export default async function AppLayout({
   children,
@@ -21,6 +22,8 @@ export default async function AppLayout({
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8">
             {children}
           </div>
+
+          <Toaster />
         </BreadcrumbProvider>
       </SidebarInset>
     </SidebarProvider>

@@ -1,0 +1,280 @@
+---
+description: Guidelines for working with the notifications system
+globs: src/features/notifications/**/*
+alwaysApply: true
+---
+
+# Notifications System Guidelines
+
+This project includes a comprehensive notifications system with real-time updates, markdown support, and clickable notifications with links.
+
+## Feature Structure
+
+```
+features/notifications/
+├── actions/
+│   ├── get-notifications.action.ts
+│   ├── mark-notification-read.action.ts
+│   ├── mark-all-notifications-read.action.ts
+│   ├── create-notification.action.ts
+│   └── test-notification.action.ts
+├── components/
+│   ├── notification-icon.tsx        # Bell icon with popover in header
+│   ├── notifications-list.tsx       # Full notifications center page
+│   └── test-notification-button.tsx # Test button for creating notifications
+└── schemas/
+    └── notification.schema.ts
+```
+
+## Database Schema
+
+The `Notification` model includes:
+- `id`: String (cuid)
+- `userId`: String (foreign key to User)
+- `title`: String (required)
+- `subtitle`: String (optional)
+- `detail`: String (optional, supports markdown)
+- `link`: String (optional, URL/path for clickable notifications)
+- `read`: Boolean (default: false)
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+
+## Creating Notifications
+
+### Server Action
+
+Always use the `createNotificationAction` to create notifications:
+
+```typescript
+"use server";
+
+import { createNotificationAction } from "@/features/notifications/actions/create-notification.action";
+
+// Example: Creating a notification with all fields
+await createNotificationAction({
+  userId: session.user.id,
+  title: "New Project Created",
+  subtitle: "Your project has been successfully created",
+  detail: "## Project Details\n\nYour project **Project Name** has been created successfully.",
+  link: "/projects/123", // Optional: makes notification clickable
+});
+```
+
+### Notification Fields
+
+- **title** (required): Main notification message (max 200 chars)
+- **subtitle** (optional): Additional context (max 300 chars)
+- **detail** (optional): Full markdown content for detailed view
+- **link** (optional): URL or path that notification navigates to when clicked
+
+### Using Test Notification Action
+
+For testing, use `testNotificationAction`:
+
+```typescript
+import { testNotificationAction } from "@/features/notifications/actions/test-notification.action";
+
+const result = await testNotificationAction({});
+```
+
+## Notification Icon Component
+
+The notification icon (`notification-icon.tsx`) displays in the header and shows:
+- Unread count badge (white text on red background)
+- Popover with recent notifications (last 10)
+- "More details" link to notifications center
+- "Mark as read" functionality
+- Auto-refresh when notifications are created
+
+### Features
+
+- **Real-time updates**: Listens to window refresh events after `router.refresh()`
+- **Clickable notifications**: Notifications with `link` field navigate on click
+- **Mark as read**: Individual or bulk mark-as-read functionality
+- **See all link**: Always visible at bottom of popover
+
+## Notifications Center Page
+
+The notifications center (`/notifications`) shows:
+- All notifications (up to 50)
+- Full detail content with markdown rendering
+- Clickable notifications with links
+- Highlighting when opened via query parameter (`?id=notificationId`)
+
+### Opening Specific Notification
+
+Navigate to `/notifications?id={notificationId}` to:
+- Scroll to the notification
+- Temporarily highlight it with a ring effect
+- Show full detail content
+
+## Server Actions
+
+### Get Notifications
+
+```typescript
+import { getNotificationsAction } from "@/features/notifications/actions/get-notifications.action";
+
+const result = await getNotificationsAction({
+  limit: 10,           // Number of notifications to fetch (default: 10)
+  offset: 0,           // Pagination offset (default: 0)
+  unreadOnly: false,   // Filter to unread only (default: false)
+});
+```
+
+### Mark as Read
+
+```typescript
+import { markNotificationReadAction } from "@/features/notifications/actions/mark-notification-read.action";
+
+await markNotificationReadAction({
+  notificationId: "notification-id",
+});
+```
+
+### Mark All as Read
+
+```typescript
+import { markAllNotificationsReadAction } from "@/features/notifications/actions/mark-all-notifications-read.action";
+
+await markAllNotificationsReadAction({});
+```
+
+## UI Patterns
+
+### Popover Design
+
+- Shows title and subtitle (no detail section)
+- Date and "More details" link are stacked vertically with spacing
+- Padding: `px-4 py-3` for notification items
+- Max height: 400px with scroll for many notifications
+
+### Notifications Center
+
+- Shows full detail content with markdown rendering
+- Larger spacing for better readability
+- Clickable notifications have visual indicators ("Click to view →")
+- Highlighted notifications have `bg-primary/10` background
+
+## Real-time Updates
+
+The notification system uses Next.js patterns for updates:
+
+1. **Server Actions**: Use `revalidatePath()` to revalidate server components
+2. **Client Components**: Use `router.refresh()` to trigger revalidation
+3. **Auto-refresh**: Notification icon listens to refresh events and refetches unread count
+
+### Update Flow
+
+```typescript
+// In server action
+revalidatePath("/notifications");
+revalidatePath("/dashboard");
+
+// In client component (after action)
+router.refresh();
+
+// Notification icon auto-refreshes via window callback
+// (see notification-icon.tsx for implementation)
+```
+
+## Best Practices
+
+### 1. Notification Content
+
+- **Title**: Keep concise (under 100 characters recommended)
+- **Subtitle**: Provide context or summary
+- **Detail**: Use markdown for rich content in notifications center
+- **Link**: Always provide links for actionable notifications
+
+### 2. When to Create Notifications
+
+Create notifications for:
+- User actions (e.g., "Project created")
+- System events (e.g., "Document processed")
+- Important updates (e.g., "Status changed")
+- Collaboration events (e.g., "Comment added")
+
+### 3. Notification Links
+
+- Use relative paths for internal routes: `/projects/123`
+- Use full URLs for external links: `https://example.com`
+- Links make notifications clickable and mark them as read automatically
+
+### 4. Error Handling
+
+Always handle errors in notification actions:
+
+```typescript
+try {
+  await createNotificationAction({ ... });
+} catch (error) {
+  console.error("Failed to create notification:", error);
+  // Handle error appropriately
+}
+```
+
+## Examples
+
+### Creating a Project Notification
+
+```typescript
+"use server";
+
+import { createNotificationAction } from "@/features/notifications/actions/create-notification.action";
+
+export async function createProjectWithNotification(data: ProjectData) {
+  const project = await db.project.create({ data });
+  
+  // Create notification for the user
+  await createNotificationAction({
+    userId: project.userId,
+    title: "Project Created",
+    subtitle: `Your project "${project.name}" has been created`,
+    detail: `## Project Details\n\n**Name**: ${project.name}\n\n**Description**: ${project.description || "No description"}`,
+    link: `/projects/${project.id}`,
+  });
+  
+  return project;
+}
+```
+
+### Creating a System Notification
+
+```typescript
+"use server";
+
+import { createNotificationAction } from "@/features/notifications/actions/create-notification.action";
+
+export async function notifySystemUpdate(userId: string) {
+  await createNotificationAction({
+    userId,
+    title: "System Update Available",
+    subtitle: "A new version of the application is available",
+    detail: `## Update Details\n\n- **Version**: 2.0.0\n- **Changes**: Improved performance and new features\n- **Action Required**: None`,
+    link: "/settings/updates",
+  });
+}
+```
+
+## Testing
+
+Use the test notification button on the dashboard to create sample notifications with:
+- Title and subtitle
+- Markdown detail content
+- Link to dashboard
+- All fields populated for testing
+
+## Accessibility
+
+- Notification icon has proper ARIA labels
+- Clickable notifications use Link components (not divs with onClick)
+- Focus states are properly styled
+- Keyboard navigation supported
+
+## Performance
+
+- Notifications are paginated (default: 10 in popover, 50 in center)
+- Unread count is fetched separately for efficiency
+- Markdown is only rendered in notifications center (not popover)
+- Real-time updates don't cause full page reloads
