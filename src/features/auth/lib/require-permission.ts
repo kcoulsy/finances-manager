@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/features/shared/lib/auth/config";
-import { db } from "@/features/shared/lib/db/client";
+import type { SessionWithRoles } from "@/features/shared/lib/auth/types";
 import {
   ROLE_PERMISSIONS,
   type PermissionType,
@@ -24,26 +24,11 @@ async function getCurrentUserWithPermissions() {
     throw new Error("Unauthorized: You must be logged in");
   }
 
-  // Get user with their roles
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      userRoles: {
-        include: {
-          role: true,
-        },
-      },
-    },
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  // Get all permissions for the user's roles
-  const userRoles = user.userRoles.map((ur) => ur.role.name);
+  // Roles are now included in the session from customSession plugin
+  const userRoles = (session as SessionWithRoles).roles || [];
   const userPermissions = new Set<PermissionType>();
 
+  // Get all permissions for the user's roles
   for (const roleName of userRoles) {
     const rolePermissions = ROLE_PERMISSIONS[roleName] || [];
     for (const perm of rolePermissions) {
@@ -52,7 +37,7 @@ async function getCurrentUserWithPermissions() {
   }
 
   return {
-    user,
+    user: session.user,
     roles: userRoles,
     permissions: userPermissions,
   };

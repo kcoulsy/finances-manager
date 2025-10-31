@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { customSession } from "better-auth/plugins";
 import { db } from "../db/client";
 import {
   sendVerificationEmail,
@@ -12,12 +13,12 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }, request) => {
+    sendResetPassword: async ({ user, url, token }) => {
       await sendResetPassword({ user, url, token });
     },
   },
   emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }, request) => {
+    sendVerificationEmail: async ({ user, url, token }) => {
       await sendVerificationEmail({ user, url, token });
     },
   },
@@ -29,6 +30,27 @@ export const auth = betterAuth({
     },
   },
   plugins: [
+    customSession(async ({ user, session }) => {
+      // Fetch user roles and add them to the session
+      const userWithRoles = await db.user.findUnique({
+        where: { id: user.id },
+        include: {
+          userRoles: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+
+      const roles = userWithRoles?.userRoles.map((ur) => ur.role.name) || [];
+
+      return {
+        user,
+        session,
+        roles,
+      };
+    }),
     // mcp({
     //   loginPage: "/sign-in", // path to your login page
     // }),

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { auth } from "@/features/shared/lib/auth/config";
-import { db } from "@/features/shared/lib/db/client";
+import type { SessionWithRoles } from "@/features/shared/lib/auth/types";
 import { UserRole, type UserRoleType } from "../constants/roles";
 
 /**
@@ -29,28 +29,11 @@ export async function requireRole(requiredRole: UserRoleType) {
     throw redirect("/login");
   }
 
-  // Get user with their roles
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      userRoles: {
-        include: {
-          role: true,
-        },
-      },
-    },
-  });
+  // Roles are now included in the session from customSession plugin
+  const roles = (session as SessionWithRoles).roles || [];
+  const hasRequiredRole = roles.includes(requiredRole);
 
-  if (!user) {
-    throw redirect("/unauthorized");
-  }
-
-  // Check if user has the required role
-  const hasRole = user.userRoles.some(
-    (userRole) => userRole.role.name === requiredRole
-  );
-
-  if (!hasRole) {
+  if (!hasRequiredRole) {
     // ADMIN role → 404, other roles → unauthorized
     if (requiredRole === UserRole.ADMIN) {
       throw notFound();
@@ -60,7 +43,7 @@ export async function requireRole(requiredRole: UserRoleType) {
   }
 
   return {
-    user,
-    roles: user.userRoles.map((ur) => ur.role.name as UserRoleType),
+    user: session.user,
+    roles: roles as UserRoleType[],
   };
 }

@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { auth } from "@/features/shared/lib/auth/config";
-import { db } from "@/features/shared/lib/db/client";
+import type { SessionWithRoles } from "./types";
 import { UserRole, type UserRoleType } from "@/features/auth/constants/roles";
 
 /**
@@ -23,26 +23,9 @@ export async function hasRole(requiredRole: UserRoleType): Promise<boolean> {
       return false;
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return false;
-    }
-
-    const hasRole = user.userRoles.some(
-      (userRole) => userRole.role.name === requiredRole
-    );
-
-    return hasRole;
+    // Roles are now included in the session from customSession plugin
+    const roles = (session as SessionWithRoles).roles || [];
+    return roles.includes(requiredRole);
   } catch (error) {
     return false;
   }
@@ -64,24 +47,9 @@ export async function getUserRoles(): Promise<string[]> {
       return [];
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return [];
-    }
-
-    return user.userRoles.map((ur) => ur.role.name);
+    // Roles are now included in the session from customSession plugin
+    return (session as SessionWithRoles).roles || [];
   } catch (error) {
     return [];
   }
 }
-
