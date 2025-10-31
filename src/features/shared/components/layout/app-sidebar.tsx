@@ -18,6 +18,7 @@ import {
   SidebarRail,
 } from "@/features/shared/components/ui/sidebar";
 import { AdminNav } from "./admin-nav";
+import { ProjectNav } from "./project-nav";
 
 const navItems = [
   {
@@ -84,6 +85,7 @@ export function AppSidebar({ isAdmin = false, ...props }: AppSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <ProjectNav />
         <AdminNav isAdmin={isAdmin} />
       </SidebarContent>
       <SidebarRail />
