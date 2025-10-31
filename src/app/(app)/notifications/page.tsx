@@ -13,7 +13,7 @@ export default async function NotificationsPage({
   const { id } = await searchParams;
 
   const result = await getNotificationsAction({
-    limit: 50,
+    limit: 20, // Start with 20, then load more with pagination
     offset: 0,
     unreadOnly: false,
   });

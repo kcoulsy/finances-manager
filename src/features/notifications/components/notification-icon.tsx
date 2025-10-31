@@ -210,6 +210,7 @@ export function NotificationIcon() {
                           variant="ghost"
                           size="sm"
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             handleMarkAsRead(notification.id);
                           }}

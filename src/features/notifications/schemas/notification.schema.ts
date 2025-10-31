@@ -12,6 +12,8 @@ export const markNotificationReadSchema = z.object({
 
 export const markAllNotificationsReadSchema = z.object({});
 
+export const deleteAllNotificationsSchema = z.object({});
+
 export const createNotificationSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
@@ -23,5 +25,5 @@ export const createNotificationSchema = z.object({
 export type GetNotificationsInput = z.infer<typeof getNotificationsSchema>;
 export type MarkNotificationReadInput = z.infer<typeof markNotificationReadSchema>;
 export type MarkAllNotificationsReadInput = z.infer<typeof markAllNotificationsReadSchema>;
+export type DeleteAllNotificationsInput = z.infer<typeof deleteAllNotificationsSchema>;
 export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;
-

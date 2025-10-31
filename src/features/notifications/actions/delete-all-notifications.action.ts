@@ -3,12 +3,12 @@
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
-import { markAllNotificationsReadSchema } from "../schemas/notification.schema";
+import { deleteAllNotificationsSchema } from "../schemas/notification.schema";
 import { headers } from "next/headers";
 
-export const markAllNotificationsReadAction = actionClient
-  .inputSchema(markAllNotificationsReadSchema)
-  .action(async ({ parsedInput }) => {
+export const deleteAllNotificationsAction = actionClient
+  .inputSchema(deleteAllNotificationsSchema)
+  .action(async () => {
     try {
       const session = await auth.api.getSession({
         headers: await headers(),
@@ -18,29 +18,27 @@ export const markAllNotificationsReadAction = actionClient
         throw new Error("Unauthorized");
       }
 
-      await db.notification.updateMany({
+      // Delete all notifications for the user
+      await db.notification.deleteMany({
         where: {
           userId: session.user.id,
-          read: false,
-        },
-        data: {
-          read: true,
         },
       });
 
       return {
         success: true,
         toast: {
-          message: "All notifications marked as read",
+          message: "All notifications deleted",
           type: "success",
-          description: "All notifications have been marked as read.",
+          description: "All notifications have been permanently deleted.",
         },
       };
     } catch (error) {
-      console.error("Mark all notifications read error:", error);
+      console.error("Delete all notifications error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to mark all notifications as read"
+        error instanceof Error
+          ? error.message
+          : "Failed to delete all notifications"
       );
     }
   });
-
