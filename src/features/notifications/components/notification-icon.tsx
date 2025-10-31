@@ -171,6 +171,13 @@ export function NotificationIcon() {
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => {
+                const handleMoreDetails = (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setOpen(false);
+                  router.push(`/notifications?id=${notification.id}`);
+                };
+
                 const notificationContent = (
                   <>
                     <div className="flex items-start justify-between gap-3">
@@ -193,16 +200,26 @@ export function NotificationIcon() {
                               minute: "2-digit",
                             })}
                           </p>
-                          <Link
-                            href={`/notifications?id=${notification.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpen(false);
-                            }}
-                            className="text-xs text-primary hover:underline w-fit"
-                          >
-                            More details →
-                          </Link>
+                          {notification.link ? (
+                            <button
+                              type="button"
+                              onClick={handleMoreDetails}
+                              className="text-xs text-primary hover:underline w-fit text-left"
+                            >
+                              More details →
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/notifications?id=${notification.id}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpen(false);
+                              }}
+                              className="text-xs text-primary hover:underline w-fit"
+                            >
+                              More details →
+                            </Link>
+                          )}
                         </div>
                       </div>
                       {!notification.read && (

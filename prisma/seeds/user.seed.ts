@@ -53,6 +53,133 @@ async function seedUsers() {
       password: "password",
       roles: [UserRole.USER],
     },
+    // Additional users for testing pagination
+    {
+      name: "John Doe",
+      email: "john@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Jane Smith",
+      email: "jane@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Bob Johnson",
+      email: "bob@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Alice Williams",
+      email: "alice@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Charlie Brown",
+      email: "charlie@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Diana Prince",
+      email: "diana@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Edward Norton",
+      email: "edward@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Fiona Apple",
+      email: "fiona@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "George Clooney",
+      email: "george@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Helen Hunt",
+      email: "helen@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Ian McKellen",
+      email: "ian@example.com",
+      password: "password",
+      roles: [UserRole.MODERATOR],
+    },
+    {
+      name: "Julia Roberts",
+      email: "julia@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Kevin Spacey",
+      email: "kevin@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Linda Hamilton",
+      email: "linda@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Michael Jordan",
+      email: "michael@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Nancy Drew",
+      email: "nancy@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Oliver Twist",
+      email: "oliver@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Patricia Johnson",
+      email: "patricia@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Quentin Tarantino",
+      email: "quentin@example.com",
+      password: "password",
+      roles: [UserRole.MODERATOR],
+    },
+    {
+      name: "Rachel Green",
+      email: "rachel@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
+    {
+      name: "Steve Jobs",
+      email: "steve@example.com",
+      password: "password",
+      roles: [UserRole.USER],
+    },
   ];
 
   for (const userData of users) {
