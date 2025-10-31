@@ -24,5 +24,11 @@ export const deleteAccountAction = actionClient
       headers: await headers(),
     });
 
-    throw redirect("/login");
+    redirect("/login");
+
+    // This will never execute, but TypeScript needs a return
+    return {
+      success: true,
+      message: "Account deleted successfully",
+    };
   });

@@ -3,7 +3,8 @@
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { auth } from "@/features/shared/lib/auth/config";
 import { forgotPasswordSchema } from "../schemas/auth.schema";
-import { sendPasswordResetEmail } from "@/features/shared/lib/utils/email";
+// TODO: Implement email utility
+// import { sendPasswordResetEmail } from "@/features/shared/lib/utils/email";
 import { headers } from "next/headers";
 
 export const forgotPasswordAction = actionClient
@@ -21,10 +22,9 @@ export const forgotPasswordAction = actionClient
 
       // Generate reset URL (better-auth handles the token generation internally)
       // In a real scenario, better-auth will send the email via configured email service
-      // For now, we'll just log it
-      const resetUrl = `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/reset-password`;
-      
-      await sendPasswordResetEmail(parsedInput.email, resetUrl);
+      // TODO: Implement email sending utility
+      // const resetUrl = `${process.env.BETTER_AUTH_URL || "http://localhost:3000"}/reset-password`;
+      // await sendPasswordResetEmail(parsedInput.email, resetUrl);
 
       return {
         success: true,

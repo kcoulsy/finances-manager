@@ -16,5 +16,12 @@ export const logoutAction = actionClient.action(async () => {
       error instanceof Error ? error.message : "Failed to sign out"
     );
   }
-  throw redirect("/login");
+
+  redirect("/login");
+
+  // This will never execute, but TypeScript needs a return
+  return {
+    success: true,
+    message: "Signed out successfully",
+  };
 });
