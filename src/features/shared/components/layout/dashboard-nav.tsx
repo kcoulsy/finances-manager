@@ -3,6 +3,7 @@ import { SidebarTrigger } from "@/features/shared/components/ui/sidebar";
 import { UserNav } from "./user-nav";
 import { AppBreadcrumbs } from "./app-breadcrumbs";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import { logger } from "../../lib/logger";
 
 export async function DashboardNav() {
   const session = await requireAuth();
