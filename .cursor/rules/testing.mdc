@@ -1,0 +1,685 @@
+---
+description: Testing guidelines using Vitest with emphasis on avoiding mocks and co-locating tests
+globs: 
+alwaysApply: true
+---
+
+# Testing Guidelines
+
+This project uses **Vitest** for testing. Tests should be reliable, maintainable, and test real behavior rather than implementation details.
+
+## File Structure
+
+### Test File Location
+- **Always** co-locate test files next to the code they test
+- Test files should be named `[filename].test.ts` or `[filename].test.tsx`
+- Place test files in the same directory as the code being tested
+
+### Structure Examples
+
+```
+✅ Good - Co-located tests
+src/features/auth/actions/
+├── login.action.ts
+└── login.action.test.ts
+
+src/features/shared/components/ui/
+├── button.tsx
+└── button.test.tsx
+
+src/features/projects/components/
+├── project-form.tsx
+└── project-form.test.tsx
+
+❌ Bad - Separate test directory
+src/features/auth/actions/
+└── login.action.ts
+
+src/tests/
+└── login.action.test.ts  # Too far from source
+```
+
+## Key Principles
+
+### 1. Avoid Mocking Where Possible
+
+**Default to testing real behavior over mocked implementations.**
+
+Mocking should be a last resort, not the default approach. Real tests provide more confidence and catch more bugs.
+
+```typescript
+// ✅ Good - Test with real database/client
+import { db } from "@/features/shared/lib/db/client";
+import { createProjectAction } from "./create-project.action";
+
+describe("createProjectAction", () => {
+  it("creates a project in the database", async () => {
+    const result = await createProjectAction({
+      name: "Test Project",
+      description: "Test description",
+    });
+
+    // Verify with real database query
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+    });
+
+    expect(project).toBeDefined();
+    expect(project?.name).toBe("Test Project");
+  });
+});
+
+// ❌ Bad - Unnecessary mocking
+import { db } from "@/features/shared/lib/db/client";
+import { createProjectAction } from "./create-project.action";
+import { vi } from "vitest";
+
+describe("createProjectAction", () => {
+  it("creates a project", async () => {
+    vi.spyOn(db.project, "create").mockResolvedValue({
+      id: "123",
+      name: "Test Project",
+    });
+
+    const result = await createProjectAction({
+      name: "Test Project",
+    });
+
+    // This doesn't actually test if the database works
+    expect(result.data?.project.name).toBe("Test Project");
+  });
+});
+```
+
+### When Mocking is Acceptable
+
+Only mock when:
+1. **External APIs**: HTTP requests to third-party services
+2. **Time-dependent code**: Date/time functions that need specific values
+3. **Expensive operations**: File I/O, image processing, etc.
+4. **Untestable side effects**: Browser APIs that don't work in Node.js
+5. **Testing error paths**: Simulating errors that are hard to reproduce
+
+```typescript
+// ✅ Good - Mock external API
+import { vi } from "vitest";
+
+describe("sendEmail", () => {
+  it("handles API errors gracefully", async () => {
+    vi.spyOn(emailService, "send").mockRejectedValue(
+      new Error("API rate limit exceeded")
+    );
+
+    const result = await sendEmailAction({ to: "test@example.com" });
+
+    expect(result.serverError).toContain("rate limit");
+  });
+});
+
+// ✅ Good - Mock date for time-dependent tests
+import { vi } from "vitest";
+
+describe("isExpired", () => {
+  it("returns true for expired dates", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-01-15"));
+
+    const expired = isExpired(new Date("2024-01-01"));
+
+    expect(expired).toBe(true);
+
+    vi.useRealTimers();
+  });
+});
+```
+
+### 2. Test Real User Interactions
+
+Use Testing Library's user-centric queries and interactions rather than testing implementation details.
+
+```typescript
+// ✅ Good - Test from user perspective
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { LoginForm } from "./login-form";
+
+describe("LoginForm", () => {
+  it("submits form when user enters credentials", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(screen.getByLabelText(/email/i), "test@example.com");
+    await user.type(screen.getByLabelText(/password/i), "password123");
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+    });
+  });
+});
+
+// ❌ Bad - Testing implementation details
+describe("LoginForm", () => {
+  it("calls onSubmit with form data", () => {
+    const onSubmit = vi.fn();
+    const { container } = render(<LoginForm onSubmit={onSubmit} />);
+
+    const form = container.querySelector("form");
+    const emailInput = container.querySelector('input[name="email"]');
+    const passwordInput = container.querySelector('input[name="password"]');
+
+    // Testing DOM structure instead of user behavior
+    expect(form).toBeInTheDocument();
+    expect(emailInput).toBeInTheDocument();
+  });
+});
+```
+
+### 3. Test Behavior, Not Implementation
+
+Focus on what the code does, not how it does it.
+
+```typescript
+// ✅ Good - Test behavior
+describe("calculateTotal", () => {
+  it("calculates correct total with tax", () => {
+    const total = calculateTotal(100, 0.1);
+
+    expect(total).toBe(110);
+  });
+});
+
+// ❌ Bad - Testing implementation details
+describe("calculateTotal", () => {
+  it("multiplies amount by tax rate and adds amount", () => {
+    const spy = vi.spyOn(Math, "multiply");
+    calculateTotal(100, 0.1);
+
+    // Testing HOW it calculates instead of WHAT it returns
+    expect(spy).toHaveBeenCalled();
+  });
+});
+```
+
+## Testing Patterns
+
+### Server Actions
+
+Test server actions with real database operations when possible:
+
+```typescript
+import { db } from "@/features/shared/lib/db/client";
+import { createProjectAction } from "./create-project.action";
+import { beforeEach, afterEach } from "vitest";
+
+describe("createProjectAction", () => {
+  beforeEach(async () => {
+    // Clean up before each test
+    await db.project.deleteMany();
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await db.project.deleteMany();
+  });
+
+  it("creates a project successfully", async () => {
+    const result = await createProjectAction({
+      name: "New Project",
+      description: "Project description",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.project).toBeDefined();
+
+    // Verify in database
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+    });
+
+    expect(project?.name).toBe("New Project");
+  });
+
+  it("validates required fields", async () => {
+    const result = await createProjectAction({
+      name: "",
+      description: "",
+    });
+
+    expect(result.validationErrors).toBeDefined();
+    expect(result.validationErrors?.fieldErrors?.name).toBeDefined();
+  });
+});
+```
+
+### React Components
+
+Test components with real user interactions:
+
+```typescript
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ProjectForm } from "./project-form";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+describe("ProjectForm", () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  it("renders form fields", () => {
+    render(<ProjectForm />, { wrapper });
+
+    expect(screen.getByLabelText(/project name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+  });
+
+  it("submits form with valid data", async () => {
+    const user = userEvent.setup();
+    render(<ProjectForm />, { wrapper });
+
+    await user.type(screen.getByLabelText(/project name/i), "My Project");
+    await user.type(
+      screen.getByLabelText(/description/i),
+      "Project description"
+    );
+    await user.click(screen.getByRole("button", { name: /create/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/project created/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Utilities and Helpers
+
+Test pure functions without mocks:
+
+```typescript
+import { formatDate, calculateAge } from "./date-utils";
+
+describe("formatDate", () => {
+  it("formats date correctly", () => {
+    const date = new Date("2024-01-15");
+    const formatted = formatDate(date);
+
+    expect(formatted).toBe("January 15, 2024");
+  });
+});
+
+describe("calculateAge", () => {
+  it("calculates age correctly", () => {
+    const birthDate = new Date("1990-01-15");
+    const today = new Date("2024-01-15");
+    
+    const age = calculateAge(birthDate, today);
+
+    expect(age).toBe(34);
+  });
+});
+```
+
+### Zod Schemas
+
+Test validation schemas directly:
+
+```typescript
+import { projectSchema } from "../schemas/project.schema";
+
+describe("projectSchema", () => {
+  it("validates valid project data", () => {
+    const validData = {
+      name: "Test Project",
+      description: "Test description",
+    };
+
+    const result = projectSchema.safeParse(validData);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.name).toBe("Test Project");
+    }
+  });
+
+  it("rejects invalid project data", () => {
+    const invalidData = {
+      name: "",
+      description: "",
+    };
+
+    const result = projectSchema.safeParse(invalidData);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.errors).toBeDefined();
+    }
+  });
+});
+```
+
+## Test Organization
+
+### Structure Tests by Feature
+
+Organize tests to mirror your feature structure:
+
+```
+src/features/projects/
+├── actions/
+│   ├── create-project.action.ts
+│   └── create-project.action.test.ts
+├── components/
+│   ├── project-form.tsx
+│   └── project-form.test.tsx
+├── schemas/
+│   ├── project.schema.ts
+│   └── project.schema.test.ts
+└── hooks/
+    ├── use-projects.ts
+    └── use-projects.test.ts
+```
+
+### Test Naming
+
+Use descriptive test names that explain what is being tested:
+
+```typescript
+// ✅ Good - Descriptive names
+describe("createProjectAction", () => {
+  it("creates a project with valid data", async () => {
+    // ...
+  });
+
+  it("returns validation errors for missing required fields", async () => {
+    // ...
+  });
+
+  it("handles database connection errors gracefully", async () => {
+    // ...
+  });
+});
+
+// ❌ Bad - Vague names
+describe("createProjectAction", () => {
+  it("works", async () => {
+    // ...
+  });
+
+  it("test1", async () => {
+    // ...
+  });
+});
+```
+
+## Setup and Teardown
+
+### Database Cleanup
+
+Always clean up test data:
+
+```typescript
+import { db } from "@/features/shared/lib/db/client";
+import { beforeEach, afterEach } from "vitest";
+
+describe("project actions", () => {
+  beforeEach(async () => {
+    // Clean state before each test
+    await db.project.deleteMany();
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await db.project.deleteMany();
+  });
+});
+```
+
+### Test Isolation
+
+Each test should be independent and not rely on other tests:
+
+```typescript
+// ✅ Good - Independent tests
+describe("calculateTotal", () => {
+  it("calculates total for positive amounts", () => {
+    expect(calculateTotal(100, 0.1)).toBe(110);
+  });
+
+  it("calculates total for zero amount", () => {
+    expect(calculateTotal(0, 0.1)).toBe(0);
+  });
+
+  it("calculates total for negative amounts", () => {
+    expect(calculateTotal(-100, 0.1)).toBe(-110);
+  });
+});
+
+// ❌ Bad - Tests depend on each other
+describe("calculateTotal", () => {
+  let result: number;
+
+  it("calculates total", () => {
+    result = calculateTotal(100, 0.1);
+    expect(result).toBe(110);
+  });
+
+  it("uses previous result", () => {
+    // Depends on previous test
+    expect(result).toBe(110);
+  });
+});
+```
+
+## Best Practices
+
+### 1. Prefer Integration Tests
+
+Integration tests test multiple units working together and catch more bugs:
+
+```typescript
+// ✅ Good - Integration test
+describe("createProjectFlow", () => {
+  it("creates project end-to-end", async () => {
+    const result = await createProjectAction({
+      name: "Test Project",
+    });
+
+    // Test action, database, and validation together
+    expect(result.data?.success).toBe(true);
+
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+    });
+
+    expect(project).toBeDefined();
+  });
+});
+```
+
+### 2. Test Error Cases
+
+Always test error paths and edge cases:
+
+```typescript
+describe("getProjectAction", () => {
+  it("returns project when found", async () => {
+    // ...
+  });
+
+  it("returns error when project not found", async () => {
+    const result = await getProjectAction({
+      projectId: "non-existent-id",
+    });
+
+    expect(result.serverError).toBeDefined();
+  });
+
+  it("validates project ID format", async () => {
+    const result = await getProjectAction({
+      projectId: "",
+    });
+
+    expect(result.validationErrors).toBeDefined();
+  });
+});
+```
+
+### 3. Use Descriptive Assertions
+
+Make test failures easy to understand:
+
+```typescript
+// ✅ Good - Clear assertions
+expect(project.name).toBe("Test Project");
+expect(result.data?.success).toBe(true);
+expect(screen.getByRole("button", { name: /submit/i })).toBeDisabled();
+
+// ❌ Bad - Hard to debug
+expect(result).toBeDefined();
+expect(project).toBeTruthy();
+expect(button).toBeInTheDocument();
+```
+
+### 4. Keep Tests Fast
+
+- Use in-memory database for tests when possible
+- Avoid unnecessary waits and timeouts
+- Clean up resources promptly
+
+### 5. Test Accessibility
+
+Use accessibility-focused queries from Testing Library:
+
+```typescript
+// ✅ Good - Accessibility-focused queries
+screen.getByRole("button", { name: /submit/i });
+screen.getByLabelText(/email address/i);
+screen.getByText(/welcome/i);
+
+// ❌ Bad - Implementation-focused queries
+container.querySelector("button");
+container.querySelector('input[name="email"]');
+```
+
+## Running Tests
+
+### Test Commands
+
+```bash
+# Run tests in watch mode (development)
+npm test
+
+# Run tests once (CI)
+npm run test:run
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+## Common Patterns
+
+### Testing Server Components
+
+Server components should be tested with real data fetching:
+
+```typescript
+import { render } from "@testing-library/react";
+import { ProjectsPage } from "./page";
+
+describe("ProjectsPage", () => {
+  it("displays projects from database", async () => {
+    // Use real database
+    const projects = await getProjectsAction();
+    
+    const { container } = await render(ProjectsPage({ projects }));
+    
+    expect(container).toHaveTextContent(projects[0].name);
+  });
+});
+```
+
+### Testing Client Components with Hooks
+
+Wrap components with necessary providers:
+
+```typescript
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render } from "@testing-library/react";
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
+describe("ProjectsList", () => {
+  it("renders projects", () => {
+    render(<ProjectsList />, { wrapper: createWrapper() });
+    // ...
+  });
+});
+```
+
+## Anti-Patterns to Avoid
+
+### ❌ Over-Mocking
+
+Don't mock everything - it defeats the purpose of testing:
+
+```typescript
+// ❌ Bad - Over-mocking
+vi.spyOn(db.project, "create").mockResolvedValue({});
+vi.spyOn(db.project, "findUnique").mockResolvedValue({});
+vi.spyOn(auth, "getSession").mockResolvedValue({});
+
+// This doesn't test anything real
+```
+
+### ❌ Testing Implementation Details
+
+Don't test HOW code works, test WHAT it does:
+
+```typescript
+// ❌ Bad - Testing internals
+expect(component.state.isLoading).toBe(true);
+expect(fn.mock.calls.length).toBe(1);
+
+// ✅ Good - Testing behavior
+expect(screen.getByText(/loading/i)).toBeInTheDocument();
+expect(screen.getByText(/success/i)).toBeInTheDocument();
+```
+
+### ❌ Brittle Tests
+
+Don't write tests that break when implementation changes:
+
+```typescript
+// ❌ Bad - Brittle
+expect(container.querySelector("div > div > button")).toBeInTheDocument();
+
+// ✅ Good - Robust
+expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
+```
+
+## Summary
+
+1. **Co-locate tests** with the code they test
+2. **Avoid mocking** - test real behavior when possible
+3. **Test user interactions** - use Testing Library's user-centric APIs
+4. **Test behavior** - focus on what code does, not how
+5. **Test error cases** - don't just test happy paths
+6. **Keep tests independent** - each test should stand alone
+7. **Use descriptive names** - make test failures easy to understand
+8. **Clean up test data** - use beforeEach/afterEach for cleanup
