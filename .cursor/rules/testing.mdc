@@ -594,13 +594,52 @@ expect(project).toBeTruthy();
 expect(button).toBeInTheDocument();
 ```
 
-### 4. Keep Tests Fast
+### 4. Never Wrap Expects in If Statements
+
+**Always write direct assertions. Never wrap `expect` calls in conditional statements.**
+
+Conditional assertions hide test failures and make debugging difficult. Use non-null assertions or type narrowing if needed.
+
+```typescript
+// ✅ Good - Direct assertions with non-null assertion
+expect(notFoundError).not.toBeNull();
+expect(
+  notFoundError!.message.includes("NEXT_NOT_FOUND") ||
+    notFoundError!.message.includes("Unauthorized"),
+).toBe(true);
+
+// ✅ Good - Direct assertions after type narrowing with expect
+expect(result).toBeDefined();
+expect(result.data?.success).toBe(true);
+
+// ❌ Bad - Wrapped in if statement (hides failures)
+expect(notFoundError).toBeDefined();
+if (notFoundError) {
+  expect(
+    notFoundError.message.includes("NEXT_NOT_FOUND") ||
+      notFoundError.message.includes("Unauthorized"),
+  ).toBe(true);
+}
+
+// ❌ Bad - Conditional assertion
+if (result) {
+  expect(result.data?.success).toBe(true);
+}
+```
+
+**When to use non-null assertions:**
+- After asserting that a value is not null/undefined, use `!` operator to tell TypeScript the value is safe
+- Example: `expect(error).not.toBeNull(); expect(error!.message).toContain("error");`
+
+**Note:** The only exception is when using type guards with `safeParse` from Zod, where you need to check the `success` property before accessing `data` or `error`.
+
+### 5. Keep Tests Fast
 
 - Use in-memory database for tests when possible
 - Avoid unnecessary waits and timeouts
 - Clean up resources promptly
 
-### 5. Test Accessibility
+### 6. Test Accessibility
 
 Use accessibility-focused queries from Testing Library:
 

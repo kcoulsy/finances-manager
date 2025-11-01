@@ -7,14 +7,30 @@ vi.mock("next/headers", () => ({
   headers: vi.fn(),
 }));
 
-// Mock the auth API since it's an external service
-vi.mock("@/features/shared/lib/auth/config", () => ({
-  auth: {
-    api: {
-      getSession: vi.fn(),
+// Mock the auth API - we'll use the real better-auth with test database,
+// but need to mock it for testing purposes
+vi.mock("@/features/shared/lib/auth/config", async () => {
+  const actual = await vi.importActual<typeof import("@/features/shared/lib/auth/config")>(
+    "@/features/shared/lib/auth/config"
+  );
+  return {
+    ...actual,
+    auth: {
+      ...actual.auth,
+      api: {
+        ...actual.auth.api,
+        getSession: vi.fn(),
+        signUpEmail: vi.fn(),
+        signInEmail: vi.fn(),
+        signOut: vi.fn(),
+        changePassword: vi.fn(),
+        resetPassword: vi.fn(),
+        requestPasswordReset: vi.fn(),
+        deleteUser: vi.fn(),
+      },
     },
-  },
-}));
+  };
+});
 
 // Mock Next.js navigation functions that throw errors
 vi.mock("next/navigation", () => ({
