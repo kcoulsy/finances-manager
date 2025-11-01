@@ -51,3 +51,7 @@ try {
   // Ignore errors - database might already be set up
   console.warn("Database setup warning (this is usually fine):", error);
 }
+
+// Note: Cleanup is now handled by globalSetup (global-setup.ts)
+// This file only handles mocks and database setup, not data cleanup
+// Cleanup runs once at the start via globalSetup, which runs before any test files

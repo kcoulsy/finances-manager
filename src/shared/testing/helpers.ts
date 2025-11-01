@@ -184,25 +184,25 @@ export async function cleanupTestData(): Promise<void> {
 }
 
 /**
- * Sets up beforeEach and afterEach hooks for test cleanup
+ * Sets up beforeEach hooks for mock initialization
  * Call this once in your test file
  *
- * Note: beforeEach hooks run in registration order, so cleanup will run
- * before any test-specific beforeEach hooks that create data
+ * Note: This does NOT clean up data - cleanup only happens:
+ * - Once at the start of the entire test suite (global setup)
+ * - Once at the end of the entire test suite (global teardown)
+ *
+ * This prevents cleanup from interfering between test files or individual tests.
  */
 export function setupTestHooks(): void {
-  // Clean up at the start of the test file to ensure clean state
-  // This runs once before all tests in the file
+  // Reset mocks at the start of each test file to ensure clean state
+  // This does NOT cleanup data - that happens only in global setup/teardown
   beforeAll(async () => {
-    await cleanupTestData();
-    // Reset mocks at the start of each test file to ensure clean state
     vi.resetAllMocks();
     // Ensure headers mock is initialized
     vi.mocked(headers).mockResolvedValue(new Headers() as any);
   });
 
   // Initialize headers mock before each test
-  // Cleanup happens in global teardown after all test files complete
   beforeEach(async () => {
     // Just ensure headers mock is initialized
     vi.mocked(headers).mockResolvedValue(new Headers() as any);

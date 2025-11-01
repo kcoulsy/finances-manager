@@ -511,15 +511,18 @@ describe("createProjectAction", () => {
 ```
 
 **When using `setupTestHooks()`:**
-- `beforeAll` cleanup runs once at the start of each test file to ensure a clean starting state
-- `beforeEach` only initializes mocks - it does NOT cleanup data (cleanup in beforeEach causes race conditions)
+- `setupTestHooks()` does NOT clean up data - it only initializes mocks
+- `beforeAll` only resets mocks - it does NOT cleanup data
+- `beforeEach` only initializes headers mock - it does NOT cleanup data
 - Always create data in your test file's `beforeEach` AFTER `setupTestHooks()` is called
-- Global teardown (`src/shared/testing/teardown.ts`) runs once after ALL test files complete
-- This prevents cleanup from interfering with tests that are still running or causing race conditions
-- Cleanup happens at the start of each test file (`beforeAll`) and after all test files complete (global teardown)
+- Cleanup happens in two places only:
+  1. **Global setup** (`src/shared/testing/setup.ts`) - runs once at the start of the entire test suite
+  2. **Global teardown** (`src/shared/testing/teardown.ts`) - runs once after ALL test files complete
+- This prevents cleanup from interfering between test files or individual tests
 - If a test needs to delete data (e.g., for error testing), create it fresh in that test itself
 - Tests must never rely on data from other tests, even in the same file
-- Each test should be completely isolated - cleanup from one test should never affect another test's execution
+- Each test should be completely isolated - cleanup should never interfere with test execution
+- **Never put cleanup in `beforeEach` or `afterEach`** - this causes race conditions and data deletion between tests
 
 ## Best Practices
 
@@ -614,7 +617,95 @@ container.querySelector('input[name="email"]');
 
 ## Running Tests
 
-### Test Commands
+### Use Vitest MCP Server
+
+**Always use the Vitest MCP server instead of terminal commands when running tests from the agent.**
+
+The Vitest MCP server provides:
+- Structured test results with detailed output
+- Better integration with the codebase
+- Automatic project root detection
+- Optimized test execution
+
+```typescript
+// ✅ Good - Use Vitest MCP server
+import { mcp_vitest_set_project_root, mcp_vitest_run_tests } from "@/mcp-tools";
+
+// Set project root first
+await mcp_vitest_set_project_root({
+  path: "/absolute/path/to/project"
+});
+
+// Run tests for specific files or directories
+await mcp_vitest_run_tests({
+  target: "src/features/projects/actions/update-project.action.test.ts",
+  format: "detailed", // or "summary"
+  showLogs: false // Set to true to see console output
+});
+
+// ❌ Bad - Don't use terminal commands
+run_terminal_cmd({
+  command: "npm test -- src/features/projects/actions/update-project.action.test.ts"
+});
+```
+
+**Key Points:**
+1. **Always set project root first** using `mcp_vitest_set_project_root` before running tests
+2. **Use detailed format** when debugging failures, summary format for quick checks
+3. **Enable showLogs** (`showLogs: true`) when you need to see console output from tests
+4. **Target specific files or directories** using relative paths from project root
+5. **Prefer MCP server over terminal** - provides better structured output and integration
+
+### Test the Whole Suite After Individual Tests
+
+**Always run the entire test suite after individual tests pass to ensure they don't conflict with each other.**
+
+When writing or modifying tests:
+1. **First**: Run individual test files to verify they pass in isolation
+2. **Then**: Run the entire test suite to ensure tests don't interfere with each other
+3. **Fix any conflicts**: If tests pass individually but fail when run together, investigate:
+   - Shared state between tests
+   - Cleanup interfering with other tests
+   - Race conditions from cleanup happening at wrong times
+   - Missing isolation in test setup
+
+```typescript
+// ✅ Good - Test workflow
+// 1. Run individual test file
+await mcp_vitest_run_tests({
+  target: "src/features/projects/actions/create-project.action.test.ts",
+  format: "detailed"
+});
+
+// 2. After individual tests pass, run entire suite
+await mcp_vitest_run_tests({
+  target: "src/features/projects/actions", // or entire test suite
+  format: "detailed"
+});
+
+// ❌ Bad - Only testing individual files
+// Tests might pass individually but fail when run together
+await mcp_vitest_run_tests({
+  target: "src/features/projects/actions/create-project.action.test.ts"
+});
+// Missing: Not testing the whole suite to catch conflicts
+```
+
+**Why This Matters:**
+- Individual tests might pass because cleanup happens between files
+- Tests might interfere with each other if cleanup happens at wrong times
+- Shared state or race conditions only appear when multiple test files run together
+- Ensures test isolation and prevents flaky tests
+
+**Common Issues to Watch For:**
+- Foreign key constraint violations when one test file's cleanup deletes data another test needs
+- Tests passing individually but failing in the suite due to cleanup timing
+- Race conditions from cleanup happening in `beforeAll` of each test file
+- Tests relying on data from previous test files
+
+### Test Commands (Manual Testing)
+
+For manual testing outside the agent, you can still use terminal commands:
 
 ```bash
 # Run tests in watch mode (development)
