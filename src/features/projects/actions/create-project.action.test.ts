@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
-import { createProjectAction } from "./create-project.action";
 import {
-  setupTestUserWithSession,
-  setupTestHooks,
-  mockNoAuthSession,
   mockAuthSession,
+  mockNoAuthSession,
+  setupTestHooks,
+  setupTestUserWithSession,
   type TestUser,
 } from "@/shared/testing/helpers";
+import { createProjectAction } from "./create-project.action";
 
 describe("createProjectAction", () => {
   let testUser: TestUser;
@@ -138,7 +138,7 @@ describe("createProjectAction", () => {
   it("handles database errors gracefully", async () => {
     // Create a fresh user for this test to avoid interfering with other tests
     const errorTestUser = await setupTestUserWithSession();
-    
+
     // Delete the user to cause a foreign key constraint error
     await db.user.delete({
       where: { id: errorTestUser.id },
@@ -174,7 +174,11 @@ describe("createProjectAction", () => {
     });
 
     expect(projects).toHaveLength(2);
-    expect(projects.map((p: { name: string }) => p.name)).toContain("Project 1");
-    expect(projects.map((p: { name: string }) => p.name)).toContain("Project 2");
+    expect(projects.map((p: { name: string }) => p.name)).toContain(
+      "Project 1",
+    );
+    expect(projects.map((p: { name: string }) => p.name)).toContain(
+      "Project 2",
+    );
   });
 });
