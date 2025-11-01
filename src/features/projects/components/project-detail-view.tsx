@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProjectForm } from "./project-form";
 import { DeleteProjectForm } from "./delete-project-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import type { Project } from "@prisma/client";
 
@@ -59,8 +65,12 @@ export function ProjectDetailView({ project }: ProjectDetailViewProps) {
             </div>
             {project.description && (
               <div className="md:col-span-2">
-                <p className="text-sm text-muted-foreground mb-1">Description</p>
-                <p className="text-sm whitespace-pre-wrap">{project.description}</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Description
+                </p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {project.description}
+                </p>
               </div>
             )}
             <div>
@@ -77,9 +87,7 @@ export function ProjectDetailView({ project }: ProjectDetailViewProps) {
             </div>
           </div>
           <div className="flex gap-2 pt-4 border-t">
-            <Button onClick={() => setIsEditing(true)}>
-              Edit Project
-            </Button>
+            <Button onClick={() => setIsEditing(true)}>Edit Project</Button>
           </div>
         </CardContent>
       </Card>
@@ -88,4 +96,3 @@ export function ProjectDetailView({ project }: ProjectDetailViewProps) {
     </div>
   );
 }
-

@@ -51,7 +51,7 @@ async function getCurrentUserWithPermissions() {
  */
 function hasAnyPermission(
   userPermissions: Set<PermissionType>,
-  requiredPermissions: PermissionType | PermissionType[]
+  requiredPermissions: PermissionType | PermissionType[],
 ): boolean {
   const permissionsArray = Array.isArray(requiredPermissions)
     ? requiredPermissions
@@ -106,7 +106,7 @@ function isAdminPermission(permissionString: string): boolean {
  * ```
  */
 export async function requirePermission(
-  requiredPermissions: PermissionType | PermissionType[]
+  requiredPermissions: PermissionType | PermissionType[],
 ) {
   const { user, roles, permissions } = await getCurrentUserWithPermissions();
 
@@ -119,7 +119,7 @@ export async function requirePermission(
     // Convert permissions to strings and check if any is admin permission
     const permissionStrings = permissionsArray.map(String);
     const hasAdminPermission = permissionStrings.some((p) =>
-      isAdminPermission(p)
+      isAdminPermission(p),
     );
 
     if (hasAdminPermission) {
@@ -144,7 +144,7 @@ export async function requirePermission(
  */
 function checkWildcardPermission(
   userPermissions: Set<PermissionType>,
-  requiredPermission: PermissionType
+  requiredPermission: PermissionType,
 ): boolean {
   // Convert permission to string
   const permissionString = String(requiredPermission);

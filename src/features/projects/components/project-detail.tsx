@@ -35,4 +35,3 @@ export async function ProjectDetail({ projectId }: ProjectDetailProps) {
 
   return <ProjectDetailView project={result.data.project} />;
 }
-

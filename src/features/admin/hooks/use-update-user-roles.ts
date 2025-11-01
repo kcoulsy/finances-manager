@@ -13,7 +13,7 @@ export function useUpdateUserRoles() {
 
       // Show toast from action result (handles both errors and success toasts)
       showToastFromAction(result);
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -32,4 +32,3 @@ export function useUpdateUserRoles() {
     },
   });
 }
-

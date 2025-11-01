@@ -8,7 +8,7 @@ export function useProjects() {
     queryKey: ["projects"],
     queryFn: async () => {
       const result = await getProjectsAction();
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -21,4 +21,3 @@ export function useProjects() {
     },
   });
 }
-

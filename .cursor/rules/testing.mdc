@@ -475,6 +475,52 @@ describe("calculateTotal", () => {
 });
 ```
 
+### Test Independence and Race Conditions
+
+**Tests must be completely independent of each other. There should never be a situation where one test causes a race condition or removes data that another test needs.**
+
+Key principles:
+1. **Each test is responsible for its own setup**: Tests should create all the data they need in their own `beforeEach` or at the start of the test
+2. **Cleanup should not interfere with test execution**: Cleanup should only happen in `afterEach`, not in `beforeEach` where it might delete data needed by the test
+3. **No shared state between tests**: Tests should not rely on data created by other tests, even in the same file
+4. **Test files should be isolated**: One test file's cleanup should never affect another test file's execution
+
+```typescript
+// ✅ Good - Cleanup only in afterEach, data creation in beforeEach
+describe("createProjectAction", () => {
+  setupTestHooks(); // Sets up cleanup in afterEach
+
+  beforeEach(async () => {
+    // Create data needed for this test
+    testUser = await setupTestUserWithSession();
+  });
+
+  afterEach(async () => {
+    // Cleanup happens here, after test completes
+    // This ensures cleanup doesn't interfere with test execution
+  });
+});
+
+// ❌ Bad - Cleanup in beforeEach interferes with test execution
+describe("createProjectAction", () => {
+  beforeEach(async () => {
+    await cleanupTestData(); // ❌ This deletes data before test can use it
+    testUser = await setupTestUserWithSession();
+  });
+});
+```
+
+**When using `setupTestHooks()`:**
+- `beforeAll` cleanup runs once at the start of each test file to ensure a clean starting state
+- `beforeEach` only initializes mocks - it does NOT cleanup data (cleanup in beforeEach causes race conditions)
+- Always create data in your test file's `beforeEach` AFTER `setupTestHooks()` is called
+- Global teardown (`src/shared/testing/teardown.ts`) runs once after ALL test files complete
+- This prevents cleanup from interfering with tests that are still running or causing race conditions
+- Cleanup happens at the start of each test file (`beforeAll`) and after all test files complete (global teardown)
+- If a test needs to delete data (e.g., for error testing), create it fresh in that test itself
+- Tests must never rely on data from other tests, even in the same file
+- Each test should be completely isolated - cleanup from one test should never affect another test's execution
+
 ## Best Practices
 
 ### 1. Prefer Integration Tests

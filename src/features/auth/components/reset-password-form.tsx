@@ -9,7 +9,14 @@ import { resetPasswordSchema } from "../schemas/auth.schema";
 import type { ResetPasswordInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -41,7 +48,10 @@ export function ResetPasswordForm() {
   const onSubmit = async (data: ResetPasswordInput) => {
     if (!token) return;
 
-    const result = await resetPasswordAction({ token, newPassword: data.newPassword });
+    const result = await resetPasswordAction({
+      token,
+      newPassword: data.newPassword,
+    });
 
     if (result?.serverError) {
       setError("root", {
@@ -60,10 +70,15 @@ export function ResetPasswordForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Invalid Reset Token</CardTitle>
-          <CardDescription>The password reset link is invalid or has expired.</CardDescription>
+          <CardDescription>
+            The password reset link is invalid or has expired.
+          </CardDescription>
         </CardHeader>
         <CardFooter>
-          <a href="/forgot-password" className="text-sm text-primary hover:underline">
+          <a
+            href="/forgot-password"
+            className="text-sm text-primary hover:underline"
+          >
             Request a new reset link
           </a>
         </CardFooter>
@@ -96,12 +111,18 @@ export function ResetPasswordForm() {
               {...register("newPassword")}
             />
             {errors.newPassword && (
-              <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.newPassword.message}
+              </p>
             )}
           </div>
         </CardContent>
         <CardFooter className="mt-6 flex flex-col space-y-4">
-          <Button type="submit" className="w-full" disabled={isSubmitting || !token}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting || !token}
+          >
             {isSubmitting ? "Resetting..." : "Reset Password"}
           </Button>
           <div className="text-sm text-center">

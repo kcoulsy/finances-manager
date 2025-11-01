@@ -8,7 +8,7 @@ export function useUser(userId: string) {
     queryKey: ["user", userId],
     queryFn: async () => {
       const result = await getUserAction({ userId });
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -22,4 +22,3 @@ export function useUser(userId: string) {
     enabled: !!userId,
   });
 }
-

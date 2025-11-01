@@ -3,4 +3,3 @@ import { Unauthorized as UnauthorizedComponent } from "@/features/shared/compone
 export default async function UnauthorizedPage() {
   return <UnauthorizedComponent />;
 }
-

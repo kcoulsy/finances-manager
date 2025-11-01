@@ -4,12 +4,25 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateProject } from "../hooks/use-create-project";
 import { useUpdateProject } from "../hooks/use-update-project";
-import { createProjectSchema, updateProjectSchema } from "../schemas/project.schema";
-import type { CreateProjectInput, UpdateProjectInput } from "../schemas/project.schema";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+} from "../schemas/project.schema";
+import type {
+  CreateProjectInput,
+  UpdateProjectInput,
+} from "../schemas/project.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { Input } from "@/features/shared/components/ui/input";
 import { Textarea } from "@/features/shared/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 
 interface ProjectFormProps {
   projectId?: string;
@@ -31,11 +44,13 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
     setError,
   } = useForm<CreateProjectInput | UpdateProjectInput>({
     resolver: zodResolver(isEdit ? updateProjectSchema : createProjectSchema),
-    defaultValues: initialData ? {
-      name: initialData.name,
-      description: initialData.description || undefined,
-      ...(isEdit ? { projectId } : {}),
-    } : undefined,
+    defaultValues: initialData
+      ? {
+          name: initialData.name,
+          description: initialData.description || undefined,
+          ...(isEdit ? { projectId } : {}),
+        }
+      : undefined,
   });
 
   const onSubmit = async (data: CreateProjectInput | UpdateProjectInput) => {
@@ -48,19 +63,23 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
       // Toast is shown automatically by the hooks via showToastFromAction
     } catch (error) {
       setError("root", {
-        message: error instanceof Error ? error.message : "Failed to save project",
+        message:
+          error instanceof Error ? error.message : "Failed to save project",
       });
     }
   };
 
-  const isLoading = isSubmitting || createProject.isPending || updateProject.isPending;
+  const isLoading =
+    isSubmitting || createProject.isPending || updateProject.isPending;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{isEdit ? "Edit Project" : "Create New Project"}</CardTitle>
         <CardDescription>
-          {isEdit ? "Update your project details" : "Add a new project to your workspace"}
+          {isEdit
+            ? "Update your project details"
+            : "Add a new project to your workspace"}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -98,17 +117,24 @@ export function ProjectForm({ projectId, initialData }: ProjectFormProps) {
               {...register("description")}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
             )}
           </div>
         </CardContent>
         <CardFooter className="mt-6">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? (isEdit ? "Updating..." : "Creating...") : (isEdit ? "Update Project" : "Create Project")}
+            {isLoading
+              ? isEdit
+                ? "Updating..."
+                : "Creating..."
+              : isEdit
+                ? "Update Project"
+                : "Create Project"}
           </Button>
         </CardFooter>
       </form>
     </Card>
   );
 }
-

@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronDownIcon, CheckIcon } from "lucide-react"
-import { cn } from "@/features/shared/lib/utils/index"
+import * as React from "react";
+import { ChevronDownIcon, CheckIcon } from "lucide-react";
+import { cn } from "@/features/shared/lib/utils/index";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/features/shared/components/ui/dropdown-menu"
-import { Button } from "@/features/shared/components/ui/button"
+} from "@/features/shared/components/ui/dropdown-menu";
+import { Button } from "@/features/shared/components/ui/button";
 
 interface SelectOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface SelectProps {
-  value?: string
-  onValueChange?: (value: string) => void
-  options: SelectOption[]
-  placeholder?: string
-  className?: string
+  value?: string;
+  onValueChange?: (value: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  className?: string;
 }
 
 function Select({
@@ -31,7 +31,7 @@ function Select({
   placeholder = "Select...",
   className,
 }: SelectProps) {
-  const selectedOption = options.find((option) => option.value === value)
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <DropdownMenu>
@@ -41,7 +41,7 @@ function Select({
           className={cn(
             "w-full justify-between text-left font-normal",
             !value && "text-muted-foreground",
-            className
+            className,
           )}
         >
           <span>{selectedOption?.label ?? placeholder}</span>
@@ -57,17 +57,14 @@ function Select({
           >
             <div className="flex items-center justify-between w-full">
               <span>{option.label}</span>
-              {value === option.value && (
-                <CheckIcon className="h-4 w-4" />
-              )}
+              {value === option.value && <CheckIcon className="h-4 w-4" />}
             </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }
 
-export { Select }
-export type { SelectOption }
-
+export { Select };
+export type { SelectOption };

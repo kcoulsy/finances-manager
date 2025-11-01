@@ -1,5 +1,11 @@
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
 import Link from "next/link";
@@ -68,4 +74,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-

@@ -6,7 +6,13 @@ import { logoutAction } from "../actions/logout.action";
 import { Button } from "@/features/shared/components/ui/button";
 
 interface LogoutButtonProps {
-  variant?: "default" | "outline" | "destructive" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "outline"
+    | "destructive"
+    | "secondary"
+    | "ghost"
+    | "link";
   className?: string;
   children?: React.ReactNode;
 }
@@ -47,4 +53,3 @@ export function LogoutButton({
     </Button>
   );
 }
-

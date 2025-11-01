@@ -14,7 +14,16 @@ export function useUsers(input?: GetUsersInput) {
   const sortOrder = input?.sortOrder;
 
   return useQuery({
-    queryKey: ["users", page, limit, search, role, emailVerified, sortBy, sortOrder],
+    queryKey: [
+      "users",
+      page,
+      limit,
+      search,
+      role,
+      emailVerified,
+      sortBy,
+      sortOrder,
+    ],
     queryFn: async () => {
       const result = await getUsersAction({
         page,
@@ -25,7 +34,7 @@ export function useUsers(input?: GetUsersInput) {
         sortBy,
         sortOrder,
       });
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -41,4 +50,3 @@ export function useUsers(input?: GetUsersInput) {
     },
   });
 }
-

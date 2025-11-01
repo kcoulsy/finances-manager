@@ -40,7 +40,7 @@ export function DataTableFooter({
   // Generate page numbers to display
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
-    
+
     if (totalPages <= 7) {
       // Show all pages if 7 or fewer
       for (let i = 1; i <= totalPages; i++) {
@@ -49,7 +49,7 @@ export function DataTableFooter({
     } else {
       // Always show first page
       pages.push(1);
-      
+
       if (page <= 4) {
         // Show first 5 pages, ellipsis, last page
         for (let i = 2; i <= 5; i++) {
@@ -73,25 +73,33 @@ export function DataTableFooter({
         pages.push(totalPages);
       }
     }
-    
+
     // Remove consecutive ellipsis
     const filteredPages: (number | "ellipsis")[] = [];
     for (let i = 0; i < pages.length; i++) {
-      if (pages[i] === "ellipsis" && filteredPages[filteredPages.length - 1] === "ellipsis") {
+      if (
+        pages[i] === "ellipsis" &&
+        filteredPages[filteredPages.length - 1] === "ellipsis"
+      ) {
         continue; // Skip duplicate ellipsis
       }
       filteredPages.push(pages[i]!);
     }
-    
+
     return filteredPages;
   };
 
   return (
-    <div className={cn("border-t border-border px-4 py-4 flex items-center justify-between", className)}>
+    <div
+      className={cn(
+        "border-t border-border px-4 py-4 flex items-center justify-between",
+        className,
+      )}
+    >
       <div className="text-sm text-muted-foreground">
         Showing {start} to {end} of {totalCount} results
       </div>
-      
+
       <Pagination>
         <PaginationContent>
           <PaginationItem>
@@ -103,10 +111,12 @@ export function DataTableFooter({
                   onPageChange?.(page - 1);
                 }
               }}
-              className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+              }
             />
           </PaginationItem>
-          
+
           {getPageNumbers().map((pageNum, index) => {
             if (pageNum === "ellipsis") {
               return (
@@ -115,7 +125,7 @@ export function DataTableFooter({
                 </PaginationItem>
               );
             }
-            
+
             return (
               <PaginationItem key={pageNum}>
                 <PaginationLink
@@ -132,7 +142,7 @@ export function DataTableFooter({
               </PaginationItem>
             );
           })}
-          
+
           <PaginationItem>
             <PaginationNext
               href="#"
@@ -142,7 +152,11 @@ export function DataTableFooter({
                   onPageChange?.(page + 1);
                 }
               }}
-              className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                page === totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
             />
           </PaginationItem>
         </PaginationContent>
@@ -152,4 +166,3 @@ export function DataTableFooter({
 }
 
 export type { DataTablePagination };
-

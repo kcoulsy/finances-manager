@@ -16,14 +16,30 @@ export const deleteAllNotificationsSchema = z.object({});
 
 export const createNotificationSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
-  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  subtitle: z.string().max(300, "Subtitle must be less than 300 characters").optional(),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200, "Title must be less than 200 characters"),
+  subtitle: z
+    .string()
+    .max(300, "Subtitle must be less than 300 characters")
+    .optional(),
   detail: z.string().optional(),
-  link: z.string().min(1, "Link must not be empty").optional().or(z.literal("")),
+  link: z
+    .string()
+    .min(1, "Link must not be empty")
+    .optional()
+    .or(z.literal("")),
 });
 
 export type GetNotificationsInput = z.infer<typeof getNotificationsSchema>;
-export type MarkNotificationReadInput = z.infer<typeof markNotificationReadSchema>;
-export type MarkAllNotificationsReadInput = z.infer<typeof markAllNotificationsReadSchema>;
-export type DeleteAllNotificationsInput = z.infer<typeof deleteAllNotificationsSchema>;
+export type MarkNotificationReadInput = z.infer<
+  typeof markNotificationReadSchema
+>;
+export type MarkAllNotificationsReadInput = z.infer<
+  typeof markAllNotificationsReadSchema
+>;
+export type DeleteAllNotificationsInput = z.infer<
+  typeof deleteAllNotificationsSchema
+>;
 export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;

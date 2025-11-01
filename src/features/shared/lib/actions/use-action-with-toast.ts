@@ -27,7 +27,7 @@ export function useActionWithToast(
     onExecute?: (args: { input: any }) => void | Promise<void>;
     /** Custom onSettled callback */
     onSettled?: (args: { result: any; input: any }) => void | Promise<void>;
-  }
+  },
 ) {
   const {
     showToasts = true,
@@ -68,7 +68,7 @@ export function useActionWithToast(
                   ? error.serverError
                   : String(error.serverError),
             },
-            errorToast
+            errorToast,
           );
         } else {
           // Otherwise show error from result (error has serverError property)

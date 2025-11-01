@@ -9,7 +9,9 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage your account settings</p>
+        <p className="text-muted-foreground mt-2">
+          Manage your account settings
+        </p>
       </div>
 
       <div className="space-y-6">
@@ -19,5 +21,3 @@ export default async function SettingsPage() {
     </div>
   );
 }
-
-

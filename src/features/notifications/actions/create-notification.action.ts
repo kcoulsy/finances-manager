@@ -42,8 +42,9 @@ export const createNotificationAction = actionClient
     } catch (error) {
       console.error("Create notification error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to create notification"
+        error instanceof Error
+          ? error.message
+          : "Failed to create notification",
       );
     }
   });
-

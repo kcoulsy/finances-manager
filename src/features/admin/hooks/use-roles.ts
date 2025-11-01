@@ -8,7 +8,7 @@ export function useRoles() {
     queryKey: ["roles"],
     queryFn: async () => {
       const result = await getRolesAction();
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -21,4 +21,3 @@ export function useRoles() {
     },
   });
 }
-

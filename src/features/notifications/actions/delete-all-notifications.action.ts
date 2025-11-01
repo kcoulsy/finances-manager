@@ -38,7 +38,7 @@ export const deleteAllNotificationsAction = actionClient
       throw new Error(
         error instanceof Error
           ? error.message
-          : "Failed to delete all notifications"
+          : "Failed to delete all notifications",
       );
     }
   });

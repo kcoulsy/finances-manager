@@ -4,7 +4,13 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useUsers } from "../hooks/use-users";
 import { useDebounce } from "@/features/shared/hooks/use-debounce";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   DataTable,
@@ -45,11 +51,14 @@ export function UsersList() {
   const users = data?.users ?? [];
   const pagination = data?.pagination;
 
-  const handleSortChange = useCallback((column: string, direction: SortDirection) => {
-    setSortBy(column);
-    setSortOrder(direction);
-    setPage(1); // Reset to first page on sort change
-  }, []);
+  const handleSortChange = useCallback(
+    (column: string, direction: SortDirection) => {
+      setSortBy(column);
+      setSortOrder(direction);
+      setPage(1); // Reset to first page on sort change
+    },
+    [],
+  );
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -74,9 +83,7 @@ export function UsersList() {
       key: "name",
       header: "Name",
       sortable: true,
-      render: (user) => (
-        <span className="font-medium">{user.name}</span>
-      ),
+      render: (user) => <span className="font-medium">{user.name}</span>,
     },
     {
       key: "email",
@@ -107,7 +114,9 @@ export function UsersList() {
       key: "emailVerified",
       header: "Verified",
       render: (user) => (
-        <span className={`text-xs ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}>
+        <span
+          className={`text-xs ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}
+        >
           {user.emailVerified ? "Yes" : "No"}
         </span>
       ),

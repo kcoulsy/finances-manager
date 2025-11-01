@@ -27,8 +27,7 @@ export const getRolesAction = actionClient.action(async () => {
   } catch (error) {
     console.error("Error fetching roles:", error);
     throw new Error(
-      error instanceof Error ? error.message : "Failed to fetch roles"
+      error instanceof Error ? error.message : "Failed to fetch roles",
     );
   }
 });
-

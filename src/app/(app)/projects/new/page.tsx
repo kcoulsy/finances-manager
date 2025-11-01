@@ -11,9 +11,7 @@ export default async function NewProjectPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">New Project</h1>
-          <p className="text-muted-foreground mt-2">
-            Create a new project
-          </p>
+          <p className="text-muted-foreground mt-2">Create a new project</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/projects">Back to Projects</Link>
@@ -24,4 +22,3 @@ export default async function NewProjectPage() {
     </div>
   );
 }
-

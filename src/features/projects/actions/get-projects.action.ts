@@ -31,8 +31,7 @@ export const getProjectsAction = actionClient.action(async () => {
   } catch (error) {
     console.error("Get projects error:", error);
     throw new Error(
-      error instanceof Error ? error.message : "Failed to fetch projects"
+      error instanceof Error ? error.message : "Failed to fetch projects",
     );
   }
 });
-

@@ -115,7 +115,7 @@ export const getUsersAction = actionClient
     } catch (error) {
       console.error("Error fetching users:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to fetch users"
+        error instanceof Error ? error.message : "Failed to fetch users",
       );
     }
   });

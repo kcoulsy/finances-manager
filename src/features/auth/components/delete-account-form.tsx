@@ -10,7 +10,14 @@ import type { DeleteAccountInput } from "../schemas/auth.schema";
 import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 
 export function DeleteAccountForm() {
   const router = useRouter();
@@ -24,10 +31,7 @@ export function DeleteAccountForm() {
     resolver: zodResolver(deleteAccountSchema),
   });
 
-  const {
-    execute,
-    status,
-  } = useActionWithToast(deleteAccountAction, {
+  const { execute, status } = useActionWithToast(deleteAccountAction, {
     errorToast: {
       message: "Failed to delete account",
       type: "error",
@@ -36,7 +40,10 @@ export function DeleteAccountForm() {
       // Set form error when there's a server error
       if (error?.serverError) {
         setError("root", {
-          message: typeof error.serverError === "string" ? error.serverError : String(error.serverError),
+          message:
+            typeof error.serverError === "string"
+              ? error.serverError
+              : String(error.serverError),
         });
       }
       // Handle validation errors
@@ -79,7 +86,8 @@ export function DeleteAccountForm() {
       <CardHeader>
         <CardTitle className="text-destructive">Delete Account</CardTitle>
         <CardDescription>
-          Permanently delete your account and all associated data. This action cannot be undone.
+          Permanently delete your account and all associated data. This action
+          cannot be undone.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -101,7 +109,9 @@ export function DeleteAccountForm() {
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.password.message}
+              </p>
             )}
             <p className="text-xs text-muted-foreground">
               Enter your password to confirm account deletion

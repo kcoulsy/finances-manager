@@ -13,13 +13,10 @@ export default async function ProjectsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Projects</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your projects
-        </p>
+        <p className="text-muted-foreground mt-2">Manage your projects</p>
       </div>
 
       <ProjectsList projects={projects} />
     </div>
   );
 }
-

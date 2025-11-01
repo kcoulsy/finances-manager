@@ -34,7 +34,10 @@ function getRouteLabel(segment: string): string {
   }
 
   // Return label from routeLabels or capitalize the segment
-  return routeLabels[segment.toLowerCase()] || segment.charAt(0).toUpperCase() + segment.slice(1);
+  return (
+    routeLabels[segment.toLowerCase()] ||
+    segment.charAt(0).toUpperCase() + segment.slice(1)
+  );
 }
 
 export function AppBreadcrumbs() {
@@ -83,7 +86,10 @@ function AutoBreadcrumbs({ pathname }: { pathname: string }) {
   const pathSegments = pathname.split("/").filter(Boolean);
 
   // Don't show breadcrumbs if we're on the dashboard root
-  if (pathSegments.length === 0 || (pathSegments.length === 1 && pathSegments[0] === "dashboard")) {
+  if (
+    pathSegments.length === 0 ||
+    (pathSegments.length === 1 && pathSegments[0] === "dashboard")
+  ) {
     return null;
   }
 
@@ -146,4 +152,3 @@ function AutoBreadcrumbs({ pathname }: { pathname: string }) {
     </Breadcrumb>
   );
 }
-

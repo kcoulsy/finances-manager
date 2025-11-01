@@ -59,8 +59,7 @@ export const verifyUserAction = actionClient
     } catch (error) {
       console.error("Error verifying user:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to verify user"
+        error instanceof Error ? error.message : "Failed to verify user",
       );
     }
   });
-

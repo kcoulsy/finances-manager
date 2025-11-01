@@ -45,46 +45,47 @@ export function NotificationsList({
   highlightNotificationId,
 }: NotificationsListProps) {
   const router = useRouter();
-  const [notifications, setNotifications] = React.useState(initialNotifications);
+  const [notifications, setNotifications] =
+    React.useState(initialNotifications);
   const [unreadCount, setUnreadCount] = React.useState(initialUnreadCount);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-  const [hasMore, setHasMore] = React.useState(initialNotifications.length >= PAGE_SIZE);
-  const notificationRefs = React.useRef<Record<string, HTMLDivElement | HTMLAnchorElement | null>>({});
+  const [hasMore, setHasMore] = React.useState(
+    initialNotifications.length >= PAGE_SIZE,
+  );
+  const notificationRefs = React.useRef<
+    Record<string, HTMLDivElement | HTMLAnchorElement | null>
+  >({});
 
   const [showClearDialog, setShowClearDialog] = React.useState(false);
 
-  const {
-    execute: executeMarkAllRead,
-    status: markAllReadStatus,
-  } = useActionWithToast(markAllNotificationsReadAction, {
-    successToast: {
-      message: "All notifications marked as read",
-      type: "success",
-      description: "All notifications have been marked as read.",
-    },
-    onSuccess: () => {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-      setUnreadCount(0);
-      router.refresh();
-    },
-  });
+  const { execute: executeMarkAllRead, status: markAllReadStatus } =
+    useActionWithToast(markAllNotificationsReadAction, {
+      successToast: {
+        message: "All notifications marked as read",
+        type: "success",
+        description: "All notifications have been marked as read.",
+      },
+      onSuccess: () => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        setUnreadCount(0);
+        router.refresh();
+      },
+    });
 
-  const {
-    execute: executeDeleteAll,
-    status: deleteAllStatus,
-  } = useActionWithToast(deleteAllNotificationsAction, {
-    successToast: {
-      message: "All notifications deleted",
-      type: "success",
-      description: "All notifications have been permanently deleted.",
-    },
-    onSuccess: () => {
-      setNotifications([]);
-      setUnreadCount(0);
-      setShowClearDialog(false);
-      router.refresh();
-    },
-  });
+  const { execute: executeDeleteAll, status: deleteAllStatus } =
+    useActionWithToast(deleteAllNotificationsAction, {
+      successToast: {
+        message: "All notifications deleted",
+        type: "success",
+        description: "All notifications have been permanently deleted.",
+      },
+      onSuccess: () => {
+        setNotifications([]);
+        setUnreadCount(0);
+        setShowClearDialog(false);
+        router.refresh();
+      },
+    });
 
   // Scroll to highlighted notification on mount
   React.useEffect(() => {
@@ -109,9 +110,7 @@ export function NotificationsList({
 
     if (result?.data?.success) {
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
       router.refresh();
@@ -190,7 +189,9 @@ export function NotificationsList({
               onClick={handleMarkAllAsRead}
               disabled={markAllReadStatus === "executing"}
             >
-              {markAllReadStatus === "executing" ? "Marking..." : "Mark All as Read"}
+              {markAllReadStatus === "executing"
+                ? "Marking..."
+                : "Mark All as Read"}
             </Button>
           )}
           {notifications.length > 0 && (
@@ -215,10 +216,12 @@ export function NotificationsList({
                       <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />
                     )}
                     <div className="flex-1">
-                      <h3 className={cn(
-                        "text-base font-semibold",
-                        !notification.read && "text-foreground"
-                      )}>
+                      <h3
+                        className={cn(
+                          "text-base font-semibold",
+                          !notification.read && "text-foreground",
+                        )}
+                      >
                         {notification.title}
                       </h3>
                     </div>
@@ -234,16 +237,21 @@ export function NotificationsList({
                     </div>
                   )}
                   {notification.link && (
-                    <p className="text-sm text-primary font-medium">Click to view →</p>
+                    <p className="text-sm text-primary font-medium">
+                      Click to view →
+                    </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {new Date(notification.createdAt).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(notification.createdAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      },
+                    )}
                   </p>
                 </div>
                 {!notification.read && (
@@ -265,7 +273,7 @@ export function NotificationsList({
             const containerClassName = cn(
               "p-6 transition-colors hover:bg-accent",
               !notification.read && "bg-accent/50",
-              isHighlighted && "bg-primary/10"
+              isHighlighted && "bg-primary/10",
             );
 
             return (
@@ -284,7 +292,7 @@ export function NotificationsList({
                     }}
                     className={cn(
                       containerClassName,
-                      "block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      "block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                     )}
                   >
                     {NotificationContent}
@@ -321,7 +329,8 @@ export function NotificationsList({
           <DialogHeader>
             <DialogTitle>Clear All Notifications</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete all notifications? This action cannot be undone.
+              Are you sure you want to delete all notifications? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -345,4 +354,3 @@ export function NotificationsList({
     </>
   );
 }
-

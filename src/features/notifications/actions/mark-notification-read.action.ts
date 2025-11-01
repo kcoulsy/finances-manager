@@ -48,8 +48,9 @@ export const markNotificationReadAction = actionClient
     } catch (error) {
       console.error("Mark notification read error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to mark notification as read"
+        error instanceof Error
+          ? error.message
+          : "Failed to mark notification as read",
       );
     }
   });
-

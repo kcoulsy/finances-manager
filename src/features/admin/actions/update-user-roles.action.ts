@@ -88,8 +88,7 @@ export const updateUserRolesAction = actionClient
     } catch (error) {
       console.error("Error updating user roles:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to update user roles"
+        error instanceof Error ? error.message : "Failed to update user roles",
       );
     }
   });
-

@@ -1,5 +1,11 @@
 import { Button } from "@/features/shared/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import Link from "next/link";
 
 interface UnauthorizedProps {
@@ -30,4 +36,3 @@ export function Unauthorized({ message }: UnauthorizedProps) {
     </div>
   );
 }
-

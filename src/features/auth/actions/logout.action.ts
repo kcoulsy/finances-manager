@@ -13,7 +13,7 @@ export const logoutAction = actionClient.action(async () => {
   } catch (error) {
     console.error("Logout error:", error);
     throw new Error(
-      error instanceof Error ? error.message : "Failed to sign out"
+      error instanceof Error ? error.message : "Failed to sign out",
     );
   }
 

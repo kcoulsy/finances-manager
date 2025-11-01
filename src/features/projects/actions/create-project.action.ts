@@ -38,8 +38,7 @@ export const createProjectAction = actionClient
     } catch (error) {
       console.error("Create project error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to create project"
+        error instanceof Error ? error.message : "Failed to create project",
       );
     }
   });
-

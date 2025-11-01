@@ -102,9 +102,7 @@ export function NotificationIcon() {
 
     if (result?.data?.success) {
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
+        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     }
@@ -182,18 +180,24 @@ export function NotificationIcon() {
                   <>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 space-y-2">
-                        <h4 className="text-sm font-medium leading-tight">{notification.title}</h4>
+                        <h4 className="text-sm font-medium leading-tight">
+                          {notification.title}
+                        </h4>
                         {notification.subtitle && (
                           <p className="text-xs text-muted-foreground leading-relaxed">
                             {notification.subtitle}
                           </p>
                         )}
                         {notification.link && (
-                          <p className="text-xs text-primary">Click to view →</p>
+                          <p className="text-xs text-primary">
+                            Click to view →
+                          </p>
                         )}
                         <div className="flex flex-col gap-2 pt-1">
                           <p className="text-xs text-muted-foreground">
-                            {new Date(notification.createdAt).toLocaleDateString("en-US", {
+                            {new Date(
+                              notification.createdAt,
+                            ).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               hour: "2-digit",
@@ -252,7 +256,7 @@ export function NotificationIcon() {
                     }}
                     className={cn(
                       "block px-4 py-3 transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                      !notification.read && "bg-accent/50"
+                      !notification.read && "bg-accent/50",
                     )}
                   >
                     {notificationContent}
@@ -262,7 +266,7 @@ export function NotificationIcon() {
                     key={notification.id}
                     className={cn(
                       "px-4 py-3 transition-colors hover:bg-accent",
-                      !notification.read && "bg-accent/50"
+                      !notification.read && "bg-accent/50",
                     )}
                   >
                     {notificationContent}
@@ -286,4 +290,3 @@ export function NotificationIcon() {
     </Popover>
   );
 }
-

@@ -10,7 +10,13 @@ import {
   CompactTableHead,
   CompactTableCell,
 } from "@/features/shared/components/ui/compact-table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import type { Project } from "@prisma/client";
 
@@ -70,7 +76,8 @@ export function UserProjectsTable({ userId }: UserProjectsTableProps) {
       <CardHeader className="border-b">
         <CardTitle>User Projects</CardTitle>
         <CardDescription>
-          {projects.length} project{projects.length !== 1 ? "s" : ""} owned by this user
+          {projects.length} project{projects.length !== 1 ? "s" : ""} owned by
+          this user
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -81,7 +88,9 @@ export function UserProjectsTable({ userId }: UserProjectsTableProps) {
               <CompactTableHead>Description</CompactTableHead>
               <CompactTableHead>Created</CompactTableHead>
               <CompactTableHead>Updated</CompactTableHead>
-              <CompactTableHead className="text-right">Actions</CompactTableHead>
+              <CompactTableHead className="text-right">
+                Actions
+              </CompactTableHead>
             </CompactTableRow>
           </CompactTableHeader>
           <CompactTableBody>
@@ -114,4 +123,3 @@ export function UserProjectsTable({ userId }: UserProjectsTableProps) {
     </Card>
   );
 }
-

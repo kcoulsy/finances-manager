@@ -39,7 +39,7 @@ export const changePasswordAction = actionClient
     } catch (error) {
       console.error("Change password error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to change password"
+        error instanceof Error ? error.message : "Failed to change password",
       );
     }
   });

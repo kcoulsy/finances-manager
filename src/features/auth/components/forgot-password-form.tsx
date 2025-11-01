@@ -8,7 +8,14 @@ import { forgotPasswordSchema } from "../schemas/auth.schema";
 import type { ForgotPasswordInput } from "../schemas/auth.schema";
 import { Button } from "@/features/shared/components/ui/button";
 import { Input } from "@/features/shared/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 
 export function ForgotPasswordForm() {
   const [success, setSuccess] = useState(false);
@@ -42,7 +49,8 @@ export function ForgotPasswordForm() {
         <CardHeader>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            If an account exists, a password reset link has been sent to your email.
+            If an account exists, a password reset link has been sent to your
+            email.
           </CardDescription>
         </CardHeader>
         <CardFooter>
@@ -59,7 +67,8 @@ export function ForgotPasswordForm() {
       <CardHeader>
         <CardTitle>Forgot Password</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we'll send you a link to reset your
+          password.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>

@@ -25,13 +25,13 @@ export function useActionToast() {
     async <TData, TInput>(
       action: (input: TInput) => Promise<ActionResult<TData>>,
       input: TInput,
-      toastConfig?: ToastConfig
+      toastConfig?: ToastConfig,
     ): Promise<ActionResult<TData>> => {
       const result = await action(input);
       handleActionWithToast(result, toastConfig);
       return result;
     },
-    []
+    [],
   );
 
   return { executeWithToast };

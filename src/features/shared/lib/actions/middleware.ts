@@ -9,7 +9,7 @@ export const errorToastMiddleware = (
     bindArgsClientInputs: unknown[];
     ctx: object;
     metadata: undefined;
-  }
+  },
 ): string => {
   // Log the error for debugging
   console.error("Action error:", {

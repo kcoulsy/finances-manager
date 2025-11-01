@@ -2,7 +2,10 @@
 
 import { SearchIcon } from "lucide-react";
 import { Input } from "@/features/shared/components/ui/input";
-import { Select, type SelectOption } from "@/features/shared/components/ui/select";
+import {
+  Select,
+  type SelectOption,
+} from "@/features/shared/components/ui/select";
 import { cn } from "@/features/shared/lib/utils/index";
 
 export interface DataTableFilter {
@@ -32,7 +35,12 @@ export function DataTableFilters({
   className,
 }: DataTableFiltersProps) {
   return (
-    <div className={cn("flex flex-wrap gap-4 px-4 py-3 border-b border-border", className)}>
+    <div
+      className={cn(
+        "flex flex-wrap gap-4 px-4 py-3 border-b border-border",
+        className,
+      )}
+    >
       {/* Search Input */}
       {onSearchChange && (
         <div className="relative flex-1 min-w-[200px]">
@@ -64,4 +72,3 @@ export function DataTableFilters({
     </div>
   );
 }
-

@@ -8,7 +8,14 @@ import type { ChangePasswordInput } from "../schemas/auth.schema";
 import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { Button } from "@/features/shared/components/ui/button";
 import { PasswordInput } from "@/features/shared/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 
 export function ChangePasswordForm() {
   const {
@@ -21,10 +28,7 @@ export function ChangePasswordForm() {
     resolver: zodResolver(changePasswordSchema),
   });
 
-  const {
-    execute,
-    status,
-  } = useActionWithToast(changePasswordAction, {
+  const { execute, status } = useActionWithToast(changePasswordAction, {
     successToast: {
       message: "Password changed successfully",
       type: "success",
@@ -39,13 +43,23 @@ export function ChangePasswordForm() {
       // Set form error when there's a server error
       if (error?.serverError) {
         setError("root", {
-          message: typeof error.serverError === "string" ? error.serverError : String(error.serverError),
+          message:
+            typeof error.serverError === "string"
+              ? error.serverError
+              : String(error.serverError),
         });
       }
       // Handle validation errors
-      if (error?.validationErrors && typeof error.validationErrors === "object") {
+      if (
+        error?.validationErrors &&
+        typeof error.validationErrors === "object"
+      ) {
         Object.entries(error.validationErrors).forEach(([field, messages]) => {
-          if (Array.isArray(messages) && messages.length > 0 && typeof messages[0] === "string") {
+          if (
+            Array.isArray(messages) &&
+            messages.length > 0 &&
+            typeof messages[0] === "string"
+          ) {
             setError(field as keyof ChangePasswordInput, {
               type: "validation",
               message: messages[0],
@@ -93,7 +107,9 @@ export function ChangePasswordForm() {
               {...register("currentPassword")}
             />
             {errors.currentPassword && (
-              <p className="text-sm text-destructive">{errors.currentPassword.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.currentPassword.message}
+              </p>
             )}
           </div>
           <div className="space-y-2">
@@ -108,7 +124,9 @@ export function ChangePasswordForm() {
               {...register("newPassword")}
             />
             {errors.newPassword && (
-              <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.newPassword.message}
+              </p>
             )}
           </div>
         </CardContent>

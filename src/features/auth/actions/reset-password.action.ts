@@ -25,4 +25,3 @@ export const resetPasswordAction = actionClient
       message: "Password reset successfully",
     };
   });
-

@@ -25,7 +25,7 @@ interface AdminNavProps {
 export function AdminNav({ isAdmin }: AdminNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(
-    pathname?.startsWith("/admin") ?? false
+    pathname?.startsWith("/admin") ?? false,
   );
 
   React.useEffect(() => {
@@ -63,7 +63,10 @@ export function AdminNav({ isAdmin }: AdminNavProps) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url || pathname?.startsWith(`${item.url}/`)}
+                    isActive={
+                      pathname === item.url ||
+                      pathname?.startsWith(`${item.url}/`)
+                    }
                   >
                     <Link href={item.url}>
                       <item.icon className="size-4" />

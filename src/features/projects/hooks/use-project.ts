@@ -8,7 +8,7 @@ export function useProject(projectId: string) {
     queryKey: ["project", projectId],
     queryFn: async () => {
       const result = await getProjectAction({ projectId });
-      
+
       if (result?.serverError) {
         throw new Error(result.serverError);
       }
@@ -22,4 +22,3 @@ export function useProject(projectId: string) {
     enabled: !!projectId,
   });
 }
-

@@ -24,7 +24,7 @@ export const loginAction = actionClient
     } catch (error) {
       console.error("Login error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to sign in"
+        error instanceof Error ? error.message : "Failed to sign in",
       );
     }
   });

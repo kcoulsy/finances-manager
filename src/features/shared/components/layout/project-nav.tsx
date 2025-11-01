@@ -3,7 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, FolderKanban, ChevronDown } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileText,
+  FolderKanban,
+  ChevronDown,
+} from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -20,17 +25,15 @@ import {
 
 export function ProjectNav() {
   const pathname = usePathname();
-  
+
   // Extract project ID from pathname (/projects/[id]/...)
   const projectMatch = pathname?.match(/^\/projects\/([^/]+)/);
   const projectId = projectMatch?.[1];
-  
+
   // Check if we're inside a project route
   const isInProject = projectId !== undefined;
-  
-  const [open, setOpen] = React.useState(
-    isInProject ?? false
-  );
+
+  const [open, setOpen] = React.useState(isInProject ?? false);
 
   React.useEffect(() => {
     setOpen(isInProject ?? false);
@@ -78,15 +81,14 @@ export function ProjectNav() {
                   isActive = pathname === item.url;
                 } else {
                   // Details or other pages: active when pathname matches or starts with the URL
-                  isActive = pathname === item.url || pathname?.startsWith(`${item.url}/`);
+                  isActive =
+                    pathname === item.url ||
+                    pathname?.startsWith(`${item.url}/`);
                 }
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                    >
+                    <SidebarMenuButton asChild isActive={isActive}>
                       <Link href={item.url}>
                         <item.icon className="size-4" />
                         <span>{item.title}</span>
@@ -102,4 +104,3 @@ export function ProjectNav() {
     </Collapsible>
   );
 }
-

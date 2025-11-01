@@ -28,7 +28,8 @@ export default async function NotificationsPage({
           <h1 className="text-3xl font-bold">Notifications</h1>
           {unreadCount > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
-              {unreadCount} unread {unreadCount === 1 ? "notification" : "notifications"}
+              {unreadCount} unread{" "}
+              {unreadCount === 1 ? "notification" : "notifications"}
             </p>
           )}
         </div>
@@ -41,4 +42,3 @@ export default async function NotificationsPage({
     </div>
   );
 }
-

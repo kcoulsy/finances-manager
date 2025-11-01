@@ -1,8 +1,8 @@
-import { requireRole } from "@/features/auth/lib/require-role";
-import { UserRole } from "@/features/auth/constants/roles";
-import { UserDetail } from "@/features/admin/components/user-detail";
-import { Button } from "@/features/shared/components/ui/button";
 import Link from "next/link";
+import { UserDetail } from "@/features/admin/components/user-detail";
+import { UserRole } from "@/features/auth/constants/roles";
+import { requireRole } from "@/features/auth/lib/require-role";
+import { Button } from "@/features/shared/components/ui/button";
 
 interface AdminUserDetailPageProps {
   params: Promise<{ id: string }>;
@@ -32,4 +32,3 @@ export default async function AdminUserDetailPage({
     </div>
   );
 }
-

@@ -11,7 +11,7 @@ interface SetBreadcrumbsProps {
 /**
  * Component to set breadcrumbs for the current page
  * Use this in page components to specify custom breadcrumbs
- * 
+ *
  * @example
  * ```tsx
  * <SetBreadcrumbs breadcrumbs={[
@@ -36,4 +36,3 @@ export function SetBreadcrumbs({ breadcrumbs, children }: SetBreadcrumbsProps) {
 
   return <>{children}</>;
 }
-

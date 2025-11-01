@@ -119,7 +119,10 @@ export function DataTable<T extends Record<string, unknown>>({
       return (
         <CompactTableRow key={rowKey}>
           {columns.map((column) => (
-            <CompactTableCell key={`${rowKey}-${column.key}`} className={column.className}>
+            <CompactTableCell
+              key={`${rowKey}-${column.key}`}
+              className={column.className}
+            >
               <Skeleton className="h-4 w-full max-w-[100px]" />
             </CompactTableCell>
           ))}
@@ -147,10 +150,7 @@ export function DataTable<T extends Record<string, unknown>>({
         <CompactTableHeader className="border-b border-border">
           <CompactTableRow>
             {columns.map((column) => (
-              <CompactTableHead
-                key={column.key}
-                className={column.className}
-              >
+              <CompactTableHead key={column.key} className={column.className}>
                 {column.sortable ? (
                   <Button
                     variant="ghost"
@@ -176,7 +176,9 @@ export function DataTable<T extends Record<string, unknown>>({
                 className="text-center py-12"
               >
                 <p className="text-destructive">
-                  {error instanceof Error ? error.message : "Failed to load data"}
+                  {error instanceof Error
+                    ? error.message
+                    : "Failed to load data"}
                 </p>
               </CompactTableCell>
             </CompactTableRow>
@@ -194,7 +196,8 @@ export function DataTable<T extends Record<string, unknown>>({
           ) : (
             data.map((row) => {
               // Try to use an 'id' field if available, otherwise generate a key from the first column
-              const rowKey = (row as { id?: string } | undefined)?.id ??
+              const rowKey =
+                (row as { id?: string } | undefined)?.id ??
                 String(row[columns[0]?.key ?? ""] ?? Math.random());
               return (
                 <CompactTableRow key={rowKey}>
@@ -217,12 +220,8 @@ export function DataTable<T extends Record<string, unknown>>({
 
       {/* Footer with Pagination */}
       {pagination && (
-        <DataTableFooter
-          pagination={pagination}
-          onPageChange={onPageChange}
-        />
+        <DataTableFooter pagination={pagination} onPageChange={onPageChange} />
       )}
     </div>
   );
 }
-

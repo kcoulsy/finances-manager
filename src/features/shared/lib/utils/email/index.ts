@@ -43,7 +43,7 @@ const isDev = process.env.NODE_ENV === "development";
  * ```
  */
 export async function sendEmail(
-  options: SendEmailOptions
+  options: SendEmailOptions,
 ): Promise<EmailResult> {
   if (isDev) {
     // In dev mode, just log the email details
@@ -73,7 +73,7 @@ export async function sendEmail(
           })),
         },
       },
-      "📧 Email would be sent (dev mode)"
+      "📧 Email would be sent (dev mode)",
     );
 
     return {
@@ -100,7 +100,7 @@ export async function sendEmail(
 
     // For now, throw error to indicate not implemented
     throw new Error(
-      "Email sending not configured. Set up your email service provider."
+      "Email sending not configured. Set up your email service provider.",
     );
   } catch (error) {
     logger.error(
@@ -111,7 +111,7 @@ export async function sendEmail(
           subject: options.subject,
         },
       },
-      "Failed to send email"
+      "Failed to send email",
     );
 
     return {

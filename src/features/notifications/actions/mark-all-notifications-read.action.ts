@@ -39,8 +39,9 @@ export const markAllNotificationsReadAction = actionClient
     } catch (error) {
       console.error("Mark all notifications read error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to mark all notifications as read"
+        error instanceof Error
+          ? error.message
+          : "Failed to mark all notifications as read",
       );
     }
   });
-

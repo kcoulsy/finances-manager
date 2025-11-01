@@ -78,7 +78,7 @@ export const updateProjectAction = actionClient
 
       console.error("Update project error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to update project"
+        error instanceof Error ? error.message : "Failed to update project",
       );
     }
   });

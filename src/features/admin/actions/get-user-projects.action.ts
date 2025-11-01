@@ -33,8 +33,9 @@ export const getUserProjectsAction = actionClient
     } catch (error) {
       console.error("Error fetching user projects:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to fetch user projects"
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch user projects",
       );
     }
   });
-

@@ -6,7 +6,13 @@ import { useUser } from "../hooks/use-user";
 import { useRoles } from "../hooks/use-roles";
 import { useUpdateUserRoles } from "../hooks/use-update-user-roles";
 import { useVerifyUser } from "../hooks/use-verify-user";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import { UserProjectsTable } from "./user-projects-table";
 
@@ -16,7 +22,11 @@ interface UserDetailProps {
 
 export function UserDetail({ userId }: UserDetailProps) {
   const router = useRouter();
-  const { data: user, isLoading: isLoadingUser, error: userError } = useUser(userId);
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+    error: userError,
+  } = useUser(userId);
   const { data: roles, isLoading: isLoadingRoles } = useRoles();
   const updateUserRoles = useUpdateUserRoles();
   const verifyUser = useVerifyUser();
@@ -44,7 +54,9 @@ export function UserDetail({ userId }: UserDetailProps) {
       <Card>
         <CardContent className="py-8">
           <p className="text-center text-destructive">
-            {userError instanceof Error ? userError.message : "Failed to load user"}
+            {userError instanceof Error
+              ? userError.message
+              : "Failed to load user"}
           </p>
         </CardContent>
       </Card>
@@ -55,7 +67,7 @@ export function UserDetail({ userId }: UserDetailProps) {
     setSelectedRoleIds((prev) =>
       prev.includes(roleId)
         ? prev.filter((id) => id !== roleId)
-        : [...prev, roleId]
+        : [...prev, roleId],
     );
   };
 
@@ -89,9 +101,14 @@ export function UserDetail({ userId }: UserDetailProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>User Details</CardTitle>
-              <CardDescription>View and manage user information</CardDescription>
+              <CardDescription>
+                View and manage user information
+              </CardDescription>
             </div>
-            <Button variant="outline" onClick={() => router.push("/admin/users")}>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/admin/users")}
+            >
               Back to Users
             </Button>
           </div>
@@ -107,9 +124,13 @@ export function UserDetail({ userId }: UserDetailProps) {
               <p className="font-medium">{user.email}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Email Verified</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                Email Verified
+              </p>
               <div className="flex items-center gap-2">
-                <p className={`font-medium ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}>
+                <p
+                  className={`font-medium ${user.emailVerified ? "text-green-600" : "text-muted-foreground"}`}
+                >
                   {user.emailVerified ? "Yes" : "No"}
                 </p>
                 {!user.emailVerified && (
@@ -196,4 +217,3 @@ export function UserDetail({ userId }: UserDetailProps) {
     </div>
   );
 }
-

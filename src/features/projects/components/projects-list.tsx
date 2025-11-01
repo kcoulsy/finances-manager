@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import { Button } from "@/features/shared/components/ui/button";
 import type { Project } from "@prisma/client";
 
@@ -32,7 +38,10 @@ export function ProjectsList({ projects }: ProjectsListProps) {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <Card key={project.id} className="hover:bg-muted/50 transition-colors">
+              <Card
+                key={project.id}
+                className="hover:bg-muted/50 transition-colors"
+              >
                 <CardHeader>
                   <CardTitle className="text-lg">{project.name}</CardTitle>
                   {project.description && (
@@ -59,4 +68,3 @@ export function ProjectsList({ projects }: ProjectsListProps) {
     </Card>
   );
 }
-

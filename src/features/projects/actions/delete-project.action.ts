@@ -16,8 +16,7 @@ function isNextJsNavigationError(error: unknown): boolean {
   if (error && typeof error === "object" && "digest" in error) {
     const digest = String(error.digest);
     return (
-      digest.includes("NEXT_REDIRECT") ||
-      digest.includes("NEXT_NOT_FOUND")
+      digest.includes("NEXT_REDIRECT") || digest.includes("NEXT_NOT_FOUND")
     );
   }
   return false;
@@ -75,8 +74,7 @@ export const deleteProjectAction = actionClient
 
       console.error("Delete project error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to delete project"
+        error instanceof Error ? error.message : "Failed to delete project",
       );
     }
   });
-

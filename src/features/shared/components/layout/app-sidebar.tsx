@@ -73,7 +73,11 @@ export function AppSidebar({ isAdmin = false, ...props }: AppSidebarProps) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url || (item.url !== "/dashboard" && pathname?.startsWith(`${item.url}/`))}
+                    isActive={
+                      pathname === item.url ||
+                      (item.url !== "/dashboard" &&
+                        pathname?.startsWith(`${item.url}/`))
+                    }
                   >
                     <Link href={item.url}>
                       <item.icon className="size-4" />

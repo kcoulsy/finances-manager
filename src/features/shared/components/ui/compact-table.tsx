@@ -13,10 +13,7 @@ const CompactTable = React.forwardRef<
   <div className="relative w-full min-w-0 overflow-x-auto">
     <table
       ref={ref}
-      className={cn(
-        "min-w-[1400px] text-sm border-collapse",
-        className
-      )}
+      className={cn("min-w-[1400px] text-sm border-collapse", className)}
       {...props}
     />
   </div>
@@ -31,7 +28,7 @@ const CompactTableHeader = React.forwardRef<
     ref={ref}
     className={cn(
       "bg-muted/50 border-b border-border [&_tr]:border-b",
-      className
+      className,
     )}
     {...props}
   />
@@ -54,7 +51,7 @@ const CompactTableRow = React.forwardRef<
     ref={ref}
     className={cn(
       "border-b border-border transition-colors odd:bg-background even:bg-muted/30 hover:bg-muted/70 data-[state=selected]:bg-muted",
-      className
+      className,
     )}
     {...props}
   />
@@ -69,7 +66,7 @@ const CompactTableHead = React.forwardRef<
     ref={ref}
     className={cn(
       "px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground [&:has([role=checkbox])]:pr-0",
-      className
+      className,
     )}
     {...props}
   />
@@ -84,7 +81,7 @@ const CompactTableCell = React.forwardRef<
     ref={ref}
     className={cn(
       "px-3 py-2 align-middle text-sm [&:has([role=checkbox])]:pr-0",
-      className
+      className,
     )}
     {...props}
   />
@@ -99,4 +96,3 @@ export {
   CompactTableHead,
   CompactTableCell,
 };
-

@@ -26,7 +26,7 @@ type ActionResult<TData> = {
  */
 export function showToastFromAction<TData>(
   result: ActionResult<TData>,
-  customToast?: ToastConfig
+  customToast?: ToastConfig,
 ) {
   // Check if there's a custom toast provided
   if (customToast) {
@@ -84,7 +84,7 @@ export function showToastFromAction<TData>(
  */
 export function handleActionWithToast<TData>(
   result: ActionResult<TData>,
-  customToast?: ToastConfig
+  customToast?: ToastConfig,
 ): ActionResult<TData> {
   showToastFromAction(result, customToast);
   return result;

@@ -1,5 +1,11 @@
 import { Button } from "@/features/shared/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/features/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/features/shared/components/ui/card";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -9,7 +15,8 @@ export default function NotFound() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">404 - Not Found</CardTitle>
           <CardDescription>
-            The page you're looking for doesn't exist or you don't have access to it.
+            The page you're looking for doesn't exist or you don't have access
+            to it.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -26,4 +33,3 @@ export default function NotFound() {
     </div>
   );
 }
-

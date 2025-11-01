@@ -8,4 +8,3 @@ export type SessionWithRoles = Awaited<
 > & {
   roles?: string[];
 };
-

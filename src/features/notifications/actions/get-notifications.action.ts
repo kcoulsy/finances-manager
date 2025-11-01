@@ -45,8 +45,9 @@ export const getNotificationsAction = actionClient
     } catch (error) {
       console.error("Get notifications error:", error);
       throw new Error(
-        error instanceof Error ? error.message : "Failed to fetch notifications"
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch notifications",
       );
     }
   });
-

@@ -221,7 +221,7 @@ async function seedUsers() {
         if (existingUser) {
           await assignRolesToUser(existingUser.id, userData.roles);
           console.log(
-            `⚠ User ${userData.email} already exists, roles assigned`
+            `⚠ User ${userData.email} already exists, roles assigned`,
           );
         }
       } else {
