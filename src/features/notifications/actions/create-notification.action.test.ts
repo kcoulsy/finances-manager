@@ -6,7 +6,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { createNotificationAction } from "./create-notification.action";
 
 describe("createNotificationAction", () => {

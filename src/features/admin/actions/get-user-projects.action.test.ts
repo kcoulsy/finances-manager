@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { UserRole } from "@/features/auth/constants/roles";
 import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
@@ -8,8 +9,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { UserRole } from "@/features/auth/constants/roles";
+} from "@/features/shared/testing/helpers";
 import { getUserProjectsAction } from "./get-user-projects.action";
 
 describe("getUserProjectsAction", () => {
@@ -177,4 +177,3 @@ describe("getUserProjectsAction", () => {
     expect(result.data?.projects.length).toBe(0);
   });
 });
-

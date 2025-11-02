@@ -6,9 +6,9 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { deleteAllNotificationsAction } from "./delete-all-notifications.action";
+} from "@/features/shared/testing/helpers";
 import { createNotificationAction } from "./create-notification.action";
+import { deleteAllNotificationsAction } from "./delete-all-notifications.action";
 
 describe("deleteAllNotificationsAction", () => {
   let testUser: TestUser;
@@ -216,4 +216,3 @@ describe("deleteAllNotificationsAction", () => {
     expect(notifications[0].title).toBe("New Notification");
   });
 });
-

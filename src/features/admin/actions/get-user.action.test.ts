@@ -9,7 +9,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { getUserAction } from "./get-user.action";
 
 describe("getUserAction", () => {

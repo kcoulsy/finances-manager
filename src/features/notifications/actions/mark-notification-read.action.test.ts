@@ -6,9 +6,9 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { markNotificationReadAction } from "./mark-notification-read.action";
+} from "@/features/shared/testing/helpers";
 import { createNotificationAction } from "./create-notification.action";
+import { markNotificationReadAction } from "./mark-notification-read.action";
 
 describe("markNotificationReadAction", () => {
   let testUser: TestUser;
@@ -51,9 +51,9 @@ describe("markNotificationReadAction", () => {
     expect(result.validationErrors).toBeDefined();
     expect(result.validationErrors).toHaveProperty("notificationId");
     expect(result.validationErrors?.notificationId).toHaveProperty("_errors");
-    expect(Array.isArray(result.validationErrors?.notificationId?._errors)).toBe(
-      true,
-    );
+    expect(
+      Array.isArray(result.validationErrors?.notificationId?._errors),
+    ).toBe(true);
     expect(result.validationErrors?.notificationId?._errors?.[0]).toBe(
       "Notification ID is required",
     );
@@ -177,4 +177,3 @@ describe("markNotificationReadAction", () => {
     expect(finalCheck2?.read).toBe(true);
   });
 });
-

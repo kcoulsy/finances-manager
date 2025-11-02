@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { UserRole } from "@/features/auth/constants/roles";
 import {
   assignRolesToUser,
   createTestRole,
@@ -7,8 +8,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { UserRole } from "@/features/auth/constants/roles";
+} from "@/features/shared/testing/helpers";
 import { getRolesAction } from "./get-roles.action";
 
 describe("getRolesAction", () => {
@@ -102,4 +102,3 @@ describe("getRolesAction", () => {
     expect(result.serverError?.length).toBeGreaterThan(0);
   });
 });
-

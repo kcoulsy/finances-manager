@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { UserRole } from "@/features/auth/constants/roles";
 import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
@@ -9,8 +10,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { UserRole } from "@/features/auth/constants/roles";
+} from "@/features/shared/testing/helpers";
 import { updateUserRolesAction } from "./update-user-roles.action";
 
 describe("updateUserRolesAction", () => {
@@ -187,4 +187,3 @@ describe("updateUserRolesAction", () => {
     ]);
   });
 });
-

@@ -65,6 +65,8 @@ export const loginAction = actionClient
 ### 3. Error Handling
 Always wrap server-side API calls in try/catch:
 
+**CRITICAL: Error messages must be user-appropriate** since they are displayed in error toasts visible to end users. Never expose internal technical details, database errors, or stack traces to users.
+
 ```typescript
 export const loginAction = actionClient
   .inputSchema(loginSchema)
@@ -83,12 +85,30 @@ export const loginAction = actionClient
         user: response.user,
       };
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login error:", error); // Log technical details for debugging
+      // Always throw user-friendly messages
       throw new Error(
-        error instanceof Error ? error.message : "Failed to sign in"
+        error instanceof Error 
+          ? error.message // Only if it's already user-friendly
+          : "Failed to sign in. Please check your credentials and try again."
       );
     }
   });
+```
+
+**Good Error Messages (User-Appropriate):**
+```typescript
+// ✅ Good - Clear, actionable, user-friendly
+throw new Error("Invalid email or password. Please try again.");
+throw new Error("Contact not found.");
+throw new Error("You don't have permission to perform this action.");
+throw new Error("This email address is already registered.");
+
+// ❌ Bad - Technical details, internal errors
+throw new Error("PrismaClientKnownRequestError: P2002");
+throw new Error("Database connection timeout");
+throw new Error("Error: Validation failed at schema.validate()");
+throw new Error("Cannot read property 'id' of undefined");
 ```
 
 ### 4. Headers Usage
@@ -141,7 +161,7 @@ export const changePasswordAction = actionClient
     });
 
     if (!session) {
-      throw new Error("Unauthorized");
+      throw new Error("You must be signed in to change your password.");
     }
 
     // Rest of implementation
@@ -157,15 +177,26 @@ import { db } from "@/features/shared/lib/db/client";
 export const getUserAction = actionClient
   .inputSchema(getUserSchema)
   .action(async ({ parsedInput }) => {
-    const user = await db.user.findUnique({
-      where: { id: parsedInput.userId },
-    });
-    
-    if (!user) {
-      throw new Error("User not found");
-    }
+    try {
+      const user = await db.user.findUnique({
+        where: { id: parsedInput.userId },
+      });
+      
+      if (!user) {
+        throw new Error("User not found.");
+      }
 
-    return { user };
+      return { user };
+    } catch (error) {
+      console.error("Get user error:", error); // Log technical details
+      
+      // Provide user-friendly error messages
+      if (error instanceof Error && error.message === "User not found.") {
+        throw error; // Already user-friendly
+      }
+      
+      throw new Error("Unable to retrieve user information. Please try again.");
+    }
   });
 ```
 
@@ -237,18 +268,32 @@ return {
 
 ### Error Handling
 - Use try/catch for all async operations
-- Log errors for debugging
-- Throw meaningful error messages
+- Log errors for debugging (console.error with technical details)
+- **Always throw user-appropriate error messages** - these messages are displayed in error toasts to users
+- Never expose technical details, database error codes, stack traces, or internal system information
 
 ```typescript
 try {
   // Operation
   return { success: true, data };
 } catch (error) {
-  console.error("Action error:", error);
-  throw new Error(
-    error instanceof Error ? error.message : "Operation failed"
-  );
+  console.error("Action error:", error); // Log technical details for debugging
+  
+  // Provide user-friendly error messages
+  if (error instanceof Error) {
+    // Only use the error message if it's already user-friendly
+    // For known errors, provide specific user messages
+    if (error.message.includes("not found")) {
+      throw new Error("The requested item could not be found.");
+    }
+    if (error.message.includes("permission") || error.message.includes("unauthorized")) {
+      throw new Error("You don't have permission to perform this action.");
+    }
+    // For unexpected errors, use generic but helpful messages
+    throw new Error("Something went wrong. Please try again later.");
+  }
+  
+  throw new Error("An unexpected error occurred. Please try again.");
 }
 ```
 
@@ -257,10 +302,12 @@ try {
 1. **Keep actions focused**: One action per file, one responsibility
 2. **Validate input**: Always use Zod schemas
 3. **Handle errors gracefully**: Always wrap in try/catch
-4. **Log errors**: Use console.error for debugging
-5. **Type safety**: Let TypeScript infer types from schemas
-6. **Server-only**: Never import client-side code in actions
-7. **Consistent naming**: Use descriptive action names ending with "Action"
+4. **Log errors**: Use console.error for debugging (technical details)
+5. **User-friendly error messages**: Always throw error messages that are appropriate for end users - these messages are displayed in error toasts
+6. **Never expose technical details**: Don't show database error codes, stack traces, internal system messages, or technical jargon to users
+7. **Type safety**: Let TypeScript infer types from schemas
+8. **Server-only**: Never import client-side code in actions
+9. **Consistent naming**: Use descriptive action names ending with "Action"
 
 ## Middleware and Toast Notifications
 
@@ -460,13 +507,29 @@ export function CreateItemForm() {
 
 Errors are automatically caught by the middleware and made available in `result.serverError`. The client-side utilities automatically show error toasts for server errors.
 
+**IMPORTANT: Error messages thrown in actions are displayed directly to users in error toasts.** Always ensure error messages are:
+- User-friendly and clear
+- Actionable when possible
+- Free of technical jargon
+- Appropriate for end users
+
 ```typescript
-// In action - errors are automatically caught
+// ✅ Good - User-friendly error message
 export const someAction = actionClient
   .inputSchema(someSchema)
   .action(async ({ parsedInput }) => {
     if (!condition) {
-      throw new Error("Something went wrong"); // This will be caught
+      throw new Error("Unable to complete this action. Please check your input and try again.");
+    }
+    return { success: true };
+  });
+
+// ❌ Bad - Technical error message shown to users
+export const someAction = actionClient
+  .inputSchema(someSchema)
+  .action(async ({ parsedInput }) => {
+    if (!condition) {
+      throw new Error("PrismaClientValidationError: Validation failed"); // Too technical!
     }
     return { success: true };
   });

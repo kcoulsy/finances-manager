@@ -7,8 +7,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    globalSetup: ["./src/shared/testing/global-setup.ts"],
-    setupFiles: ["./src/shared/testing/setup.ts"],
+    globalSetup: ["./src/features/shared/testing/global-setup.ts"],
+    setupFiles: ["./src/features/shared/testing/setup.ts"],
     // Run tests sequentially to avoid database state conflicts
     sequence: {
       shuffle: false,

@@ -249,6 +249,176 @@ describe("createProjectAction", () => {
     expect(result.validationErrors).toBeDefined();
     expect(result.validationErrors?.fieldErrors?.name).toBeDefined();
   });
+
+  it("returns user-friendly error messages for toast display", async () => {
+    // Mock a database error to test error message handling
+    vi.spyOn(db.project, "create").mockRejectedValue(
+      new Error("PrismaClientKnownRequestError: P2002")
+    );
+
+    const result = await createProjectAction({
+      name: "Test Project",
+      description: "Test description",
+    });
+
+    // Test error messages are user-appropriate (not technical)
+    expect(result.serverError).toBeDefined();
+    expect(result.serverError).not.toContain("PrismaClient");
+    expect(result.serverError).not.toContain("P2002");
+    expect(result.serverError).not.toContain("Database");
+    // Should contain user-friendly message
+    expect(result.serverError).toMatch(/unable|failed|error/i);
+  });
+});
+```
+
+### Testing Toast Outputs
+
+**Always test toast outputs when testing server actions** to ensure error messages are user-appropriate and success toasts are properly configured.
+
+#### Testing Error Toast Messages
+
+When testing actions that may throw errors, verify that error messages are user-friendly and appropriate for toast display:
+
+```typescript
+import { createProjectAction } from "./create-project.action";
+import { vi } from "vitest";
+
+describe("createProjectAction", () => {
+  it("returns user-friendly error messages for toast display", async () => {
+    // Mock a database error
+    vi.spyOn(db.project, "create").mockRejectedValue(
+      new Error("PrismaClientKnownRequestError: P2002")
+    );
+
+    const result = await createProjectAction({
+      name: "Test Project",
+      description: "Test description",
+    });
+
+    // Verify error message is user-appropriate (not technical)
+    expect(result.serverError).toBeDefined();
+    expect(result.serverError).not.toContain("PrismaClient");
+    expect(result.serverError).not.toContain("P2002");
+    expect(result.serverError).not.toContain("Database");
+    // Should contain user-friendly message
+    expect(result.serverError).toMatch(/unable|failed|error/i);
+  });
+
+  it("returns specific user-friendly error for not found", async () => {
+    const result = await getProjectAction({
+      projectId: "non-existent-id",
+    });
+
+    expect(result.serverError).toBeDefined();
+    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    // Should not contain technical details
+    expect(result.serverError).not.toContain("Prisma");
+    expect(result.serverError).not.toContain("undefined");
+  });
+});
+```
+
+#### Testing Success Toast Configuration
+
+When actions return toast configuration, test that it's properly structured:
+
+```typescript
+describe("createProjectAction", () => {
+  it("returns success toast configuration", async () => {
+    const result = await createProjectAction({
+      name: "New Project",
+      description: "Project description",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.toast).toBeDefined();
+    expect(result.data?.toast?.message).toBeDefined();
+    expect(result.data?.toast?.type).toBe("success");
+    expect(result.data?.toast?.message).toContain("Project"); // Should be specific
+  });
+});
+```
+
+#### Testing Both Error and Success Paths
+
+Always test both error and success toast scenarios:
+
+```typescript
+describe("updateProjectAction", () => {
+  it("returns success toast on successful update", async () => {
+    const result = await updateProjectAction({
+      projectId: "existing-id",
+      name: "Updated Project",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.toast?.message).toContain("updated");
+    expect(result.data?.toast?.type).toBe("success");
+  });
+
+  it("returns user-friendly error toast on failure", async () => {
+    const result = await updateProjectAction({
+      projectId: "non-existent-id",
+      name: "Updated Project",
+    });
+
+    expect(result.serverError).toBeDefined();
+    // Error message should be user-friendly
+    expect(result.serverError?.toLowerCase()).toMatch(/not found|unable|failed/i);
+    expect(result.serverError).not.toContain("Prisma");
+    expect(result.serverError).not.toContain("P2025");
+  });
+});
+```
+
+#### Key Testing Requirements
+
+When testing toast outputs:
+
+1. **Error Messages**: Always verify error messages are user-friendly:
+   - ✅ Good: Test that messages don't contain technical jargon
+   - ✅ Good: Test that messages are clear and actionable
+   - ❌ Bad: Don't just check that error exists - verify it's appropriate
+
+2. **Success Toasts**: Test that success toast configuration is present and correct:
+   - ✅ Good: Verify message, type, and optional description
+   - ✅ Good: Test that messages are specific and informative
+
+3. **User-Appropriate**: Verify messages are suitable for end users:
+   - ✅ Good: Messages should be clear, actionable, and free of technical details
+   - ❌ Bad: Messages should never expose database codes, stack traces, or internal errors
+
+```typescript
+// ✅ Good - Comprehensive toast testing
+describe("deleteProjectAction", () => {
+  it("returns user-friendly error if project not found", async () => {
+    const result = await deleteProjectAction({
+      projectId: "non-existent-id",
+    });
+
+    expect(result.serverError).toBeDefined();
+    // Verify user-friendly message
+    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    // Verify no technical details
+    expect(result.serverError).not.toMatch(/prisma|database|p2025|undefined/i);
+  });
+
+  it("returns success toast on successful deletion", async () => {
+    // Setup: create a project first
+    const project = await createProjectAction({
+      name: "Test Project",
+      description: "Test",
+    });
+
+    const result = await deleteProjectAction({
+      projectId: project.data?.project.id!,
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.toast?.message).toMatch(/deleted|removed/i);
+    expect(result.data?.toast?.type).toBe("success");
+  });
 });
 ```
 
@@ -516,8 +686,8 @@ describe("createProjectAction", () => {
 - `beforeEach` only initializes headers mock - it does NOT cleanup data
 - Always create data in your test file's `beforeEach` AFTER `setupTestHooks()` is called
 - Cleanup happens in two places only:
-  1. **Global setup** (`src/shared/testing/setup.ts`) - runs once at the start of the entire test suite
-  2. **Global teardown** (`src/shared/testing/teardown.ts`) - runs once after ALL test files complete
+  1. **Global setup** (`src/features/shared/testing/setup.ts`) - runs once at the start of the entire test suite
+  2. **Global teardown** (`src/features/shared/testing/teardown.ts`) - runs once after ALL test files complete
 - This prevents cleanup from interfering between test files or individual tests
 - If a test needs to delete data (e.g., for error testing), create it fresh in that test itself
 - Tests must never rely on data from other tests, even in the same file

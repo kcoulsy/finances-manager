@@ -1,0 +1,57 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:John Smith
+N:Smith;John;;;
+EMAIL;TYPE=INTERNET,HOME:john.smith@example.com
+TEL;TYPE=CELL:+1-555-0123
+TEL;TYPE=HOME:+1-555-0124
+TEL;TYPE=WORK:+1-555-0125
+ORG:Tech Solutions Inc.
+TITLE:Senior Software Engineer
+URL:https://johnsmith.dev
+NOTE:Primary contact for development projects
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Jane Doe
+N:Doe;Jane;;;
+EMAIL;TYPE=INTERNET:jane.doe@company.com
+TEL;TYPE=MOBILE:+1-555-0234
+ORG:Marketing Pro
+TITLE:Marketing Director
+URL:https://janedoe.com
+NOTE:Handles all marketing inquiries
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Robert Johnson
+N:Johnson;Robert;Michael;;
+EMAIL;TYPE=INTERNET:robert.j@business.com
+TEL;TYPE=WORK:+1-555-0345
+TEL;TYPE=HOME:+1-555-0346
+ORG:Global Services
+TITLE:CEO
+URL:https://robertjohnson.biz
+NOTE:Executive level contact
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Emily Chen
+N:Chen;Emily;;;
+EMAIL;TYPE=INTERNET:emily.chen@design.co
+TEL;TYPE=CELL:+1-555-0456
+ORG:Creative Design Studio
+TITLE:Lead Designer
+NOTE:Design projects and branding
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Michael Brown
+N:Brown;Michael;;;
+EMAIL;TYPE=INTERNET:mike.brown@finance.io
+TEL;TYPE=WORK:+1-555-0567
+ORG:Finance Corp
+TITLE:CFO
+URL:https://michaelbrown.io
+END:VCARD
+

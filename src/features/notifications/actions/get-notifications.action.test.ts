@@ -6,9 +6,9 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { getNotificationsAction } from "./get-notifications.action";
+} from "@/features/shared/testing/helpers";
 import { createNotificationAction } from "./create-notification.action";
+import { getNotificationsAction } from "./get-notifications.action";
 
 describe("getNotificationsAction", () => {
   let testUser: TestUser;
@@ -156,7 +156,9 @@ describe("getNotificationsAction", () => {
     });
 
     expect(result.data?.notifications.length).toBe(1);
-    expect(result.data?.notifications[0].id).toBe(unread2.data?.notification.id);
+    expect(result.data?.notifications[0].id).toBe(
+      unread2.data?.notification.id,
+    );
     expect(result.data?.notifications[0].read).toBe(false);
     expect(result.data?.unreadCount).toBe(1);
   });
@@ -271,4 +273,3 @@ describe("getNotificationsAction", () => {
     expect(result.data?.unreadCount).toBe(15);
   });
 });
-

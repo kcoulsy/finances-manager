@@ -9,7 +9,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { deleteProjectAction } from "./delete-project.action";
 
 describe("deleteProjectAction", () => {

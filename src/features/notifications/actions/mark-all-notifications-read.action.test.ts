@@ -6,9 +6,9 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { markAllNotificationsReadAction } from "./mark-all-notifications-read.action";
+} from "@/features/shared/testing/helpers";
 import { createNotificationAction } from "./create-notification.action";
+import { markAllNotificationsReadAction } from "./mark-all-notifications-read.action";
 
 describe("markAllNotificationsReadAction", () => {
   let testUser: TestUser;
@@ -45,7 +45,9 @@ describe("markAllNotificationsReadAction", () => {
 
     expect(result.data?.success).toBe(true);
     expect(result.data?.toast).toBeDefined();
-    expect(result.data?.toast?.message).toBe("All notifications marked as read");
+    expect(result.data?.toast?.message).toBe(
+      "All notifications marked as read",
+    );
 
     // Verify all are now read
     const updated1 = await db.notification.findUnique({
@@ -165,7 +167,9 @@ describe("markAllNotificationsReadAction", () => {
 
     const result = await markAllNotificationsReadAction({});
 
-    expect(result.data?.toast?.message).toBe("All notifications marked as read");
+    expect(result.data?.toast?.message).toBe(
+      "All notifications marked as read",
+    );
     expect(result.data?.toast?.type).toBe("success");
     expect(result.data?.toast?.description).toBe(
       "All notifications have been marked as read.",
@@ -196,4 +200,3 @@ describe("markAllNotificationsReadAction", () => {
     });
   });
 });
-

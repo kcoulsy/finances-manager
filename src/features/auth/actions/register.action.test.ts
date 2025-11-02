@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/features/shared/lib/db/client";
 import { auth } from "@/features/shared/lib/auth/config";
+import { db } from "@/features/shared/lib/db/client";
 import {
   mockNoAuthSession,
   setupTestHooks,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { registerAction } from "./register.action";
 
 describe("registerAction", () => {
@@ -146,4 +146,3 @@ describe("registerAction", () => {
     await db.user.delete({ where: { id: existingUser.id } });
   });
 });
-

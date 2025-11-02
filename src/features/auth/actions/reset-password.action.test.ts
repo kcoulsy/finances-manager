@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "@/features/shared/lib/auth/config";
-import { setupTestHooks } from "@/shared/testing/helpers";
+import { setupTestHooks } from "@/features/shared/testing/helpers";
 import { resetPasswordAction } from "./reset-password.action";
 
 describe("resetPasswordAction", () => {

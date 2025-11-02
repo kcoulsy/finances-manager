@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { UserRole } from "@/features/auth/constants/roles";
 import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
@@ -9,8 +10,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
-import { UserRole } from "@/features/auth/constants/roles";
+} from "@/features/shared/testing/helpers";
 import { getUsersAction } from "./get-users.action";
 
 describe("getUsersAction", () => {
@@ -136,9 +136,7 @@ describe("getUsersAction", () => {
     });
 
     expect(result.data?.success).toBe(true);
-    const foundUser = result.data?.users.find(
-      (u) => u.email === uniqueEmail,
-    );
+    const foundUser = result.data?.users.find((u) => u.email === uniqueEmail);
     expect(foundUser).toBeDefined();
   });
 
@@ -212,8 +210,14 @@ describe("getUsersAction", () => {
     const roleNames = await assignRolesToUser(adminUser.id, [UserRole.ADMIN]);
     mockAuthSession(adminUser, roleNames);
 
-    await createTestUser({ name: "A User", email: `a-${Date.now()}@example.com` });
-    await createTestUser({ name: "Z User", email: `z-${Date.now()}@example.com` });
+    await createTestUser({
+      name: "A User",
+      email: `a-${Date.now()}@example.com`,
+    });
+    await createTestUser({
+      name: "Z User",
+      email: `z-${Date.now()}@example.com`,
+    });
 
     const result = await getUsersAction({
       page: 1,
@@ -236,8 +240,14 @@ describe("getUsersAction", () => {
     const roleNames = await assignRolesToUser(adminUser.id, [UserRole.ADMIN]);
     mockAuthSession(adminUser, roleNames);
 
-    await createTestUser({ name: "User A", email: `a-${Date.now()}@example.com` });
-    await createTestUser({ name: "User Z", email: `z-${Date.now()}@example.com` });
+    await createTestUser({
+      name: "User A",
+      email: `a-${Date.now()}@example.com`,
+    });
+    await createTestUser({
+      name: "User Z",
+      email: `z-${Date.now()}@example.com`,
+    });
 
     const result = await getUsersAction({
       page: 1,
@@ -348,4 +358,3 @@ describe("getUsersAction", () => {
     expect(result.validationErrors).toHaveProperty("limit");
   });
 });
-

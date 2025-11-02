@@ -5,7 +5,7 @@ import {
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { getProjectsAction } from "./get-projects.action";
 
 describe("getProjectsAction", () => {
@@ -122,7 +122,7 @@ describe("getProjectsAction", () => {
 
   it("only returns projects for the authenticated user", async () => {
     // Create another user
-    const { createTestUser } = await import("@/shared/testing/helpers");
+    const { createTestUser } = await import("@/features/shared/testing/helpers");
     const otherUser = await createTestUser({
       name: "Other User",
     });

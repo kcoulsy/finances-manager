@@ -3,7 +3,7 @@ import { auth } from "@/features/shared/lib/auth/config";
 import {
   mockNoAuthSession,
   setupTestHooks,
-} from "@/shared/testing/helpers";
+} from "@/features/shared/testing/helpers";
 import { loginAction } from "./login.action";
 
 describe("loginAction", () => {
