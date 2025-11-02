@@ -221,7 +221,6 @@ function parseCSV(content: string): Array<{
     if (!line) continue;
 
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
-    console.log(line);
 
     const firstName =
       getValue(headers, values, ["first name", "firstname", "first_name", "fname"]) || "";
@@ -341,8 +340,6 @@ function parseCSV(content: string): Array<{
     }
   }
 
-  console.log('contacts', contacts);
-
   return contacts;
 }
 
@@ -443,19 +440,19 @@ export const importContactsAction = actionClient
             personalWebsite: normalizedPersonalWebsite,
           };
 
-          // Only include company fields if provided
-          if (contactData.companyName !== undefined) {
-            data.companyName = contactData.companyName ?? null;
+          // Only include company fields if provided (check for truthy values)
+          if (contactData.companyName) {
+            data.companyName = contactData.companyName;
           }
-          if (normalizedCompanyWebsite !== undefined) {
+          if (normalizedCompanyWebsite) {
             data.companyWebsite = normalizedCompanyWebsite;
           }
-          if (contactData.position !== undefined) {
-            data.position = contactData.position || null;
+          if (contactData.position) {
+            data.position = contactData.position;
           }
 
           const contact = await db.contact.create({
-            data: data as Parameters<typeof db.contact.create>[0]["data"],
+            data: data as any, // Using 'as any' because Prisma client types may be out of date - run 'npx prisma generate' after schema changes
           });
 
           createdContacts.push(contact);

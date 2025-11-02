@@ -56,8 +56,8 @@ Jane,Smith,jane.smith@example.com,SUPPLIER,07999 888777,Smith Ltd,Manager`;
 
     it("imports CSV with minimal required fields", async () => {
       const csvContent = `First Name,Last Name,Email
-John,Doe,john@example.com
-Jane,Smith,jane@example.com`;
+John,Doe,minimal-john@example.com
+Jane,Smith,minimal-jane@example.com`;
 
       const result = await importContactsAction({
         fileContent: csvContent,
@@ -95,7 +95,7 @@ New,Contact,new@example.com`;
 
     it("handles CSV with quoted values", async () => {
       const csvContent = `"First Name","Last Name","Email"
-"John","Doe","john.doe@example.com"`;
+"John","Doe","quoted-john.doe@example.com"`;
 
       const result = await importContactsAction({
         fileContent: csvContent,
@@ -108,7 +108,7 @@ New,Contact,new@example.com`;
 
     it("handles CSV with various column name variations", async () => {
       const csvContent = `first_name,last_name,email_address,phone_mobile,company_name
-John,Doe,john@example.com,07123 456789,Acme Corp`;
+John,Doe,variations-john@example.com,07123 456789,Acme Corp`;
 
       const result = await importContactsAction({
         fileContent: csvContent,
@@ -119,13 +119,13 @@ John,Doe,john@example.com,07123 456789,Acme Corp`;
       expect(result.data?.imported).toBe(1);
 
       const contact = await db.contact.findFirst({
-        where: { email: "john@example.com" },
+        where: { email: "variations-john@example.com" },
       });
 
       expect(contact?.firstName).toBe("John");
       expect(contact?.lastName).toBe("Doe");
       expect(contact?.phoneMobile).toBe("07123 456789");
-      expect(contact?.companyName).toBe("Acme Corp");
+      expect((contact as any)?.companyName).toBe("Acme Corp");
     });
   });
 
@@ -176,15 +176,15 @@ END:VCARD`;
       expect(johnContact?.phoneMobile).toBe("07123 456789");
       expect(johnContact?.phoneHome).toBe("01234 567890");
       expect(johnContact?.phoneWork).toBe("020 1234 5678");
-      expect(johnContact?.companyName).toBe("Acme Corp");
-      expect(johnContact?.position).toBe("Director");
+      expect((johnContact as any)?.companyName).toBe("Acme Corp");
+      expect((johnContact as any)?.position).toBe("Director");
     });
 
     it("imports vCard with minimal fields", async () => {
       const vcardContent = `BEGIN:VCARD
 VERSION:3.0
 FN:John Doe
-EMAIL:john@example.com
+EMAIL:minimal-vcard-john@example.com
 END:VCARD`;
 
       const result = await importContactsAction({
@@ -200,7 +200,7 @@ END:VCARD`;
       const vcardContent = `BEGIN:VCARD
 VERSION:3.0
 FN:John Doe
-EMAIL:john@example.com
+EMAIL:fn-only-vcard-john@example.com
 END:VCARD`;
 
       const result = await importContactsAction({
@@ -212,7 +212,7 @@ END:VCARD`;
       expect(result.data?.imported).toBe(1);
 
       const contact = await db.contact.findFirst({
-        where: { email: "john@example.com" },
+        where: { email: "fn-only-vcard-john@example.com" },
       });
 
       expect(contact?.firstName).toBe("John");
@@ -283,7 +283,7 @@ Existing,Contact,existing@example.com`;
     mockNoAuthSession();
 
     const csvContent = `First Name,Last Name,Email
-John,Doe,john@example.com`;
+John,Doe,unauth-john@example.com`;
 
     const result = await importContactsAction({
       fileContent: csvContent,
@@ -328,8 +328,8 @@ New,Contact,new@example.com`;
 
   it("returns success toast with proper message for successful import", async () => {
     const csvContent = `First Name,Last Name,Email
-John,Doe,john@example.com
-Jane,Smith,jane@example.com`;
+John,Doe,toast-john@example.com
+Jane,Smith,toast-jane@example.com`;
 
     const result = await importContactsAction({
       fileContent: csvContent,
@@ -346,7 +346,7 @@ Jane,Smith,jane@example.com`;
 
   it("handles CSV with business phone mapping to work phone", async () => {
     const csvContent = `First Name,Last Name,Email,Business Phone
-John,Doe,john@example.com,020 1234 5678`;
+John,Doe,business-phone-john@example.com,020 1234 5678`;
 
     const result = await importContactsAction({
       fileContent: csvContent,
@@ -357,15 +357,15 @@ John,Doe,john@example.com,020 1234 5678`;
     expect(result.data?.imported).toBe(1);
 
     const contact = await db.contact.findFirst({
-      where: { email: "john@example.com" },
+      where: { email: "business-phone-john@example.com" },
     });
 
     expect(contact?.phoneWork).toBe("020 1234 5678");
   });
 
-  it.only("handles CSV with company website", async () => {
+  it("handles CSV with company website", async () => {
     const csvContent = `First Name,Last Name,Email,Company Name,Company Website
-John,Doe,john@example.com,Acme Corp,acmecorp.com`;
+John,Doe,company-website-john@example.com,Acme Corp,acmecorp.com`;
 
     const result = await importContactsAction({
       fileContent: csvContent,
@@ -376,10 +376,10 @@ John,Doe,john@example.com,Acme Corp,acmecorp.com`;
     expect(result.data?.imported).toBe(1);
 
     const contact = await db.contact.findFirst({
-      where: { email: "john@example.com" },
+      where: { email: "company-website-john@example.com" },
     });
 
-    expect(contact?.companyName).toBe("Acme Corp");
+    expect((contact as any)?.companyName).toBe("Acme Corp");
     // Note: Company website normalization might happen in createContactAction,
     // but for imports it uses personalWebsite field
   });

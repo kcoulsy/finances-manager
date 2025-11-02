@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
+  generateUniqueContactEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -25,14 +26,14 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "John",
       lastName: "Doe",
-      email: "john@example.com",
+      email: "list-john@example.com",
       status: "PERSONAL",
     });
 
     await createContactAction({
       firstName: "Jane",
       lastName: "Smith",
-      email: "jane@example.com",
+      email: "list-jane@example.com",
       status: "CLIENT",
     });
 
@@ -51,14 +52,14 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Personal",
       lastName: "Contact",
-      email: "personal@example.com",
+      email: "list-status-personal@example.com",
       status: "PERSONAL",
     });
 
     await createContactAction({
       firstName: "Client",
       lastName: "Contact",
-      email: "client@example.com",
+      email: "list-status-client@example.com",
       status: "CLIENT",
     });
 
@@ -75,7 +76,7 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Active",
       lastName: "Contact",
-      email: "active@example.com",
+      email: "list-engagement-active@example.com",
       status: "CLIENT",
       engagement: "ACTIVE",
     });
@@ -83,7 +84,7 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Inactive",
       lastName: "Contact",
-      email: "inactive@example.com",
+      email: "list-engagement-inactive@example.com",
       status: "CLIENT",
       engagement: "INACTIVE",
     });
@@ -100,7 +101,7 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Client",
       lastName: "Role",
-      email: "clientrole@example.com",
+      email: "list-role-client@example.com",
       status: "CLIENT",
       role: "Client",
     });
@@ -108,7 +109,7 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Supplier",
       lastName: "Role",
-      email: "supplierrole@example.com",
+      email: "list-role-supplier@example.com",
       status: "SUPPLIER",
       role: "Supplier",
     });
@@ -125,14 +126,14 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Searchable",
       lastName: "Contact",
-      email: "searchable@example.com",
+      email: "list-search-searchable@example.com",
       status: "PERSONAL",
     });
 
     await createContactAction({
       firstName: "Another",
       lastName: "Person",
-      email: "another@example.com",
+      email: "list-search-another@example.com",
       status: "PERSONAL",
     });
 
@@ -152,16 +153,16 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "Email",
       lastName: "Search",
-      email: "uniqueemail@example.com",
+      email: "list-email-search@example.com",
       status: "PERSONAL",
     });
 
     const result = await listContactsAction({
-      search: "uniqueemail",
+      search: "list-email-search",
     });
 
     expect(result.data?.success).toBe(true);
-    expect(result.data?.contacts.some((c) => c.email.includes("uniqueemail"))).toBe(true);
+    expect(result.data?.contacts.some((c) => c.email.includes("list-email-search"))).toBe(true);
   });
 
   it("applies limit and offset for pagination", async () => {
@@ -170,7 +171,7 @@ describe("listContactsAction", () => {
       await createContactAction({
         firstName: `Contact${i}`,
         lastName: "Test",
-        email: `contact${i}@example.com`,
+        email: `list-pagination-${i}@example.com`,
         status: "PERSONAL",
       });
     }
@@ -235,7 +236,7 @@ describe("listContactsAction", () => {
     const createResult = await createContactAction({
       firstName: "ToDelete",
       lastName: "Contact",
-      email: "todelete@example.com",
+      email: generateUniqueContactEmail("list-deleted"),
       status: "PERSONAL",
     });
 
@@ -260,19 +261,19 @@ describe("listContactsAction", () => {
     await createContactAction({
       firstName: "User1",
       lastName: "Contact",
-      email: "user1@example.com",
+      email: generateUniqueContactEmail("list-user1"),
       status: "PERSONAL",
     });
 
     // Create another user and their contact
     const otherUser = await setupTestUserWithSession({
-      email: "other@example.com",
+      email: generateUniqueContactEmail("list-other-user"),
     });
 
     await createContactAction({
       firstName: "Other",
       lastName: "User",
-      email: "other@example.com",
+      email: generateUniqueContactEmail("list-other-contact"),
       status: "PERSONAL",
     });
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
+  generateUniqueContactEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -23,7 +24,7 @@ describe("createContactAction", () => {
     const result = await createContactAction({
       firstName: "John",
       lastName: "Doe",
-      email: "john.doe@example.com",
+      email: "create-minimal-john@example.com",
       status: "PERSONAL",
     });
 
@@ -31,7 +32,7 @@ describe("createContactAction", () => {
     expect(result.data?.contact).toBeDefined();
     expect(result.data?.contact.firstName).toBe("John");
     expect(result.data?.contact.lastName).toBe("Doe");
-    expect(result.data?.contact.email).toBe("john.doe@example.com");
+    expect(result.data?.contact.email).toBe("create-minimal-john@example.com");
     expect(result.data?.contact.status).toBe("PERSONAL");
     expect(result.data?.contact.userId).toBe(testUser.id);
     expect(result.data?.toast).toBeDefined();
@@ -46,14 +47,14 @@ describe("createContactAction", () => {
     expect(contact).toBeDefined();
     expect(contact?.firstName).toBe("John");
     expect(contact?.lastName).toBe("Doe");
-    expect(contact?.email).toBe("john.doe@example.com");
+    expect(contact?.email).toBe("create-minimal-john@example.com");
   });
 
   it("creates a contact with all fields", async () => {
     const result = await createContactAction({
       firstName: "Jane",
       lastName: "Smith",
-      email: "jane.smith@example.com",
+      email: "create-all-fields-jane@example.com",
       status: "CLIENT",
       role: "Client",
       engagement: "ACTIVE",
@@ -92,7 +93,7 @@ describe("createContactAction", () => {
     const result = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "create-normalize-website@example.com",
       status: "PERSONAL",
       companyWebsite: "example.com",
     });
@@ -132,7 +133,7 @@ describe("createContactAction", () => {
     await createContactAction({
       firstName: "First",
       lastName: "User",
-      email: "duplicate@example.com",
+      email: "create-duplicate-1@example.com",
       status: "PERSONAL",
     });
 
@@ -140,7 +141,7 @@ describe("createContactAction", () => {
     const result = await createContactAction({
       firstName: "Second",
       lastName: "User",
-      email: "duplicate@example.com",
+      email: "create-duplicate-1@example.com",
       status: "PERSONAL",
     });
 
@@ -157,7 +158,7 @@ describe("createContactAction", () => {
     const result = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "create-unauth-test@example.com",
       status: "PERSONAL",
     });
 
@@ -175,7 +176,7 @@ describe("createContactAction", () => {
     const result = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "create-db-error-test@example.com",
       status: "PERSONAL",
     });
 
@@ -192,19 +193,32 @@ describe("createContactAction", () => {
   });
 
   it("creates multiple contacts for the same user", async () => {
+    const email1 = generateUniqueContactEmail("create-multiple-1");
+    const email2 = generateUniqueContactEmail("create-multiple-2");
+    
     const contact1 = await createContactAction({
       firstName: "Contact",
       lastName: "One",
-      email: "contact1@example.com",
+      email: email1,
       status: "PERSONAL",
     });
+
+    // Check for errors before asserting success
+    if (contact1.serverError) {
+      throw new Error(`Contact1 creation failed: ${contact1.serverError}`);
+    }
 
     const contact2 = await createContactAction({
       firstName: "Contact",
       lastName: "Two",
-      email: "contact2@example.com",
+      email: email2,
       status: "CLIENT",
     });
+
+    // Check for errors before asserting success
+    if (contact2.serverError) {
+      throw new Error(`Contact2 creation failed: ${contact2.serverError}`);
+    }
 
     expect(contact1.data?.success).toBe(true);
     expect(contact2.data?.success).toBe(true);
@@ -214,17 +228,22 @@ describe("createContactAction", () => {
     });
 
     expect(contacts.length).toBeGreaterThanOrEqual(2);
-    expect(contacts.map((c) => c.email)).toContain("contact1@example.com");
-    expect(contacts.map((c) => c.email)).toContain("contact2@example.com");
+    expect(contacts.map((c) => c.email)).toContain(email1);
+    expect(contacts.map((c) => c.email)).toContain(email2);
   });
 
   it("returns success toast with proper description", async () => {
     const result = await createContactAction({
       firstName: "Toast",
       lastName: "Test",
-      email: "toast@example.com",
+      email: generateUniqueContactEmail("create-toast"),
       status: "PERSONAL",
     });
+
+    // Check for errors before asserting success
+    if (result.serverError) {
+      throw new Error(`Contact creation failed: ${result.serverError}`);
+    }
 
     expect(result.data?.toast).toBeDefined();
     expect(result.data?.toast?.message).toBe("Contact created successfully");

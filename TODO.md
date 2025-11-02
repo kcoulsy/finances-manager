@@ -15,6 +15,7 @@
 - React email
 - Meta data - titles etc
 - homepage
+- ToastError
 
 
 ## Secondary Features

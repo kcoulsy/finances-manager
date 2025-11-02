@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
+  generateUniqueContactEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -25,7 +26,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "ToDelete",
       lastName: "Contact",
-      email: "todelete@example.com",
+      email: "delete-soft-delete-test@example.com",
       status: "PERSONAL",
     });
 
@@ -80,7 +81,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "delete-other-user-1@example.com",
       status: "PERSONAL",
     });
 
@@ -88,7 +89,7 @@ describe("deleteContactAction", () => {
 
     // Create another user and try to delete the contact
     const otherUser = await setupTestUserWithSession({
-      email: "other@example.com",
+      email: "delete-other-user-2@example.com",
     });
 
     mockAuthSession(otherUser);
@@ -106,7 +107,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "delete-unauth-test@example.com",
       status: "PERSONAL",
     });
 
@@ -129,7 +130,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "delete-db-error-test@example.com",
       status: "PERSONAL",
     });
 
@@ -163,7 +164,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Toast",
       lastName: "Test",
-      email: "toast@example.com",
+      email: generateUniqueContactEmail("delete-toast"),
       status: "PERSONAL",
     });
 
@@ -186,7 +187,7 @@ describe("deleteContactAction", () => {
     const createResult = await createContactAction({
       firstName: "AlreadyDeleted",
       lastName: "Contact",
-      email: "alreadydeleted@example.com",
+      email: generateUniqueContactEmail("delete-already-deleted"),
       status: "PERSONAL",
     });
 
@@ -214,14 +215,14 @@ describe("deleteContactAction", () => {
     const contact1 = await createContactAction({
       firstName: "Contact1",
       lastName: "Test",
-      email: "contact1@example.com",
+      email: generateUniqueContactEmail("delete-multiple-1"),
       status: "PERSONAL",
     });
 
     const contact2 = await createContactAction({
       firstName: "Contact2",
       lastName: "Test",
-      email: "contact2@example.com",
+      email: generateUniqueContactEmail("delete-multiple-2"),
       status: "PERSONAL",
     });
 

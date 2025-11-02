@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
+  generateUniqueContactEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -25,7 +26,7 @@ describe("getContactAction", () => {
     const createResult = await createContactAction({
       firstName: "John",
       lastName: "Doe",
-      email: "john.doe@example.com",
+      email: "get-john-doe@example.com",
       status: "PERSONAL",
     });
 
@@ -41,7 +42,7 @@ describe("getContactAction", () => {
     expect(result.data?.contact.id).toBe(contactId);
     expect(result.data?.contact.firstName).toBe("John");
     expect(result.data?.contact.lastName).toBe("Doe");
-    expect(result.data?.contact.email).toBe("john.doe@example.com");
+    expect(result.data?.contact.email).toBe("get-john-doe@example.com");
     expect(result.data?.contact.userId).toBe(testUser.id);
   });
 
@@ -49,7 +50,7 @@ describe("getContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Jane",
       lastName: "Smith",
-      email: "jane@example.com",
+      email: "get-all-fields-jane@example.com",
       status: "CLIENT",
       role: "Client",
       engagement: "ACTIVE",
@@ -97,7 +98,7 @@ describe("getContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "get-other-user-1@example.com",
       status: "PERSONAL",
     });
 
@@ -105,7 +106,7 @@ describe("getContactAction", () => {
 
     // Create another user and try to access the contact
     const otherUser = await setupTestUserWithSession({
-      email: "other@example.com",
+      email: "get-other-user-2@example.com",
     });
 
     mockAuthSession(otherUser);
@@ -123,7 +124,7 @@ describe("getContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "get-unauth-test@example.com",
       status: "PERSONAL",
     });
 
@@ -163,7 +164,7 @@ describe("getContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: generateUniqueContactEmail("get-deleted"),
       status: "PERSONAL",
     });
 

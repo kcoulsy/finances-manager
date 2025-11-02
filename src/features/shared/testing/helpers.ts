@@ -208,6 +208,16 @@ export async function cleanupTestData(): Promise<void> {
 }
 
 /**
+ * Generates a unique email address for testing contacts
+ * @param prefix - A prefix to identify the test (e.g., "create", "update", "delete")
+ * @returns A unique email address
+ */
+export function generateUniqueContactEmail(prefix: string): string {
+  const hrTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+  return `${prefix}-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}@example.com`;
+}
+
+/**
  * Sets up beforeEach hooks for mock initialization
  * Call this once in your test file
  *

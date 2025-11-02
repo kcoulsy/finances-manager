@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
+  generateUniqueContactEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -24,7 +25,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Original",
       lastName: "Name",
-      email: "original@example.com",
+      email: "update-original@example.com",
       status: "PERSONAL",
     });
 
@@ -35,14 +36,14 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "Updated",
       lastName: "Name",
-      email: "updated@example.com",
+      email: "update-updated@example.com",
       status: "CLIENT",
     });
 
     expect(result.data?.success).toBe(true);
     expect(result.data?.contact).toBeDefined();
     expect(result.data?.contact.firstName).toBe("Updated");
-    expect(result.data?.contact.email).toBe("updated@example.com");
+    expect(result.data?.contact.email).toBe("update-updated@example.com");
     expect(result.data?.contact.status).toBe("CLIENT");
     expect(result.data?.toast).toBeDefined();
     expect(result.data?.toast?.message).toBe("Contact updated successfully");
@@ -54,14 +55,14 @@ describe("updateContactAction", () => {
     });
 
     expect(contact?.firstName).toBe("Updated");
-    expect(contact?.email).toBe("updated@example.com");
+    expect(contact?.email).toBe("update-updated@example.com");
   });
 
   it("updates contact with all fields", async () => {
     const createResult = await createContactAction({
       firstName: "Jane",
       lastName: "Doe",
-      email: "jane@example.com",
+      email: "update-all-fields-jane@example.com",
       status: "PERSONAL",
     });
 
@@ -71,7 +72,7 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "Jane",
       lastName: "Smith",
-      email: "jane.smith@example.com",
+      email: "update-all-fields-jane-smith@example.com",
       status: "CLIENT",
       role: "Client",
       engagement: "ACTIVE",
@@ -108,7 +109,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-normalize-website@example.com",
       status: "PERSONAL",
     });
 
@@ -118,7 +119,7 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-normalize-website@example.com",
       status: "PERSONAL",
       companyWebsite: "example.com",
     });
@@ -131,7 +132,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-validate-required@example.com",
       status: "PERSONAL",
     });
 
@@ -156,7 +157,7 @@ describe("updateContactAction", () => {
       contactId: "",
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-validate-contactid@example.com",
     });
 
     expect(result.data).toBeUndefined();
@@ -169,7 +170,7 @@ describe("updateContactAction", () => {
       contactId: "non-existent-id",
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-not-found@example.com",
       status: "PERSONAL",
     });
 
@@ -186,14 +187,14 @@ describe("updateContactAction", () => {
     const contact1 = await createContactAction({
       firstName: "First",
       lastName: "User",
-      email: "first@example.com",
+      email: "update-duplicate-1@example.com",
       status: "PERSONAL",
     });
 
     await createContactAction({
       firstName: "Second",
       lastName: "User",
-      email: "second@example.com",
+      email: "update-duplicate-2@example.com",
       status: "PERSONAL",
     });
 
@@ -204,7 +205,7 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "First",
       lastName: "User",
-      email: "second@example.com",
+      email: "update-duplicate-2@example.com",
       status: "PERSONAL",
     });
 
@@ -220,7 +221,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-unauth-test@example.com",
       status: "PERSONAL",
     });
 
@@ -230,7 +231,7 @@ describe("updateContactAction", () => {
       contactId: createResult.data?.contact.id!,
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-unauth-test@example.com",
       status: "PERSONAL",
     });
 
@@ -245,7 +246,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Test",
       lastName: "User",
-      email: "test@example.com",
+      email: "update-db-error-test@example.com",
       status: "PERSONAL",
     });
 
@@ -260,7 +261,7 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "Updated",
       lastName: "User",
-      email: "updated@example.com",
+      email: "update-db-error-updated@example.com",
       status: "PERSONAL",
     });
 
@@ -275,7 +276,7 @@ describe("updateContactAction", () => {
     const createResult = await createContactAction({
       firstName: "Toast",
       lastName: "Test",
-      email: "toast@example.com",
+      email: generateUniqueContactEmail("update-toast"),
       status: "PERSONAL",
     });
 
@@ -285,7 +286,7 @@ describe("updateContactAction", () => {
       contactId,
       firstName: "Updated",
       lastName: "Toast",
-      email: "updated@example.com",
+      email: generateUniqueContactEmail("update-toast-updated"),
       status: "CLIENT",
     });
 
