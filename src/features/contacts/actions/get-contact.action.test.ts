@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -10,7 +10,6 @@ import {
 } from "@/features/shared/testing/helpers";
 import { createContactAction } from "./create-contact.action";
 import { getContactAction } from "./get-contact.action";
-import { vi } from "vitest";
 
 describe("getContactAction", () => {
   let testUser: TestUser;
@@ -87,7 +86,9 @@ describe("getContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find|contact.*found/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find|contact.*found/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
     expect(result.serverError).not.toContain("undefined");
@@ -116,7 +117,9 @@ describe("getContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
@@ -139,14 +142,16 @@ describe("getContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/unauthorized|need.*logged|must.*sign/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unauthorized|need.*logged|must.*sign/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
   it("returns user-friendly error messages for toast display on database errors", async () => {
     // Mock database error
     vi.spyOn(db.contact, "findFirst").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: Connection timeout")
+      new Error("PrismaClientKnownRequestError: Connection timeout"),
     );
 
     const result = await getContactAction({
@@ -157,7 +162,9 @@ describe("getContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("Connection timeout");
     expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(/unable|failed|error|fetch/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unable|failed|error|fetch/i,
+    );
   });
 
   it("does not return deleted contacts", async () => {
@@ -183,6 +190,8 @@ describe("getContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find/i,
+    );
   });
 });
