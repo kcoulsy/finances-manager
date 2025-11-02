@@ -48,6 +48,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+// Mock Next.js cache functions - revalidatePath is a no-op in tests
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}));
+
 // Ensure test database is set up
 // Use dedicated test database - vitest.config.ts sets DATABASE_URL to test database
 // Prefer TEST_DATABASE_URL if explicitly set, otherwise use the default test database

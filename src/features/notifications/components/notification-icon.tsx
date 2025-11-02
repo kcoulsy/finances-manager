@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 
 import { Button } from "@/features/shared/components/ui/button";
 import {
@@ -12,10 +12,10 @@ import {
   PopoverTrigger,
 } from "@/features/shared/components/ui/popover";
 import { Separator } from "@/features/shared/components/ui/separator";
-import { getNotificationsAction } from "../actions/get-notifications.action";
-import { markNotificationReadAction } from "../actions/mark-notification-read.action";
-import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read.action";
 import { cn } from "@/features/shared/lib/utils/index";
+import { getNotificationsAction } from "../actions/get-notifications.action";
+import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read.action";
+import { markNotificationReadAction } from "../actions/mark-notification-read.action";
 
 declare global {
   interface Window {
@@ -39,6 +39,9 @@ export function NotificationIcon() {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isShaking, setIsShaking] = React.useState(false);
+  const prevCountRef = React.useRef(0);
+  const isMountedRef = React.useRef(false);
 
   const fetchNotifications = React.useCallback(async () => {
     setIsLoading(true);
@@ -72,6 +75,26 @@ export function NotificationIcon() {
   React.useEffect(() => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
+
+  // Trigger shake animation when count changes
+  React.useEffect(() => {
+    // Don't shake on initial mount
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      prevCountRef.current = unreadCount;
+      return;
+    }
+
+    // Shake when count changes (including going from 0 to 1)
+    if (unreadCount !== prevCountRef.current) {
+      setIsShaking(true);
+      const timeout = setTimeout(() => {
+        setIsShaking(false);
+      }, 600); // Match animation duration
+      return () => clearTimeout(timeout);
+    }
+    prevCountRef.current = unreadCount;
+  }, [unreadCount]);
 
   // Expose refresh function via window (for direct access after router.refresh())
   React.useEffect(() => {
@@ -133,7 +156,11 @@ export function NotificationIcon() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("relative", isShaking && "animate-shake")}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">

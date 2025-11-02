@@ -1,0 +1,217 @@
+---
+description: Import React hooks directly instead of using React.useHook pattern
+globs: src/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+# React Hooks Import Guidelines
+
+This project requires importing React hooks **directly** from React instead of using the `React.useHook` pattern. This improves code readability and follows modern React conventions.
+
+## Key Principles
+
+1. **Direct Imports**: Always import hooks directly from React using named imports
+2. **No React Namespace**: Never import React as a namespace (`import * as React`)
+3. **Consistent Pattern**: Use the same import pattern for all hooks
+
+## Import Patterns
+
+### ✅ Good: Direct Hook Imports
+
+```typescript
+import { useState, useEffect, useCallback, useRef } from "react";
+import * as React from "react"; // Only if you need React.FC or React.ReactNode
+
+export function MyComponent() {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  
+  useEffect(() => {
+    // Effect logic
+  }, []);
+
+  const handleClick = useCallback(() => {
+    // Callback logic
+  }, []);
+
+  return <div>Content</div>;
+}
+```
+
+### ❌ Bad: React Namespace Pattern
+
+```typescript
+import * as React from "react";
+
+export function MyComponent() {
+  const [count, setCount] = React.useState(0);
+  const ref = React.useRef(null);
+  
+  React.useEffect(() => {
+    // Effect logic
+  }, []);
+
+  const handleClick = React.useCallback(() => {
+    // Callback logic
+  }, []);
+
+  return <div>Content</div>;
+}
+```
+
+### ✅ Good: Minimal React Import When Needed
+
+If you only need hooks and types, import them directly:
+
+```typescript
+import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
+
+export function MyComponent({ children }: { children: ReactNode }) {
+  const [state, setState] = useState(false);
+  return <div>{children}</div>;
+}
+```
+
+### ✅ Good: Using Both Hooks and Types
+
+If you need both hooks and React types (like `React.FC` or `React.ReactNode`), you can import both:
+
+```typescript
+import { useState, useEffect, useCallback } from "react";
+import type { FC, ReactNode } from "react";
+
+export const MyComponent: FC<{ children: ReactNode }> = ({ children }) => {
+  const [state, setState] = useState(false);
+  return <div>{children}</div>;
+};
+```
+
+## Common Hooks
+
+Always import these hooks directly:
+
+```typescript
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useContext,
+  useReducer,
+  useLayoutEffect,
+  useImperativeHandle,
+  useDebugValue,
+  useId,
+  useTransition,
+  useDeferredValue,
+  useSyncExternalStore,
+  useInsertionEffect,
+} from "react";
+```
+
+## When React Namespace is Acceptable
+
+The `import * as React` pattern is only acceptable when:
+1. You need React types that aren't available as direct imports (legacy patterns)
+2. Using JSX without importing React (React 17+ automatic JSX runtime)
+3. Accessing React namespace for specific type utilities
+
+Even then, prefer type-only imports:
+
+```typescript
+// ✅ Good - Type-only import
+import type { FC, ComponentProps } from "react";
+
+// ❌ Avoid - Namespace import for types
+import * as React from "react";
+type Props = React.ComponentProps<"div">;
+```
+
+## Migration Checklist
+
+When refactoring code:
+
+- [ ] Replace `React.useState` with `useState` and add to imports
+- [ ] Replace `React.useEffect` with `useEffect` and add to imports
+- [ ] Replace `React.useCallback` with `useCallback` and add to imports
+- [ ] Replace `React.useRef` with `useRef` and add to imports
+- [ ] Replace `React.useMemo` with `useMemo` and add to imports
+- [ ] Remove `import * as React` if only used for hooks
+- [ ] Use type-only imports for React types when possible
+
+## Examples
+
+### Example: Component with Multiple Hooks
+
+```typescript
+// ✅ Good
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Button } from "@/features/shared/components/ui/button";
+
+export function NotificationIcon() {
+  const [open, setOpen] = useState(false);
+  const [count, setCount] = useState(0);
+  const prevCountRef = useRef(0);
+
+  const fetchData = useCallback(async () => {
+    // Fetch logic
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return (
+    <Button onClick={() => setOpen(!open)}>
+      Notifications ({count})
+    </Button>
+  );
+}
+```
+
+```typescript
+// ❌ Bad
+"use client";
+
+import * as React from "react";
+import { Button } from "@/features/shared/components/ui/button";
+
+export function NotificationIcon() {
+  const [open, setOpen] = React.useState(false);
+  const [count, setCount] = React.useState(0);
+  const prevCountRef = React.useRef(0);
+
+  const fetchData = React.useCallback(async () => {
+    // Fetch logic
+  }, []);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return (
+    <Button onClick={() => setOpen(!open)}>
+      Notifications ({count})
+    </Button>
+  );
+}
+```
+
+## Best Practices
+
+1. **Import only what you need**: Don't import unused hooks
+2. **Group imports logically**: Keep React imports together, then project imports
+3. **Use type-only imports**: Use `import type` for TypeScript types when possible
+4. **Consistent ordering**: Place React imports at the top, before other imports
+5. **Remove unused imports**: Clean up `import * as React` if not needed
+
+## Related Files
+
+When updating code, check these common patterns:
+- Component files: `src/features/**/components/**/*.tsx`
+- Hook files: `src/features/**/hooks/**/*.ts`
+- Client components using React hooks
