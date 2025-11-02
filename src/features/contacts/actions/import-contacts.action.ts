@@ -7,6 +7,29 @@ import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
 import { importContactsSchema } from "../schemas/contact.schema";
 
+/**
+ * Get a column value from CSV data by matching header names (case-insensitive)
+ * @param headers - Array of lowercased header names
+ * @param values - Array of values from a CSV row
+ * @param possibleNames - Array of possible header names to match (will be lowercased for comparison)
+ * @returns The trimmed value or undefined if not found or empty
+ */
+function getValue(
+  headers: string[],
+  values: string[],
+  possibleNames: string[],
+): string | undefined {
+  const lowercasedNames = possibleNames.map((name) => name.toLowerCase());
+  const index = headers.findIndex((h) => lowercasedNames.includes(h));
+  
+  if (index >= 0 && index < values.length) {
+    const trimmed = values[index]?.trim() || "";
+    return trimmed || undefined;
+  }
+  
+  return undefined;
+}
+
 // Parse vCard content
 function parseVCard(content: string): Array<{
   firstName: string;
@@ -75,11 +98,12 @@ function parseVCard(content: string): Array<{
         }
       }
 
-      // Parse EMAIL
+      // Parse EMAIL - Format: EMAIL:value or EMAIL;TYPE=...:value
       if (upperLine.startsWith("EMAIL")) {
-        const emailMatch = line.match(/EMAIL[;:]([^:]+)?:(.+)/i);
-        if (emailMatch?.[2]) {
-          email = emailMatch[2].trim();
+        // Extract email value after the last colon
+        const colonIndex = line.lastIndexOf(":");
+        if (colonIndex >= 0) {
+          email = line.substring(colonIndex + 1).trim();
         }
       }
 
@@ -181,7 +205,8 @@ function parseCSV(content: string): Array<{
     position?: string;
   }> = [];
 
-  const lines = content.split(/\r?\n/).filter((line) => line.trim());
+  // Split by newline - handle both \n and \r\n, and also handle cases where newline might not be recognized
+  const lines = content.split(/\r?\n|\n/).filter((line) => line.trim());
   if (lines.length === 0) return contacts;
 
   // Parse header row
@@ -190,148 +215,108 @@ function parseCSV(content: string): Array<{
     .split(",")
     .map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase());
 
-  // Find column indices
-  const firstNameIdx = headers.findIndex(
-    (h) =>
-      h === "first name" ||
-      h === "firstname" ||
-      h === "first_name" ||
-      h === "fname",
-  );
-  const lastNameIdx = headers.findIndex(
-    (h) =>
-      h === "last name" ||
-      h === "lastname" ||
-      h === "last_name" ||
-      h === "lname",
-  );
-  const emailIdx = headers.findIndex(
-    (h) => h === "email" || h === "email address" || h === "e-mail",
-  );
-  const statusIdx = headers.findIndex((h) => h === "status");
-  const phoneMobileIdx = headers.findIndex(
-    (h) =>
-      h === "mobile" ||
-      h === "phone mobile" ||
-      h === "mobile phone" ||
-      h === "phone_mobile",
-  );
-  const phoneHomeIdx = headers.findIndex(
-    (h) =>
-      h === "home" ||
-      h === "phone home" ||
-      h === "home phone" ||
-      h === "phone_home",
-  );
-  const phoneWorkIdx = headers.findIndex(
-    (h) =>
-      h === "work" ||
-      h === "phone work" ||
-      h === "work phone" ||
-      h === "phone_work",
-  );
-  const notesIdx = headers.findIndex(
-    (h) => h === "notes" || h === "note" || h === "comments",
-  );
-  const websiteIdx = headers.findIndex(
-    (h) => h === "website" || h === "url" || h === "personal website",
-  );
-  const companyIdx = headers.findIndex(
-    (h) =>
-      h === "company" ||
-      h === "company name" ||
-      h === "companyname" ||
-      h === "company_name" ||
-      h === "business name" ||
-      h === "businessname" ||
-      h === "business_name" ||
-      h === "organization" ||
-      h === "org",
-  );
-  const positionIdx = headers.findIndex(
-    (h) =>
-      h === "position" || h === "title" || h === "role" ||       h === "job title" ||
-      h === "jobtitle" ||
-      h === "job_title" ||
-      h === "business position" ||
-      h === "businessposition" ||
-      h === "business_position",
-  );
-  const businessPhoneIdx = headers.findIndex(
-    (h) =>
-      h === "business phone" ||
-      h === "businessphone" ||
-      h === "business_phone",
-  );
-  const companyWebsiteIdx = headers.findIndex(
-    (h) =>
-      h === "company website" ||
-      h === "companywebsite" ||
-      h === "company_website" ||
-      h === "business website" ||
-      h === "businesswebsite" ||
-      h === "business_website",
-  );
-
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+    console.log(line);
 
-    const firstName = firstNameIdx >= 0 ? values[firstNameIdx] || "" : "";
-    const lastName = lastNameIdx >= 0 ? values[lastNameIdx] || "" : "";
-    const email = emailIdx >= 0 ? values[emailIdx] || "" : "";
+    const firstName =
+      getValue(headers, values, ["first name", "firstname", "first_name", "fname"]) || "";
+    const lastName =
+      getValue(headers, values, ["last name", "lastname", "last_name", "lname"]) || "";
+    const email =
+      getValue(headers, values, ["email", "email address", "e-mail", "email_address"]) || "";
     
     // Parse status (convert lowercase to uppercase enum)
     let status: "PERSONAL" | "ENQUIRY" | "CLIENT" | "SUPPLIER" | undefined;
-    if (statusIdx >= 0 && values[statusIdx]) {
-      const statusValue = values[statusIdx].toUpperCase().trim();
+    const statusValue = getValue(headers, values, ["status"]);
+    if (statusValue) {
+      const upperStatus = statusValue.toUpperCase().trim();
       if (
-        statusValue === "PERSONAL" ||
-        statusValue === "ENQUIRY" ||
-        statusValue === "CLIENT" ||
-        statusValue === "SUPPLIER"
+        upperStatus === "PERSONAL" ||
+        upperStatus === "ENQUIRY" ||
+        upperStatus === "CLIENT" ||
+        upperStatus === "SUPPLIER"
       ) {
-        status = statusValue as "PERSONAL" | "ENQUIRY" | "CLIENT" | "SUPPLIER";
+        status = upperStatus as "PERSONAL" | "ENQUIRY" | "CLIENT" | "SUPPLIER";
       } else {
         // Map common lowercase values
-        if (statusValue === "CLIENT") status = "CLIENT";
-        else if (statusValue === "SUPPLIER") status = "SUPPLIER";
-        else if (statusValue === "ENQUIRY" || statusValue === "INQUIRY")
+        if (upperStatus === "CLIENT") status = "CLIENT";
+        else if (upperStatus === "SUPPLIER") status = "SUPPLIER";
+        else if (upperStatus === "ENQUIRY" || upperStatus === "INQUIRY")
           status = "ENQUIRY";
         else status = "PERSONAL";
       }
     }
 
-    const phoneMobile =
-      phoneMobileIdx >= 0 ? values[phoneMobileIdx] || undefined : undefined;
-    const phoneHome =
-      phoneHomeIdx >= 0 ? values[phoneHomeIdx] || undefined : undefined;
-    let phoneWork =
-      phoneWorkIdx >= 0 ? values[phoneWorkIdx] || undefined : undefined;
+    const phoneMobile = getValue(headers, values, [
+      "mobile",
+      "phone mobile",
+      "mobile phone",
+      "phone_mobile",
+    ]);
+    const phoneHome = getValue(headers, values, [
+      "home",
+      "phone home",
+      "home phone",
+      "phone_home",
+    ]);
+    let phoneWork = getValue(headers, values, [
+      "work",
+      "phone work",
+      "work phone",
+      "phone_work",
+    ]);
     
     // If Business Phone is provided and Work Phone is empty, use Business Phone
-    const businessPhone =
-      businessPhoneIdx >= 0
-        ? values[businessPhoneIdx] || undefined
-        : undefined;
+    const businessPhone = getValue(headers, values, [
+      "business phone",
+      "businessphone",
+      "business_phone",
+    ]);
     if (businessPhone && !phoneWork) {
       phoneWork = businessPhone;
     }
 
-    const notes = notesIdx >= 0 ? values[notesIdx] || undefined : undefined;
-    const personalWebsite =
-      websiteIdx >= 0 ? values[websiteIdx] || undefined : undefined;
-    const companyName =
-      companyIdx >= 0 ? values[companyIdx] || undefined : undefined;
-    const companyWebsite =
-      companyWebsiteIdx >= 0
-        ? values[companyWebsiteIdx] || undefined
-        : undefined;
-    const position =
-      positionIdx >= 0 ? values[positionIdx] || undefined : undefined;
+    const notes = getValue(headers, values, ["notes", "note", "comments"]);
+    const personalWebsite = getValue(headers, values, [
+      "website",
+      "url",
+      "personal website",
+    ]);
+    const companyName = getValue(headers, values, [
+      "company",
+      "company name",
+      "companyname",
+      "company_name",
+      "business name",
+      "businessname",
+      "business_name",
+      "organization",
+      "org",
+    ]);
+    const companyWebsite = getValue(headers, values, [
+      "company website",
+      "companywebsite",
+      "company_website",
+      "business website",
+      "businesswebsite",
+      "business_website",
+    ]);
+    const position = getValue(headers, values, [
+      "position",
+      "title",
+      "role",
+      "job title",
+      "jobtitle",
+      "job_title",
+      "business position",
+      "businessposition",
+      "business_position",
+    ]);
 
     // Only add if we have at least first name, last name, or email
     if (firstName || lastName || email) {
@@ -355,6 +340,8 @@ function parseCSV(content: string): Array<{
       });
     }
   }
+
+  console.log('contacts', contacts);
 
   return contacts;
 }
@@ -397,12 +384,13 @@ export const importContactsAction = actionClient
         throw new Error("No contacts found in the file");
       }
 
-      // Check for existing emails
+      // Check for existing emails (only non-archived contacts)
       const emails = parsedContacts.map((c) => c.email);
       const existingContacts = await db.contact.findMany({
         where: {
           email: { in: emails },
           userId: session.user.id,
+          deletedAt: null,
         },
       });
 
@@ -423,10 +411,19 @@ export const importContactsAction = actionClient
 
       for (const contactData of contactsToCreate) {
         try {
+          // Normalize personal website if provided
+          let normalizedPersonalWebsite: string | null = null;
+          if (contactData.personalWebsite) {
+            normalizedPersonalWebsite = contactData.personalWebsite;
+            if (!normalizedPersonalWebsite.match(/^https?:\/\//i)) {
+              normalizedPersonalWebsite = `https://${normalizedPersonalWebsite}`;
+            }
+          }
+
           // Normalize company website if provided
           let normalizedCompanyWebsite: string | null = null;
-          if (contactData.personalWebsite) {
-            normalizedCompanyWebsite = contactData.personalWebsite;
+          if (contactData.companyWebsite) {
+            normalizedCompanyWebsite = contactData.companyWebsite;
             if (!normalizedCompanyWebsite.match(/^https?:\/\//i)) {
               normalizedCompanyWebsite = `https://${normalizedCompanyWebsite}`;
             }
@@ -435,20 +432,23 @@ export const importContactsAction = actionClient
           // Build contact data object
           const data: Record<string, unknown> = {
             userId: session.user.id,
-            status: "PERSONAL" as const,
+            status: contactData.status ?? "PERSONAL",
             firstName: contactData.firstName,
             lastName: contactData.lastName,
             email: contactData.email,
-            phoneMobile: contactData.phoneMobile || null,
-            phoneHome: contactData.phoneHome || null,
-            phoneWork: contactData.phoneWork || null,
-            notes: contactData.notes || null,
-            personalWebsite: normalizedCompanyWebsite,
+            phoneMobile: contactData.phoneMobile ?? null,
+            phoneHome: contactData.phoneHome ?? null,
+            phoneWork: contactData.phoneWork ?? null,
+            notes: contactData.notes ?? null,
+            personalWebsite: normalizedPersonalWebsite,
           };
 
           // Only include company fields if provided
           if (contactData.companyName !== undefined) {
-            data.companyName = contactData.companyName || null;
+            data.companyName = contactData.companyName ?? null;
+          }
+          if (normalizedCompanyWebsite !== undefined) {
+            data.companyWebsite = normalizedCompanyWebsite;
           }
           if (contactData.position !== undefined) {
             data.position = contactData.position || null;
@@ -460,6 +460,7 @@ export const importContactsAction = actionClient
 
           createdContacts.push(contact);
         } catch (error) {
+          console.error(`Failed to import contact ${contactData.firstName} ${contactData.lastName}:`, error);
           errors.push(
             `Failed to import ${contactData.firstName} ${contactData.lastName}: ${
               error instanceof Error ? error.message : "Unknown error"
@@ -473,6 +474,13 @@ export const importContactsAction = actionClient
       const skippedCount = parsedContacts.length - contactsToCreate.length;
       const errorCount = errors.length;
       const successCount = createdContacts.length;
+
+      // If all contacts failed to create and none were skipped (meaning it's a real failure, not just skipping existing ones), throw an error
+      if (successCount === 0 && contactsToCreate.length > 0 && skippedCount === 0) {
+        throw new Error(
+          `Failed to import contacts. ${errorCount > 0 ? errors.slice(0, 3).join("; ") : "Please check the file format and try again."}`
+        );
+      }
 
       let message = `Successfully imported ${successCount} contact${successCount !== 1 ? "s" : ""}`;
       if (skippedCount > 0) {
@@ -510,10 +518,19 @@ export const importContactsAction = actionClient
         if (errorStr.includes("Unauthorized")) {
           errorMessage = "You need to be logged in to import contacts.";
         }
+        // Handle database errors
+        else if (
+          errorStr.includes("Prisma") ||
+          errorStr.includes("Connection timeout") ||
+          errorStr.includes("Database")
+        ) {
+          errorMessage = "Unable to import contacts. Please try again later.";
+        }
         // Use the error message if it's already user-friendly
         else if (
-          !errorStr.includes("Prisma") &&
-          !errorStr.includes("TURBOPACK")
+          !errorStr.includes("TURBOPACK") &&
+          !errorStr.includes("P2025") &&
+          !errorStr.includes("P2002")
         ) {
           errorMessage = errorStr;
         }

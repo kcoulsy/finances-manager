@@ -71,9 +71,28 @@ export const deleteContactAction = actionClient
       }
 
       console.error("Delete contact error:", error);
-      throw new Error(
-        error instanceof Error ? error.message : "Failed to delete contact",
-      );
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to delete contact";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        // Handle authentication errors
+        if (errorStr.includes("Unauthorized")) {
+          errorMessage = "You need to be logged in to delete contacts.";
+        }
+        // Handle not found errors
+        else if (errorStr.includes("not found") || errorStr.includes("Not found") || errorStr.includes("P2025")) {
+          errorMessage = "Contact not found.";
+        }
+        // Use the error message if it's already user-friendly
+        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK") && !errorStr.includes("P2025")) {
+          errorMessage = errorStr;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
   });
 

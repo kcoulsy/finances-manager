@@ -36,9 +36,28 @@ export const getContactAction = actionClient
       };
     } catch (error) {
       console.error("Get contact error:", error);
-      throw new Error(
-        error instanceof Error ? error.message : "Failed to fetch contact",
-      );
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to fetch contact";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        // Handle authentication errors
+        if (errorStr.includes("Unauthorized")) {
+          errorMessage = "You need to be logged in to view contacts.";
+        }
+        // Handle not found errors
+        else if (errorStr.includes("not found") || errorStr.includes("Not found")) {
+          errorMessage = "Contact not found.";
+        }
+        // Use the error message if it's already user-friendly
+        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK") && !errorStr.includes("Connection timeout")) {
+          errorMessage = errorStr;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
   });
 

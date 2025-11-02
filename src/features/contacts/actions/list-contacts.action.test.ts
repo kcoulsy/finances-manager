@@ -239,7 +239,9 @@ describe("listContactsAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
     // Soft delete the contact
     await db.contact.update({

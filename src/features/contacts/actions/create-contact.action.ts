@@ -19,10 +19,12 @@ export const createContactAction = actionClient
         throw new Error("Unauthorized");
       }
 
-      // Check if email already exists
-      const existingContact = await db.contact.findUnique({
+      // Check if email already exists for this user
+      const existingContact = await db.contact.findFirst({
         where: {
           email: parsedInput.email,
+          userId: session.user.id,
+          deletedAt: null,
         },
       });
 

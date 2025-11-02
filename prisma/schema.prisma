@@ -152,7 +152,7 @@ model Contact {
   engagement       ContactEngagement?
   firstName        String
   lastName         String
-  email            String            @unique
+  email            String
   phoneMobile      String?
   phoneHome        String?
   phoneWork        String?
@@ -172,6 +172,7 @@ model Contact {
   updatedAt        DateTime          @updatedAt
   deletedAt        DateTime?
 
+  @@unique([userId, email])
   @@index([userId])
   @@index([userId, status])
   @@index([userId, engagement])

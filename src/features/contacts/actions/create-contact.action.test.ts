@@ -183,7 +183,12 @@ describe("createContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2002");
     expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(/unable|failed|error/i);
+    // Error message should be user-friendly - either "already exists" or generic failure
+    expect(
+      result.serverError?.toLowerCase().includes("already exists") ||
+      result.serverError?.toLowerCase().includes("failed") ||
+      result.serverError?.toLowerCase().includes("unable")
+    ).toBe(true);
   });
 
   it("creates multiple contacts for the same user", async () => {

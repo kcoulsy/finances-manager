@@ -127,10 +127,14 @@ describe("getContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
+    const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
+
     mockNoAuthSession();
 
     const result = await getContactAction({
-      contactId: createResult.data?.contact.id!,
+      contactId,
     });
 
     expect(result.serverError).toBeDefined();
@@ -163,7 +167,9 @@ describe("getContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
     // Soft delete the contact
     await db.contact.update({

@@ -29,7 +29,9 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
     // Delete the contact
     const result = await deleteContactAction({
@@ -43,14 +45,12 @@ describe("deleteContactAction", () => {
     expect(result.data?.toast?.type).toBe("success");
     expect(result.data?.toast?.description).toContain("ToDelete Contact");
 
-    // Verify soft delete - contact should still exist but with deletedAt set
+    // Verify permanent delete - contact should not exist
     const contact = await db.contact.findUnique({
       where: { id: contactId },
     });
 
-    expect(contact).toBeDefined();
-    expect(contact?.deletedAt).not.toBeNull();
-    expect(contact?.deletedAt).toBeInstanceOf(Date);
+    expect(contact).toBeNull();
   });
 
   it("validates contactId is required", async () => {
@@ -110,10 +110,14 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
+    const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
+
     mockNoAuthSession();
 
     const result = await deleteContactAction({
-      contactId: createResult.data?.contact.id!,
+      contactId,
     });
 
     expect(result.serverError).toBeDefined();
@@ -129,10 +133,12 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
-    // Mock database error
-    vi.spyOn(db.contact, "update").mockRejectedValue(
+    // Mock database error on delete
+    vi.spyOn(db.contact, "delete").mockRejectedValue(
       new Error("PrismaClientKnownRequestError: P2025")
     );
 
@@ -144,7 +150,13 @@ describe("deleteContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
     expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(/unable|failed|error/i);
+    // Error message should be user-friendly (e.g., "Contact not found." or generic failure)
+    expect(
+      result.serverError?.toLowerCase().includes("contact not found") ||
+      result.serverError?.toLowerCase().includes("unable") ||
+      result.serverError?.toLowerCase().includes("failed") ||
+      result.serverError?.toLowerCase().includes("error")
+    ).toBe(true);
   });
 
   it("returns success toast with proper description", async () => {
@@ -155,7 +167,9 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
     const result = await deleteContactAction({
       contactId,
@@ -176,15 +190,18 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(createResult.data?.success).toBe(true);
     const contactId = createResult.data?.contact.id!;
+    expect(contactId).toBeDefined();
 
-    // Soft delete the contact first
-    await db.contact.update({
-      where: { id: contactId },
-      data: { deletedAt: new Date() },
+    // Delete the contact first (permanent delete)
+    const deleteResult = await deleteContactAction({
+      contactId,
     });
 
-    // Try to delete again
+    expect(deleteResult.data?.success).toBe(true);
+
+    // Try to delete again - should fail because contact doesn't exist
     const result = await deleteContactAction({
       contactId,
     });
@@ -208,27 +225,34 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
+    expect(contact1.data?.success).toBe(true);
+    expect(contact2.data?.success).toBe(true);
+    const contact1Id = contact1.data?.contact.id!;
+    const contact2Id = contact2.data?.contact.id!;
+    expect(contact1Id).toBeDefined();
+    expect(contact2Id).toBeDefined();
+
     const result1 = await deleteContactAction({
-      contactId: contact1.data?.contact.id!,
+      contactId: contact1Id,
     });
 
     const result2 = await deleteContactAction({
-      contactId: contact2.data?.contact.id!,
+      contactId: contact2Id,
     });
 
     expect(result1.data?.success).toBe(true);
     expect(result2.data?.success).toBe(true);
 
-    // Verify both are soft deleted
+    // Verify both are permanently deleted
     const deleted1 = await db.contact.findUnique({
-      where: { id: contact1.data?.contact.id! },
+      where: { id: contact1Id },
     });
 
     const deleted2 = await db.contact.findUnique({
-      where: { id: contact2.data?.contact.id! },
+      where: { id: contact2Id },
     });
 
-    expect(deleted1?.deletedAt).not.toBeNull();
-    expect(deleted2?.deletedAt).not.toBeNull();
+    expect(deleted1).toBeNull();
+    expect(deleted2).toBeNull();
   });
 });

@@ -32,11 +32,13 @@ export const updateContactAction = actionClient
         throw new Error("Contact not found");
       }
 
-      // Check if email is being changed and already exists
+      // Check if email is being changed and already exists for this user
       if (parsedInput.email !== existingContact.email) {
-        const emailExists = await db.contact.findUnique({
+        const emailExists = await db.contact.findFirst({
           where: {
             email: parsedInput.email,
+            userId: session.user.id,
+            deletedAt: null,
           },
         });
 
@@ -94,9 +96,32 @@ export const updateContactAction = actionClient
       };
     } catch (error) {
       console.error("Update contact error:", error);
-      throw new Error(
-        error instanceof Error ? error.message : "Failed to update contact",
-      );
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to update contact";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        // Handle authentication errors
+        if (errorStr.includes("Unauthorized")) {
+          errorMessage = "You need to be logged in to update contacts.";
+        }
+        // Handle not found errors
+        else if (errorStr.includes("not found") || errorStr.includes("Not found")) {
+          errorMessage = "Contact not found.";
+        }
+        // Handle unique constraint violations
+        else if (errorStr.includes("Unique constraint") || errorStr.includes("already exists")) {
+          errorMessage = "A contact with this email already exists.";
+        }
+        // Use the error message if it's already user-friendly
+        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK") && !errorStr.includes("P2025")) {
+          errorMessage = errorStr;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
   });
 

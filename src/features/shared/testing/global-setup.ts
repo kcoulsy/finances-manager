@@ -31,6 +31,7 @@ export async function setup() {
     // Clean up test data in the correct order to avoid foreign key violations
     await prisma.project.deleteMany();
     await prisma.notification.deleteMany();
+    await prisma.contact.deleteMany();
     await prisma.userRole.deleteMany();
     await prisma.session.deleteMany();
     await prisma.account.deleteMany();
@@ -57,6 +58,7 @@ export async function setup() {
       // Clean up test data after all tests complete
       await teardownPrisma.project.deleteMany();
       await teardownPrisma.notification.deleteMany();
+      await teardownPrisma.contact.deleteMany();
       await teardownPrisma.userRole.deleteMany();
       await teardownPrisma.session.deleteMany();
       await teardownPrisma.account.deleteMany();
