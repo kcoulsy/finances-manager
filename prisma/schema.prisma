@@ -40,6 +40,8 @@ model User {
   invitedProjectInvitations ProjectInvitation[] @relation("InvitedByUser")
   notifications             Notification[]
   contacts                  Contact[]
+  sentEmailLogs             EmailLog[]          @relation("SenderEmailLogs")
+  receivedEmailLogs         EmailLog[]          @relation("RecipientEmailLogs")
 
   @@map("user")
 }
@@ -272,4 +274,63 @@ model ProjectInvitation {
   @@index([token])
   @@index([status])
   @@map("project_invitation")
+}
+
+enum EmailLogStatus {
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
+}
+
+model EmailLog {
+  id                   String         @id @default(cuid())
+  recipientEmail       String
+  recipientUserId      String?
+  recipientUser        User?          @relation("RecipientEmailLogs", fields: [recipientUserId], references: [id], onDelete: SetNull)
+  recipientDisplayName String?
+  senderEmail          String
+  senderUserId         String?
+  senderUser           User?          @relation("SenderEmailLogs", fields: [senderUserId], references: [id], onDelete: SetNull)
+  senderDisplayName    String?
+  subject              String
+  content              String
+  status               EmailLogStatus @default(SENT)
+  mailType             String?
+  mailClass            String?
+  isResend             Boolean        @default(false)
+  originalEmailLogId   String?
+  originalEmailLog     EmailLog?      @relation("EmailLogResends", fields: [originalEmailLogId], references: [id], onDelete: SetNull)
+  resends              EmailLog[]     @relation("EmailLogResends")
+  errorMessage         String?
+  sentAt               DateTime       @default(now())
+  deliveredAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  reads                EmailLogRead[]
+
+  @@index([recipientEmail])
+  @@index([senderEmail])
+  @@index([recipientUserId])
+  @@index([senderUserId])
+  @@index([status])
+  @@index([mailType])
+  @@index([sentAt])
+  @@index([isResend])
+  @@index([originalEmailLogId])
+  @@map("email_log")
+}
+
+model EmailLogRead {
+  id              String   @id @default(cuid())
+  emailLogId      String
+  emailLog        EmailLog @relation(fields: [emailLogId], references: [id], onDelete: Cascade)
+  readAt          DateTime @default(now())
+  ipAddress       String?
+  browser         String?
+  operatingSystem String?
+
+  @@index([emailLogId])
+  @@index([readAt])
+  @@map("email_log_read")
 }

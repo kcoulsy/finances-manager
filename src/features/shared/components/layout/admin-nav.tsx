@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Shield, Users } from "lucide-react";
+import { ChevronDown, Mail, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -41,6 +41,11 @@ export function AdminNav({ isAdmin }: AdminNavProps) {
       title: "Users",
       url: "/admin/users",
       icon: Users,
+    },
+    {
+      title: "Email Logs",
+      url: "/admin/email-logs",
+      icon: Mail,
     },
   ];
 
