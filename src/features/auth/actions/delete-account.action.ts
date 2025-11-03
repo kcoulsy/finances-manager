@@ -1,17 +1,16 @@
 "use server";
 
-import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
-import { deleteAccountSchema } from "../schemas/auth.schema";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
+import { deleteAccountSchema } from "../schemas/auth.schema";
 
 export const deleteAccountAction = actionClient
   .inputSchema(deleteAccountSchema)
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session) {
       throw new Error("Unauthorized");

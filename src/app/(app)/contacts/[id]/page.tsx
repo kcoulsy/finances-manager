@@ -24,10 +24,9 @@ export default async function ContactDetailPage({
       breadcrumbs={[
         { label: "Contacts", href: "/contacts" },
         {
-          label:
-            contact
-              ? `${contact.firstName} ${contact.lastName}`
-              : "Contact",
+          label: contact
+            ? `${contact.firstName} ${contact.lastName}`
+            : "Contact",
           href: `/contacts/${id}`,
         },
         { label: "Details" },
@@ -51,4 +50,3 @@ export default async function ContactDetailPage({
     </SetBreadcrumbs>
   );
 }
-

@@ -1,9 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { importContactsSchema } from "../schemas/contact.schema";
 
@@ -21,12 +20,12 @@ function getValue(
 ): string | undefined {
   const lowercasedNames = possibleNames.map((name) => name.toLowerCase());
   const index = headers.findIndex((h) => lowercasedNames.includes(h));
-  
+
   if (index >= 0 && index < values.length) {
     const trimmed = values[index]?.trim() || "";
     return trimmed || undefined;
   }
-  
+
   return undefined;
 }
 
@@ -223,12 +222,27 @@ function parseCSV(content: string): Array<{
     const values = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
 
     const firstName =
-      getValue(headers, values, ["first name", "firstname", "first_name", "fname"]) || "";
+      getValue(headers, values, [
+        "first name",
+        "firstname",
+        "first_name",
+        "fname",
+      ]) || "";
     const lastName =
-      getValue(headers, values, ["last name", "lastname", "last_name", "lname"]) || "";
+      getValue(headers, values, [
+        "last name",
+        "lastname",
+        "last_name",
+        "lname",
+      ]) || "";
     const email =
-      getValue(headers, values, ["email", "email address", "e-mail", "email_address"]) || "";
-    
+      getValue(headers, values, [
+        "email",
+        "email address",
+        "e-mail",
+        "email_address",
+      ]) || "";
+
     // Parse status (convert lowercase to uppercase enum)
     let status: "PERSONAL" | "ENQUIRY" | "CLIENT" | "SUPPLIER" | undefined;
     const statusValue = getValue(headers, values, ["status"]);
@@ -269,7 +283,7 @@ function parseCSV(content: string): Array<{
       "work phone",
       "phone_work",
     ]);
-    
+
     // If Business Phone is provided and Work Phone is empty, use Business Phone
     const businessPhone = getValue(headers, values, [
       "business phone",
@@ -347,9 +361,7 @@ export const importContactsAction = actionClient
   .inputSchema(importContactsSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
@@ -457,7 +469,10 @@ export const importContactsAction = actionClient
 
           createdContacts.push(contact);
         } catch (error) {
-          console.error(`Failed to import contact ${contactData.firstName} ${contactData.lastName}:`, error);
+          console.error(
+            `Failed to import contact ${contactData.firstName} ${contactData.lastName}:`,
+            error,
+          );
           errors.push(
             `Failed to import ${contactData.firstName} ${contactData.lastName}: ${
               error instanceof Error ? error.message : "Unknown error"
@@ -473,9 +488,13 @@ export const importContactsAction = actionClient
       const successCount = createdContacts.length;
 
       // If all contacts failed to create and none were skipped (meaning it's a real failure, not just skipping existing ones), throw an error
-      if (successCount === 0 && contactsToCreate.length > 0 && skippedCount === 0) {
+      if (
+        successCount === 0 &&
+        contactsToCreate.length > 0 &&
+        skippedCount === 0
+      ) {
         throw new Error(
-          `Failed to import contacts. ${errorCount > 0 ? errors.slice(0, 3).join("; ") : "Please check the file format and try again."}`
+          `Failed to import contacts. ${errorCount > 0 ? errors.slice(0, 3).join("; ") : "Please check the file format and try again."}`,
         );
       }
 

@@ -10,9 +10,9 @@ vi.mock("next/headers", () => ({
 // Mock the auth API - we'll use the real better-auth with test database,
 // but need to mock it for testing purposes
 vi.mock("@/features/shared/lib/auth/config", async () => {
-  const actual = await vi.importActual<typeof import("@/features/shared/lib/auth/config")>(
-    "@/features/shared/lib/auth/config"
-  );
+  const actual = await vi.importActual<
+    typeof import("@/features/shared/lib/auth/config")
+  >("@/features/shared/lib/auth/config");
   return {
     ...actual,
     auth: {

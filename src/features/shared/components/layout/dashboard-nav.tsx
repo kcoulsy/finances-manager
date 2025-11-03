@@ -1,15 +1,13 @@
+import { NotificationIcon } from "@/features/notifications/components/notification-icon";
 import { Separator } from "@/features/shared/components/ui/separator";
 import { SidebarTrigger } from "@/features/shared/components/ui/sidebar";
-import { UserNav } from "./user-nav";
-import { AppBreadcrumbs } from "./app-breadcrumbs";
-import { NotificationIcon } from "@/features/notifications/components/notification-icon";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
-import { logger } from "../../lib/logger";
+import { AppBreadcrumbs } from "./app-breadcrumbs";
+import { UserNav } from "./user-nav";
 
 export async function DashboardNav() {
   const session = await requireAuth();
 
-  logger.info("here");
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />

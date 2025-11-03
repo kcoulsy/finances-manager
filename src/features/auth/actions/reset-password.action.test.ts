@@ -108,4 +108,3 @@ describe("resetPasswordAction", () => {
     expect(result.serverError?.length).toBeGreaterThan(0);
   });
 });
-

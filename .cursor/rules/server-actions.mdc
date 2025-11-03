@@ -156,9 +156,7 @@ For actions that require authentication, check session first:
 export const changePasswordAction = actionClient
   .inputSchema(changePasswordSchema)
   .action(async ({ parsedInput }) => {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session) {
       throw new Error("You must be signed in to change your password.");

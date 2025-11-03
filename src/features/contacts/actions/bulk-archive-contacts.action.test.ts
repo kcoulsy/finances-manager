@@ -141,7 +141,9 @@ describe("bulkArchiveContactsAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|no contacts found/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|no contacts found/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
     expect(result.serverError).not.toContain("undefined");
@@ -185,7 +187,9 @@ describe("bulkArchiveContactsAction", () => {
 
     // Verify only valid contacts are archived
     const archivedContacts = await db.contact.findMany({
-      where: { id: { in: [contact1.data?.contact.id!, contact2.data?.contact.id!] } },
+      where: {
+        id: { in: [contact1.data?.contact.id!, contact2.data?.contact.id!] },
+      },
     });
 
     expect(archivedContacts).toHaveLength(2);
@@ -265,10 +269,7 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact1.data?.contact).toBeDefined();
     expect(contact2.data?.contact).toBeDefined();
 
-    const contactIds = [
-      contact1.data?.contact.id!,
-      contact2.data?.contact.id!,
-    ];
+    const contactIds = [contact1.data?.contact.id!, contact2.data?.contact.id!];
 
     // Mock no auth session
     mockNoAuthSession();
@@ -282,11 +283,15 @@ describe("bulkArchiveContactsAction", () => {
       });
     } catch (error) {
       // Action throws error for unauthorized, wrap it
-      result = { serverError: error instanceof Error ? error.message : String(error) };
+      result = {
+        serverError: error instanceof Error ? error.message : String(error),
+      };
     }
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/unauthorized|logged in|need to be/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unauthorized|logged in|need to be/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("TURBOPACK");
   });
@@ -336,10 +341,7 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact2.data?.contact).toBeDefined();
 
     const result = await bulkArchiveContactsAction({
-      contactIds: [
-        contact1.data?.contact.id!,
-        contact2.data?.contact.id!,
-      ],
+      contactIds: [contact1.data?.contact.id!, contact2.data?.contact.id!],
     });
 
     expect(result.data?.success).toBe(true);
@@ -349,4 +351,3 @@ describe("bulkArchiveContactsAction", () => {
     expect(result.data?.toast?.description).toContain("2 contacts have");
   });
 });
-

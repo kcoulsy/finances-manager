@@ -88,4 +88,3 @@ describe("forgotPasswordAction", () => {
     expect(result.validationErrors).toHaveProperty("email");
   });
 });
-

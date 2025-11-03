@@ -74,10 +74,14 @@ export function ContactTypeSelector({
                 isSelected
                   ? cn(
                       "border-primary bg-primary/5",
-                      type.color === "blue" && "border-blue-500 bg-blue-50 dark:bg-blue-950/20",
-                      type.color === "yellow" && "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
-                      type.color === "green" && "border-green-500 bg-green-50 dark:bg-green-950/20",
-                      type.color === "purple" && "border-purple-500 bg-purple-50 dark:bg-purple-950/20",
+                      type.color === "blue" &&
+                        "border-blue-500 bg-blue-50 dark:bg-blue-950/20",
+                      type.color === "yellow" &&
+                        "border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20",
+                      type.color === "green" &&
+                        "border-green-500 bg-green-50 dark:bg-green-950/20",
+                      type.color === "purple" &&
+                        "border-purple-500 bg-purple-50 dark:bg-purple-950/20",
                     )
                   : "border-border bg-background",
               )}
@@ -115,4 +119,3 @@ export function ContactTypeSelector({
     </div>
   );
 }
-

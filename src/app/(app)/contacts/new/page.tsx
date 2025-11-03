@@ -11,7 +11,9 @@ export default async function NewContactPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">New Contact</h1>
-          <p className="text-muted-foreground mt-2">Add a new contact to your address book</p>
+          <p className="text-muted-foreground mt-2">
+            Add a new contact to your address book
+          </p>
         </div>
         <Button asChild variant="outline">
           <Link href="/contacts">Back to Contacts</Link>
@@ -22,4 +24,3 @@ export default async function NewContactPage() {
     </div>
   );
 }
-

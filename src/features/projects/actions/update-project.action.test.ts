@@ -161,9 +161,9 @@ describe("updateProjectAction", () => {
     expect(result.validationErrors).toBeDefined();
     expect(result.validationErrors).toHaveProperty("description");
     expect(result.validationErrors?.description).toHaveProperty("_errors");
-    expect(
-      Array.isArray(result.validationErrors?.description?._errors),
-    ).toBe(true);
+    expect(Array.isArray(result.validationErrors?.description?._errors)).toBe(
+      true,
+    );
     expect(result.validationErrors?.description?._errors?.[0]).toBe(
       "Description must be less than 500 characters",
     );

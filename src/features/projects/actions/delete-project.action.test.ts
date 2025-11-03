@@ -44,7 +44,7 @@ describe("deleteProjectAction", () => {
     expect(result.data?.toast).toBeDefined();
     expect(result.data?.toast?.message).toBe("Project deleted successfully");
     expect(result.data?.toast?.description).toContain(
-      "Project \"Project to Delete\" has been permanently deleted.",
+      'Project "Project to Delete" has been permanently deleted.',
     );
 
     // Verify project is deleted from database
@@ -139,7 +139,7 @@ describe("deleteProjectAction", () => {
     expect(result.data?.success).toBe(true);
     expect(result.data?.message).toBe("Project deleted successfully");
     expect(result.data?.toast?.description).toContain(
-      "Project \"Other User's Project\" has been permanently deleted.",
+      'Project "Other User\'s Project" has been permanently deleted.',
     );
 
     // Verify project is deleted from database

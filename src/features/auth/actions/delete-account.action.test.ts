@@ -134,4 +134,3 @@ describe("deleteAccountAction", () => {
     // In tests, we verify the API was called correctly
   });
 });
-

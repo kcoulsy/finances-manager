@@ -1,19 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { createContactSchema } from "../schemas/contact.schema";
-import { headers } from "next/headers";
-import { revalidatePath } from "next/cache";
 
 export const createContactAction = actionClient
   .inputSchema(createContactSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
@@ -34,7 +31,10 @@ export const createContactAction = actionClient
 
       // Normalize company website - add https:// if needed
       let normalizedCompanyWebsite = parsedInput.companyWebsite || null;
-      if (normalizedCompanyWebsite && !normalizedCompanyWebsite.match(/^https?:\/\//i)) {
+      if (
+        normalizedCompanyWebsite &&
+        !normalizedCompanyWebsite.match(/^https?:\/\//i)
+      ) {
         normalizedCompanyWebsite = `https://${normalizedCompanyWebsite}`;
       }
 
@@ -95,19 +95,26 @@ export const createContactAction = actionClient
       };
     } catch (error) {
       console.error("Create contact error:", error);
-      
+
       // Provide user-friendly error messages
       let errorMessage = "Failed to create contact";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         // Handle Prisma schema mismatch errors
-        if (errorStr.includes("Unknown argument") || errorStr.includes("does not exist")) {
-          errorMessage = "The database schema needs to be updated. Please contact support or refresh the page.";
+        if (
+          errorStr.includes("Unknown argument") ||
+          errorStr.includes("does not exist")
+        ) {
+          errorMessage =
+            "The database schema needs to be updated. Please contact support or refresh the page.";
         }
         // Handle unique constraint violations
-        else if (errorStr.includes("Unique constraint") || errorStr.includes("already exists")) {
+        else if (
+          errorStr.includes("Unique constraint") ||
+          errorStr.includes("already exists")
+        ) {
           errorMessage = "A contact with this email already exists.";
         }
         // Handle authentication errors
@@ -115,12 +122,14 @@ export const createContactAction = actionClient
           errorMessage = "You need to be logged in to create contacts.";
         }
         // Use the error message if it's already user-friendly
-        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK")) {
+        else if (
+          !errorStr.includes("Prisma") &&
+          !errorStr.includes("TURBOPACK")
+        ) {
           errorMessage = errorStr;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
   });
-

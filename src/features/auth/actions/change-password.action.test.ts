@@ -119,4 +119,3 @@ describe("changePasswordAction", () => {
     expect(result.serverError).toContain("Failed to change password");
   });
 });
-

@@ -22,4 +22,3 @@ export function useContact(contactId: string) {
     enabled: !!contactId,
   });
 }
-

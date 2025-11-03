@@ -1,10 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
-import { auth } from "@/features/shared/lib/auth/config";
-import type { SessionWithRoles } from "@/features/shared/lib/auth/types";
+import { notFound, redirect } from "next/navigation";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { UserRole, type UserRoleType } from "../constants/roles";
 
 /**
@@ -21,16 +18,14 @@ import { UserRole, type UserRoleType } from "../constants/roles";
  * ```
  */
 export async function requireRole(requiredRole: UserRoleType) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session?.user) {
     throw redirect("/login");
   }
 
   // Roles are now included in the session from customSession plugin
-  const roles = (session as SessionWithRoles).roles || [];
+  const roles = session.roles || [];
   const hasRequiredRole = roles.includes(requiredRole);
 
   if (!hasRequiredRole) {

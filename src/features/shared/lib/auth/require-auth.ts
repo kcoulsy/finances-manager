@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { auth } from "./config";
+import { getSession } from "./get-session";
 
 /**
  * Requires authentication for a page.
@@ -8,9 +7,7 @@ import { auth } from "./config";
  * Returns the session if authenticated.
  */
 export async function requireAuth() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session) {
     redirect("/login");
@@ -24,9 +21,7 @@ export async function requireAuth() {
  * Redirects to dashboard if user is already authenticated.
  */
 export async function requireNoAuth() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (session) {
     redirect("/dashboard");

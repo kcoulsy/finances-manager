@@ -81,7 +81,9 @@ describe("archiveContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find|contact.*found/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find|contact.*found/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
     expect(result.serverError).not.toContain("undefined");
@@ -110,7 +112,9 @@ describe("archiveContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|already archived/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|already archived/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
   });
@@ -139,7 +143,9 @@ describe("archiveContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
   });
@@ -170,11 +176,15 @@ describe("archiveContactAction", () => {
       });
     } catch (error) {
       // Action throws error for unauthorized, wrap it
-      result = { serverError: error instanceof Error ? error.message : String(error) };
+      result = {
+        serverError: error instanceof Error ? error.message : String(error),
+      };
     }
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/unauthorized|logged in|need to be/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unauthorized|logged in|need to be/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("TURBOPACK");
   });
@@ -205,4 +215,3 @@ describe("archiveContactAction", () => {
     expect(result.data?.toast?.description).toContain("TestArchive Contact");
   });
 });
-

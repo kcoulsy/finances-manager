@@ -3,11 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Archive,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import { ContactForm } from "./contact-form";
 import {
   Card,
@@ -25,7 +21,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/features/shared/components/ui/dialog";
-import { CONTACT_STATUS_CONFIG, CONTACT_ENGAGEMENT_CONFIG } from "../constants/contact-constants";
+import {
+  CONTACT_STATUS_CONFIG,
+  CONTACT_ENGAGEMENT_CONFIG,
+} from "../constants/contact-constants";
 import type { Contact } from "@prisma/client";
 import { cn } from "@/features/shared/lib/utils/index";
 import { useArchiveContact } from "../hooks/use-archive-contact";
@@ -123,7 +122,11 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-4xl" role="img" aria-label={statusConfig.label}>
+              <span
+                className="text-4xl"
+                role="img"
+                aria-label={statusConfig.label}
+              >
                 {statusConfig.emoji}
               </span>
               <div>
@@ -174,7 +177,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               <div className="grid gap-4 md:grid-cols-3">
                 {contact.phoneMobile && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Mobile Phone</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Mobile Phone
+                    </p>
                     <a
                       href={`tel:${contact.phoneMobile}`}
                       className="font-medium text-blue-600 hover:underline"
@@ -185,7 +190,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.phoneHome && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Home Phone</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Home Phone
+                    </p>
                     <a
                       href={`tel:${contact.phoneHome}`}
                       className="font-medium text-blue-600 hover:underline"
@@ -196,7 +203,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.phoneWork && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Work Phone</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Work Phone
+                    </p>
                     <a
                       href={`tel:${contact.phoneWork}`}
                       className="font-medium text-blue-600 hover:underline"
@@ -235,7 +244,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               </div>
               {engagementConfig && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Engagement</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Engagement
+                  </p>
                   <p
                     className={cn(
                       "font-medium",
@@ -273,13 +284,17 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               <div className="grid gap-4 md:grid-cols-2">
                 {contact.companyName && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Company Name</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Company Name
+                    </p>
                     <p className="font-medium">{contact.companyName}</p>
                   </div>
                 )}
                 {contact.companyWebsite && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Company Website</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Company Website
+                    </p>
                     <Link
                       href={contact.companyWebsite}
                       target="_blank"
@@ -292,19 +307,25 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.vatNumber && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">VAT Number</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      VAT Number
+                    </p>
                     <p className="font-medium">{contact.vatNumber}</p>
                   </div>
                 )}
                 {contact.registrationNumber && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Registration Number</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Registration Number
+                    </p>
                     <p className="font-medium">{contact.registrationNumber}</p>
                   </div>
                 )}
                 {contact.accountsEmail && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Accounts Email</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Accounts Email
+                    </p>
                     <a
                       href={`mailto:${contact.accountsEmail}`}
                       className="font-medium text-blue-600 hover:underline"
@@ -328,7 +349,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               <div className="grid gap-4 md:grid-cols-2">
                 {contact.personalWebsite && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Personal Website</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Personal Website
+                    </p>
                     <Link
                       href={contact.personalWebsite}
                       target="_blank"
@@ -341,7 +364,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.linkedinUrl && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">LinkedIn</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      LinkedIn
+                    </p>
                     <Link
                       href={contact.linkedinUrl}
                       target="_blank"
@@ -354,13 +379,17 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.twitterHandle && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Twitter</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Twitter
+                    </p>
                     <p className="font-medium">@{contact.twitterHandle}</p>
                   </div>
                 )}
                 {contact.facebookUrl && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Facebook</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Facebook
+                    </p>
                     <Link
                       href={contact.facebookUrl}
                       target="_blank"
@@ -373,7 +402,9 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
                 )}
                 {contact.instagramHandle && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Instagram</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Instagram
+                    </p>
                     <p className="font-medium">@{contact.instagramHandle}</p>
                   </div>
                 )}
@@ -480,4 +511,3 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
     </div>
   );
 }
-

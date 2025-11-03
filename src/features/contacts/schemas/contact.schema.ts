@@ -73,15 +73,40 @@ export const createContactSchema = z.object({
   notes: z.string().optional(),
   personalWebsite: z.string().url("Invalid URL").optional().or(z.literal("")),
   linkedinUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-  twitterHandle: z.string().max(50, "Twitter handle must be less than 50 characters").optional(),
+  twitterHandle: z
+    .string()
+    .max(50, "Twitter handle must be less than 50 characters")
+    .optional(),
   facebookUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-  instagramHandle: z.string().max(50, "Instagram handle must be less than 50 characters").optional(),
-  companyName: z.string().max(200, "Company name must be less than 200 characters").optional(),
-  companyWebsite: z.string().max(500, "Company website must be less than 500 characters").optional(),
-  vatNumber: z.string().max(100, "VAT number must be less than 100 characters").optional(),
-  registrationNumber: z.string().max(100, "Registration number must be less than 100 characters").optional(),
-  accountsEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
-  position: z.string().max(100, "Position must be less than 100 characters").optional(),
+  instagramHandle: z
+    .string()
+    .max(50, "Instagram handle must be less than 50 characters")
+    .optional(),
+  companyName: z
+    .string()
+    .max(200, "Company name must be less than 200 characters")
+    .optional(),
+  companyWebsite: z
+    .string()
+    .max(500, "Company website must be less than 500 characters")
+    .optional(),
+  vatNumber: z
+    .string()
+    .max(100, "VAT number must be less than 100 characters")
+    .optional(),
+  registrationNumber: z
+    .string()
+    .max(100, "Registration number must be less than 100 characters")
+    .optional(),
+  accountsEmail: z
+    .string()
+    .email("Invalid email address")
+    .optional()
+    .or(z.literal("")),
+  position: z
+    .string()
+    .max(100, "Position must be less than 100 characters")
+    .optional(),
 });
 
 // Update contact schema
@@ -116,15 +141,40 @@ export const updateContactSchema = z.object({
   notes: z.string().optional(),
   personalWebsite: z.string().url("Invalid URL").optional().or(z.literal("")),
   linkedinUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-  twitterHandle: z.string().max(50, "Twitter handle must be less than 50 characters").optional(),
+  twitterHandle: z
+    .string()
+    .max(50, "Twitter handle must be less than 50 characters")
+    .optional(),
   facebookUrl: z.string().url("Invalid URL").optional().or(z.literal("")),
-  instagramHandle: z.string().max(50, "Instagram handle must be less than 50 characters").optional(),
-  companyName: z.string().max(200, "Company name must be less than 200 characters").optional(),
-  companyWebsite: z.string().max(500, "Company website must be less than 500 characters").optional(),
-  vatNumber: z.string().max(100, "VAT number must be less than 100 characters").optional(),
-  registrationNumber: z.string().max(100, "Registration number must be less than 100 characters").optional(),
-  accountsEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
-  position: z.string().max(100, "Position must be less than 100 characters").optional(),
+  instagramHandle: z
+    .string()
+    .max(50, "Instagram handle must be less than 50 characters")
+    .optional(),
+  companyName: z
+    .string()
+    .max(200, "Company name must be less than 200 characters")
+    .optional(),
+  companyWebsite: z
+    .string()
+    .max(500, "Company website must be less than 500 characters")
+    .optional(),
+  vatNumber: z
+    .string()
+    .max(100, "VAT number must be less than 100 characters")
+    .optional(),
+  registrationNumber: z
+    .string()
+    .max(100, "Registration number must be less than 100 characters")
+    .optional(),
+  accountsEmail: z
+    .string()
+    .email("Invalid email address")
+    .optional()
+    .or(z.literal("")),
+  position: z
+    .string()
+    .max(100, "Position must be less than 100 characters")
+    .optional(),
 });
 
 // Get contact schema
@@ -162,12 +212,16 @@ export const importContactsSchema = z.object({
 
 // Bulk archive contacts schema
 export const bulkArchiveContactsSchema = z.object({
-  contactIds: z.array(z.string().min(1, "Contact ID is required")).min(1, "At least one contact ID is required"),
+  contactIds: z
+    .array(z.string().min(1, "Contact ID is required"))
+    .min(1, "At least one contact ID is required"),
 });
 
 // Bulk delete contacts schema
 export const bulkDeleteContactsSchema = z.object({
-  contactIds: z.array(z.string().min(1, "Contact ID is required")).min(1, "At least one contact ID is required"),
+  contactIds: z
+    .array(z.string().min(1, "Contact ID is required"))
+    .min(1, "At least one contact ID is required"),
 });
 
 // Type exports
@@ -181,6 +235,7 @@ export type GetContactInput = z.infer<typeof getContactSchema>;
 export type DeleteContactInput = z.infer<typeof deleteContactSchema>;
 export type ListContactsInput = z.infer<typeof listContactsSchema>;
 export type ImportContactsInput = z.infer<typeof importContactsSchema>;
-export type BulkArchiveContactsInput = z.infer<typeof bulkArchiveContactsSchema>;
+export type BulkArchiveContactsInput = z.infer<
+  typeof bulkArchiveContactsSchema
+>;
 export type BulkDeleteContactsInput = z.infer<typeof bulkDeleteContactsSchema>;
-

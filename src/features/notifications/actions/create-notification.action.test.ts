@@ -45,7 +45,9 @@ describe("createNotificationAction", () => {
     expect(notification).toBeDefined();
     expect(notification?.title).toBe("Test Notification");
     expect(notification?.subtitle).toBe("This is a test subtitle");
-    expect(notification?.detail).toBe("This is a test detail with **markdown**");
+    expect(notification?.detail).toBe(
+      "This is a test detail with **markdown**",
+    );
     expect(notification?.link).toBe("/dashboard");
     expect(notification?.read).toBe(false);
     expect(notification?.userId).toBe(testUser.id);
@@ -260,4 +262,3 @@ describe("createNotificationAction", () => {
     expect(result.serverError?.length).toBeGreaterThan(0);
   });
 });
-

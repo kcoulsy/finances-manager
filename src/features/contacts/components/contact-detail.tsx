@@ -24,4 +24,3 @@ export async function ContactDetail({ contactId }: ContactDetailProps) {
 
   return <ContactDetailView contact={result.data.contact} />;
 }
-

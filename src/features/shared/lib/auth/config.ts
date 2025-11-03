@@ -1,11 +1,12 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession } from "better-auth/plugins";
-import { db } from "../db/client";
 import {
-  sendVerificationEmail,
   sendResetPassword,
+  sendVerificationEmail,
 } from "@/features/auth/lib/email";
+import { db } from "../db/client";
+import { getUserRoles } from "./get-user-roles";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -24,6 +25,12 @@ export const auth = betterAuth({
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // Cache for 5 minutes
+    },
+  },
   user: {
     deleteUser: {
       enabled: true,
@@ -31,19 +38,9 @@ export const auth = betterAuth({
   },
   plugins: [
     customSession(async ({ user, session }) => {
-      // Fetch user roles and add them to the session
-      const userWithRoles = await db.user.findUnique({
-        where: { id: user.id },
-        include: {
-          userRoles: {
-            include: {
-              role: true,
-            },
-          },
-        },
-      });
-
-      const roles = userWithRoles?.userRoles.map((ur) => ur.role.name) || [];
+      // Use cached roles fetcher - caches per userId for 5 minutes
+      // This significantly reduces database queries when session is checked
+      const roles = await getUserRoles(user.id);
 
       return {
         user,

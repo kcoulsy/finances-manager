@@ -1,18 +1,15 @@
 "use server";
 
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { createProjectSchema } from "../schemas/project.schema";
-import { headers } from "next/headers";
 
 export const createProjectAction = actionClient
   .inputSchema(createProjectSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");

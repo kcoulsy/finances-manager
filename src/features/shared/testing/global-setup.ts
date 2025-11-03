@@ -6,7 +6,7 @@ import { PrismaClient } from "@prisma/client";
  * - Cannot use Vitest mocks
  * - Cannot share module instances with test files
  * - Can access environment variables and file system
- * 
+ *
  * Returns a teardown function that runs once after all tests complete.
  * This replaces the need for a separate globalTeardown config option.
  */
@@ -27,8 +27,7 @@ export async function setup() {
     },
   });
 
-    await prisma.$disconnect();
-
+  await prisma.$disconnect();
 
   // Return teardown function that runs after all tests complete
   return async () => {
@@ -43,4 +42,3 @@ export async function setup() {
     await teardownPrisma.$disconnect();
   };
 }
-

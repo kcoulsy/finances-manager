@@ -47,7 +47,7 @@ export function ImportContactsModal({
 
   const handleFileSelect = (selectedFile: File) => {
     const extension = selectedFile.name.toLowerCase().split(".").pop();
-    
+
     if (extension === "vcf") {
       setFileType("vcard");
       setFile(selectedFile);
@@ -95,7 +95,7 @@ export function ImportContactsModal({
     setIsProcessing(true);
     try {
       const content = await file.text();
-      
+
       await importContacts.mutateAsync({
         fileContent: content,
         fileType,
@@ -155,9 +155,10 @@ export function ImportContactsModal({
           {fileType === "vcard" ? (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Import contacts from a vCard (.vcf) file. This format is commonly used by email clients and address book applications.
+                Import contacts from a vCard (.vcf) file. This format is
+                commonly used by email clients and address book applications.
               </p>
-              
+
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -199,11 +200,19 @@ export function ImportContactsModal({
                   <div className="space-y-2 text-sm">
                     <p className="font-medium">CSV Format Requirements</p>
                     <p className="text-muted-foreground">
-                      Your CSV file must include a header row with these column names (case-insensitive):
+                      Your CSV file must include a header row with these column
+                      names (case-insensitive):
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground ml-2">
-                      <li><strong>Required:</strong> First Name (or firstName, first_name), Last Name (or lastName, last_name), Email (or email, email address)</li>
-                      <li><strong>Optional:</strong> Mobile, Home, Work, Notes, Website, Company, Position</li>
+                      <li>
+                        <strong>Required:</strong> First Name (or firstName,
+                        first_name), Last Name (or lastName, last_name), Email
+                        (or email, email address)
+                      </li>
+                      <li>
+                        <strong>Optional:</strong> Mobile, Home, Work, Notes,
+                        Website, Company, Position
+                      </li>
                     </ul>
                     <p className="text-muted-foreground mt-2">
                       Example header row:
@@ -276,4 +285,3 @@ export function ImportContactsModal({
     </Dialog>
   );
 }
-

@@ -122,4 +122,3 @@ describe("loginAction", () => {
     expect(result.validationErrors).toHaveProperty("password");
   });
 });
-

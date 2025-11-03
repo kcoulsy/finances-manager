@@ -1,17 +1,16 @@
 "use server";
 
+import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { changePasswordSchema } from "../schemas/auth.schema";
-import { headers } from "next/headers";
 
 export const changePasswordAction = actionClient
   .inputSchema(changePasswordSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session) {
         throw new Error("Unauthorized");

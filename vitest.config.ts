@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   test: {
-    silent: 'passed-only',
+    silent: "passed-only",
     globals: true,
     environment: "jsdom",
     globalSetup: ["./src/features/shared/testing/global-setup.ts"],

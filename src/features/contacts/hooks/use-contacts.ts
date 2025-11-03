@@ -22,4 +22,3 @@ export function useContacts(input?: ListContactsInput) {
     },
   });
 }
-

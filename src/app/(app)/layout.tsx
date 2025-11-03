@@ -1,13 +1,13 @@
+import { Toaster } from "sonner";
+import { UserRole } from "@/features/auth/constants/roles";
 import { AppSidebar } from "@/features/shared/components/layout/app-sidebar";
-import { DashboardNav } from "@/features/shared/components/layout/dashboard-nav";
 import { BreadcrumbProvider } from "@/features/shared/components/layout/breadcrumb-context";
+import { DashboardNav } from "@/features/shared/components/layout/dashboard-nav";
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/features/shared/components/ui/sidebar";
 import { hasRole } from "@/features/shared/lib/auth/has-role";
-import { UserRole } from "@/features/auth/constants/roles";
-import { Toaster } from "sonner";
 
 export default async function AppLayout({
   children,

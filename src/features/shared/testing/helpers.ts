@@ -28,7 +28,8 @@ export async function createTestUser(
 ): Promise<TestUser> {
   // Use a more unique email to avoid conflicts from rapid test execution
   // Combine timestamp with high-resolution timer and random number for better uniqueness
-  const hrTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const hrTime =
+    typeof performance !== "undefined" ? performance.now() : Date.now();
   const uniqueEmail =
     overrides?.email ??
     `test-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}@example.com`;
@@ -51,7 +52,8 @@ export async function createTestUser(
       "code" in error &&
       error.code === "P2002"
     ) {
-      const hrTimeRetry = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const hrTimeRetry =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
       const retryEmail = `test-${Date.now()}-${hrTimeRetry}-${Math.random().toString(36).substring(2, 15)}-retry@example.com`;
       const user = await db.user.create({
         data: {
@@ -187,14 +189,14 @@ export async function assignRolesToUser(userId: string, roleNames: string[]) {
   );
 }
 
-
 /**
  * Generates a unique email address for testing contacts
  * @param prefix - A prefix to identify the test (e.g., "create", "update", "delete")
  * @returns A unique email address
  */
 export function generateUniqueContactEmail(prefix: string): string {
-  const hrTime = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const hrTime =
+    typeof performance !== "undefined" ? performance.now() : Date.now();
   return `${prefix}-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}@example.com`;
 }
 

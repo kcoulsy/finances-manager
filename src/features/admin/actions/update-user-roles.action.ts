@@ -1,10 +1,11 @@
 "use server";
 
-import { actionClient } from "@/features/shared/lib/actions/client";
+import { Permission } from "@/features/auth/constants/permissions";
 import { requirePermission } from "@/features/auth/lib/require-permission";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { invalidateUserRolesCache } from "@/features/shared/lib/auth/get-user-roles";
 import { db } from "@/features/shared/lib/db/client";
 import { updateUserRolesSchema } from "../schemas/admin.schema";
-import { Permission } from "@/features/auth/constants/permissions";
 
 /**
  * Update user roles
@@ -53,6 +54,9 @@ export const updateUserRolesAction = actionClient
           roleId,
         })),
       });
+
+      // Invalidate roles cache for this user
+      invalidateUserRolesCache(parsedInput.userId);
 
       // Fetch updated user with roles
       const updatedUser = await db.user.findUnique({

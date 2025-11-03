@@ -122,7 +122,9 @@ describe("getProjectsAction", () => {
 
   it("only returns projects for the authenticated user", async () => {
     // Create another user
-    const { createTestUser } = await import("@/features/shared/testing/helpers");
+    const { createTestUser } = await import(
+      "@/features/shared/testing/helpers"
+    );
     const otherUser = await createTestUser({
       name: "Other User",
     });
@@ -169,9 +171,7 @@ describe("getProjectsAction", () => {
     const projectIds = result.data?.projects.map((p) => p.id);
     expect(projectIds).toContain(userProject1.id);
     expect(projectIds).toContain(userProject2.id);
-    expect(projectIds).not.toContain(
-      expect.not.stringContaining(otherUser.id),
-    );
+    expect(projectIds).not.toContain(expect.not.stringContaining(otherUser.id));
   });
 
   it("throws error when user is not authenticated", async () => {

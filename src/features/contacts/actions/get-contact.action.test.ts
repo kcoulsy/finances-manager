@@ -148,7 +148,6 @@ describe("getContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
-
   it("does not return deleted contacts", async () => {
     const createResult = await createContactAction({
       firstName: "Test",

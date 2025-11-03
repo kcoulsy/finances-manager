@@ -1,14 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "@/features/shared/lib/auth/config";
-import type { SessionWithRoles } from "@/features/shared/lib/auth/types";
+import { notFound, redirect } from "next/navigation";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import {
-  ROLE_PERMISSIONS,
   type PermissionType,
+  ROLE_PERMISSIONS,
 } from "../constants/permissions";
-import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
 
 /**
  * Gets the current user with their roles and permissions
@@ -16,16 +13,14 @@ import { notFound } from "next/navigation";
  * @throws Error if user is not authenticated
  */
 async function getCurrentUserWithPermissions() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getSession();
 
   if (!session?.user) {
     throw new Error("Unauthorized: You must be logged in");
   }
 
   // Roles are now included in the session from customSession plugin
-  const userRoles = (session as SessionWithRoles).roles || [];
+  const userRoles = session.roles || [];
   const userPermissions = new Set<PermissionType>();
 
   // Get all permissions for the user's roles

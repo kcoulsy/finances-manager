@@ -66,4 +66,3 @@ describe("logoutAction", () => {
     expect(result.serverError?.length).toBeGreaterThan(0);
   });
 });
-

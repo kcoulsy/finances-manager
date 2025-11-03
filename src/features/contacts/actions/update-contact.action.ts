@@ -1,9 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { updateContactSchema } from "../schemas/contact.schema";
 
@@ -11,9 +10,7 @@ export const updateContactAction = actionClient
   .inputSchema(updateContactSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
@@ -84,8 +81,6 @@ export const updateContactAction = actionClient
           position: parsedInput.position ?? null,
         },
       });
-
-      console.log("contact", contact);
 
       revalidatePath("/contacts");
       revalidatePath(`/contacts/${contact.id}`);

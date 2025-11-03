@@ -1,9 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "@/features/shared/lib/auth/config";
-import type { SessionWithRoles } from "./types";
-import { UserRole, type UserRoleType } from "@/features/auth/constants/roles";
+import type { UserRoleType } from "@/features/auth/constants/roles";
+import { getSession } from "./get-session";
 
 /**
  * Check if the current user has a specific role
@@ -15,18 +13,16 @@ import { UserRole, type UserRoleType } from "@/features/auth/constants/roles";
  */
 export async function hasRole(requiredRole: UserRoleType): Promise<boolean> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return false;
     }
 
     // Roles are now included in the session from customSession plugin
-    const roles = (session as SessionWithRoles).roles || [];
+    const roles = session.roles || [];
     return roles.includes(requiredRole);
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -39,17 +35,15 @@ export async function hasRole(requiredRole: UserRoleType): Promise<boolean> {
  */
 export async function getUserRoles(): Promise<string[]> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const session = await getSession();
 
     if (!session?.user) {
       return [];
     }
 
     // Roles are now included in the session from customSession plugin
-    return (session as SessionWithRoles).roles || [];
-  } catch (error) {
+    return session.roles || [];
+  } catch (_error) {
     return [];
   }
 }

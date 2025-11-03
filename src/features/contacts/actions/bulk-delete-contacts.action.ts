@@ -1,9 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { bulkDeleteContactsSchema } from "../schemas/contact.schema";
 
@@ -21,9 +20,7 @@ export const bulkDeleteContactsAction = actionClient
   .inputSchema(bulkDeleteContactsSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
@@ -71,4 +68,3 @@ export const bulkDeleteContactsAction = actionClient
       );
     }
   });
-

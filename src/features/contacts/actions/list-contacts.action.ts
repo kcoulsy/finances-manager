@@ -1,8 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { listContactsSchema } from "../schemas/contact.schema";
 
@@ -10,9 +9,7 @@ export const listContactsAction = actionClient
   .inputSchema(listContactsSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
@@ -59,7 +56,7 @@ export const listContactsAction = actionClient
       // Build orderBy clause
       const sortBy = parsedInput.sortBy || "updatedAt";
       const sortOrder = parsedInput.sortOrder || "desc";
-      
+
       // Map column names to Prisma fields
       const orderByField: Record<string, unknown> = {};
       if (sortBy === "name") {
@@ -95,23 +92,27 @@ export const listContactsAction = actionClient
       };
     } catch (error) {
       console.error("List contacts error:", error);
-      
+
       // Provide user-friendly error messages
       let errorMessage = "Failed to fetch contacts";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         // Handle authentication errors
         if (errorStr.includes("Unauthorized")) {
           errorMessage = "You need to be logged in to view contacts.";
         }
         // Use the error message if it's already user-friendly
-        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK") && !errorStr.includes("Connection timeout")) {
+        else if (
+          !errorStr.includes("Prisma") &&
+          !errorStr.includes("TURBOPACK") &&
+          !errorStr.includes("Connection timeout")
+        ) {
           errorMessage = errorStr;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
   });

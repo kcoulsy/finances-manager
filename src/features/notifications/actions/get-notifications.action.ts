@@ -1,18 +1,15 @@
 "use server";
 
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { getNotificationsSchema } from "../schemas/notification.schema";
-import { headers } from "next/headers";
 
 export const getNotificationsAction = actionClient
   .inputSchema(getNotificationsSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await auth.api.getSession({
-        headers: await headers(),
-      });
+      const session = await getSession();
 
       if (!session?.user) {
         throw new Error("Unauthorized");
