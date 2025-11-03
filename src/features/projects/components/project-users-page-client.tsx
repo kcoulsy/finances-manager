@@ -38,11 +38,6 @@ import {
   type SelectOption,
 } from "@/features/shared/components/ui/select";
 import { useDebounce } from "@/features/shared/hooks/use-debounce";
-import {
-  PROJECT_PERMISSION_CATEGORIES,
-  PROJECT_PERMISSION_DESCRIPTIONS,
-  PROJECT_ROLE_PERMISSIONS,
-} from "../constants/project-permissions";
 import { useCancelInvitation } from "../hooks/use-cancel-invitation";
 import { useInviteProjectUser } from "../hooks/use-invite-project-user";
 import { useListProjectUsers } from "../hooks/use-list-project-users";
@@ -166,58 +161,6 @@ export function ProjectUsersPageClient({
 
   const userType = watch("userType");
   const emailValue = watch("email");
-
-  // Component to display permissions for selected user type
-  // Note: All user types (Client, Contractor, Employee, Legal) receive MEMBER role permissions
-  function UserTypePermissionsDisplay({
-    userType: _userType,
-  }: {
-    userType: "Client" | "Contractor" | "Employee" | "Legal";
-  }) {
-    // All user types (Client, Contractor, Employee, Legal) receive MEMBER role permissions
-    const userPermissions = new Set(PROJECT_ROLE_PERMISSIONS.MEMBER || []);
-
-    // Filter categories to only show those with at least one permission the user has
-    const visibleCategories = PROJECT_PERMISSION_CATEGORIES.filter((category) =>
-      category.permissions.some((perm) => userPermissions.has(perm)),
-    );
-
-    return (
-      <div className="space-y-2">
-        {visibleCategories.map((category) => {
-          // Get permissions in this category that the user actually has
-          const categoryPermissions = category.permissions.filter((perm) =>
-            userPermissions.has(perm),
-          );
-
-          if (categoryPermissions.length === 0) {
-            return null;
-          }
-
-          return (
-            <div key={category.name} className="space-y-1">
-              <div className="font-medium text-xs">{category.name}</div>
-              <ul className="list-none space-y-0.5 pl-2">
-                {categoryPermissions.map((permission) => {
-                  const description =
-                    PROJECT_PERMISSION_DESCRIPTIONS[permission];
-                  return (
-                    <li
-                      key={permission}
-                      className="text-xs text-muted-foreground"
-                    >
-                      <span className="text-muted-foreground">•</span>{" "}
-                      {description}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
 
   // Update email when contact is selected
   const handleContactSelect = useCallback(
@@ -555,7 +498,7 @@ export function ProjectUsersPageClient({
               </div>
 
               {/* User Type */}
-              <div className="space-y-2 md:w-48">
+              <div className="space-y-2 md:w-60">
                 <label htmlFor="userType" className="text-sm font-medium">
                   User Type *
                 </label>
@@ -574,14 +517,20 @@ export function ProjectUsersPageClient({
                     {errors.userType.message}
                   </p>
                 )}
-                {/* Permissions Display */}
+                {/* Permissions Link */}
                 {userType && (
-                  <div className="mt-2 rounded-md border bg-muted/50 p-3 text-xs">
-                    <div className="font-semibold mb-2">
-                      Permissions for {userType}
-                    </div>
-                    <UserTypePermissionsDisplay userType={userType} />
-                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs text-muted-foreground"
+                    onClick={() => {
+                      setSelectedRole("MEMBER");
+                      setPermissionsModalOpen(true);
+                    }}
+                  >
+                    What permissions does {userType} have?
+                  </Button>
                 )}
               </div>
 
