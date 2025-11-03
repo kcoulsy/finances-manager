@@ -228,4 +228,124 @@ describe("createContactAction", () => {
     expect(result.data?.toast?.description).toContain("Toast Test");
     expect(result.data?.toast?.description).toContain("added to your contacts");
   });
+
+  it("creates a contact with addresses", async () => {
+    const result = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("create-with-addresses"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          label: "Main Address",
+          addressLine1: "123 Main St",
+          addressLine2: "Apt 4B",
+          city: "London",
+          county: "Greater London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+          notes: "Home address",
+        },
+        {
+          type: "WORK",
+          addressLine1: "456 Business Ave",
+          city: "London",
+          postalCode: "EC1A 1BB",
+          country: "United Kingdom",
+          isPrimary: false,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.contact).toBeDefined();
+
+    // Verify addresses were created
+    const addresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: result.data?.contact.id,
+      },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    });
+
+    expect(addresses).toHaveLength(2);
+    expect(addresses[0]?.type).toBe("HOME");
+    expect(addresses[0]?.addressLine1).toBe("123 Main St");
+    expect(addresses[0]?.isPrimary).toBe(true);
+    expect(addresses[1]?.type).toBe("WORK");
+    expect(addresses[1]?.isPrimary).toBe(false);
+  });
+
+  it("ensures only first address is primary when multiple addresses are marked as primary", async () => {
+    const result = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("create-multiple-primary"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          addressLine1: "123 Main St",
+          city: "London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+        {
+          type: "WORK",
+          addressLine1: "456 Business Ave",
+          city: "London",
+          postalCode: "EC1A 1BB",
+          country: "United Kingdom",
+          isPrimary: true, // Also marked as primary
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify addresses
+    const addresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: result.data?.contact.id,
+      },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    });
+
+    expect(addresses).toHaveLength(2);
+    // First address should be primary
+    expect(addresses[0]?.isPrimary).toBe(true);
+    // Second address should not be primary (should have been unset)
+    expect(addresses[1]?.isPrimary).toBe(false);
+  });
+
+  it("creates a contact with empty addresses array", async () => {
+    const result = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("create-empty-addresses"),
+      status: "PERSONAL",
+      addresses: [],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify no addresses were created
+    const addresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: result.data?.contact.id,
+      },
+    });
+
+    expect(addresses).toHaveLength(0);
+  });
 });

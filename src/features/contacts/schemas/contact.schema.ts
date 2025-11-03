@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { addressSchema } from "./address.schema";
 
 // Contact role enum
 export const contactRoleSchema = z.enum([
@@ -107,6 +108,7 @@ export const createContactSchema = z.object({
     .string()
     .max(100, "Position must be less than 100 characters")
     .optional(),
+  addresses: z.array(addressSchema).optional().default([]),
 });
 
 // Update contact schema
@@ -175,6 +177,7 @@ export const updateContactSchema = z.object({
     .string()
     .max(100, "Position must be less than 100 characters")
     .optional(),
+  addresses: z.array(addressSchema).optional().default([]),
 });
 
 // Get contact schema

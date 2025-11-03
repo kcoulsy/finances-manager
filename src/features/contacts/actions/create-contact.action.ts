@@ -82,6 +82,59 @@ export const createContactAction = actionClient
         data: contactData as Parameters<typeof db.contact.create>[0]["data"],
       });
 
+      // Create addresses if provided
+      if (parsedInput.addresses && parsedInput.addresses.length > 0) {
+        // If any address is marked as primary, unset others first
+        const hasPrimary = parsedInput.addresses.some((addr) => addr.isPrimary);
+        if (hasPrimary) {
+          // This will be handled per address creation
+        }
+
+        await db.address.createMany({
+          data: parsedInput.addresses.map((addr) => ({
+            addressableType: "Contact",
+            addressableId: contact.id,
+            type: addr.type,
+            label: addr.label ?? null,
+            addressLine1: addr.addressLine1,
+            addressLine2: addr.addressLine2 ?? null,
+            locality: addr.locality ?? null,
+            city: addr.city,
+            county: addr.county ?? null,
+            postalCode: addr.postalCode,
+            country: addr.country,
+            isPrimary: addr.isPrimary,
+            isActive: addr.isActive ?? true,
+            notes: addr.notes ?? null,
+          })),
+        });
+
+        // If multiple addresses were marked as primary, keep only the first one as primary
+        const primaryAddresses = parsedInput.addresses
+          .map((addr, index) => (addr.isPrimary ? index : null))
+          .filter((idx) => idx !== null) as number[];
+
+        if (primaryAddresses.length > 1) {
+          // Keep only first as primary, unset others
+          for (let i = 1; i < primaryAddresses.length; i++) {
+            const addrIndex = primaryAddresses[i];
+            const addr = parsedInput.addresses[addrIndex];
+            await db.address.updateMany({
+              where: {
+                addressableType: "Contact",
+                addressableId: contact.id,
+                addressLine1: addr.addressLine1,
+                city: addr.city,
+                postalCode: addr.postalCode,
+              },
+              data: {
+                isPrimary: false,
+              },
+            });
+          }
+        }
+      }
+
       revalidatePath("/contacts");
 
       return {

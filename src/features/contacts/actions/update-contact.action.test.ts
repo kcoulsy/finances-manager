@@ -271,4 +271,243 @@ describe("updateContactAction", () => {
     expect(result.data?.toast?.description).toContain("Updated Toast");
     expect(result.data?.toast?.description).toContain("has been updated");
   });
+
+  it("updates a contact with addresses", async () => {
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-with-addresses"),
+      status: "PERSONAL",
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    const result = await updateContactAction({
+      contactId,
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-with-addresses"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          label: "Main Address",
+          addressLine1: "123 Main St",
+          city: "London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+        {
+          type: "WORK",
+          addressLine1: "456 Business Ave",
+          city: "London",
+          postalCode: "EC1A 1BB",
+          country: "United Kingdom",
+          isPrimary: false,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify addresses were created
+    const addresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    });
+
+    expect(addresses).toHaveLength(2);
+    expect(addresses[0]?.type).toBe("HOME");
+    expect(addresses[0]?.addressLine1).toBe("123 Main St");
+    expect(addresses[0]?.isPrimary).toBe(true);
+    expect(addresses[1]?.type).toBe("WORK");
+    expect(addresses[1]?.isPrimary).toBe(false);
+  });
+
+  it("replaces existing addresses when updating", async () => {
+    // Create contact with addresses
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-replace-addresses"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          addressLine1: "Old Address",
+          city: "London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    // Verify original address exists
+    const originalAddresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+    });
+    expect(originalAddresses).toHaveLength(1);
+    expect(originalAddresses[0]?.addressLine1).toBe("Old Address");
+
+    // Update with new addresses
+    const result = await updateContactAction({
+      contactId,
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-replace-addresses"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "WORK",
+          addressLine1: "New Address",
+          city: "Manchester",
+          postalCode: "M1 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify old address was replaced
+    const newAddresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+    });
+
+    expect(newAddresses).toHaveLength(1);
+    expect(newAddresses[0]?.addressLine1).toBe("New Address");
+    expect(newAddresses[0]?.city).toBe("Manchester");
+  });
+
+  it("removes all addresses when addresses is empty array", async () => {
+    // Create contact with addresses
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-remove-addresses"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          addressLine1: "123 Main St",
+          city: "London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    // Verify address exists
+    const beforeAddresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+    });
+    expect(beforeAddresses).toHaveLength(1);
+
+    // Update with empty addresses array
+    const result = await updateContactAction({
+      contactId,
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-remove-addresses"),
+      status: "PERSONAL",
+      addresses: [],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify addresses were removed
+    const afterAddresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+    });
+
+    expect(afterAddresses).toHaveLength(0);
+  });
+
+  it("ensures only first address is primary when multiple addresses are marked as primary", async () => {
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-multiple-primary"),
+      status: "PERSONAL",
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    const result = await updateContactAction({
+      contactId,
+      firstName: "John",
+      lastName: "Doe",
+      email: generateUniqueContactEmail("update-multiple-primary"),
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          addressLine1: "123 Main St",
+          city: "London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+        },
+        {
+          type: "WORK",
+          addressLine1: "456 Business Ave",
+          city: "London",
+          postalCode: "EC1A 1BB",
+          country: "United Kingdom",
+          isPrimary: true, // Also marked as primary
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify addresses
+    const addresses = await db.address.findMany({
+      where: {
+        addressableType: "Contact",
+        addressableId: contactId,
+      },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+    });
+
+    expect(addresses).toHaveLength(2);
+    // First address should be primary
+    expect(addresses[0]?.isPrimary).toBe(true);
+    // Second address should not be primary (should have been unset)
+    expect(addresses[1]?.isPrimary).toBe(false);
+  });
 });

@@ -72,6 +72,105 @@ describe("getContactAction", () => {
     expect(result.data?.contact.position).toBe("Director");
   });
 
+  it("gets a contact with addresses", async () => {
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: "get-with-addresses@example.com",
+      status: "PERSONAL",
+      addresses: [
+        {
+          type: "HOME",
+          label: "Main Address",
+          addressLine1: "123 Main St",
+          addressLine2: "Apt 4B",
+          city: "London",
+          county: "Greater London",
+          postalCode: "SW1A 1AA",
+          country: "United Kingdom",
+          isPrimary: true,
+          isActive: true,
+          notes: "Home address",
+        },
+        {
+          type: "WORK",
+          addressLine1: "456 Business Ave",
+          city: "London",
+          postalCode: "EC1A 1BB",
+          country: "United Kingdom",
+          isPrimary: false,
+          isActive: true,
+        },
+      ],
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    const result = await getContactAction({
+      contactId,
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.contact).toBeDefined();
+
+    // Verify addresses are included
+    expect("addresses" in result.data.contact).toBe(true);
+    const addresses = (result.data.contact as { addresses: unknown[] })
+      .addresses;
+    expect(Array.isArray(addresses)).toBe(true);
+    expect(addresses).toHaveLength(2);
+
+    // Verify address data
+    expect(addresses[0]).toMatchObject({
+      type: "HOME",
+      addressLine1: "123 Main St",
+      city: "London",
+      postalCode: "SW1A 1AA",
+      country: "United Kingdom",
+      isPrimary: true,
+    });
+
+    expect(addresses[1]).toMatchObject({
+      type: "WORK",
+      addressLine1: "456 Business Ave",
+      city: "London",
+      postalCode: "EC1A 1BB",
+      country: "United Kingdom",
+      isPrimary: false,
+    });
+
+    // Verify addresses are ordered by primary first
+    expect(addresses[0]?.isPrimary).toBe(true);
+    expect(addresses[1]?.isPrimary).toBe(false);
+  });
+
+  it("gets a contact with no addresses", async () => {
+    const createResult = await createContactAction({
+      firstName: "John",
+      lastName: "Doe",
+      email: "get-no-addresses@example.com",
+      status: "PERSONAL",
+    });
+
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
+
+    const result = await getContactAction({
+      contactId,
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.contact).toBeDefined();
+
+    // Verify addresses are included (empty array)
+    expect("addresses" in result.data.contact).toBe(true);
+    const addresses = (result.data.contact as { addresses: unknown[] })
+      .addresses;
+    expect(Array.isArray(addresses)).toBe(true);
+    expect(addresses).toHaveLength(0);
+  });
+
   it("validates contactId is required", async () => {
     const result = await getContactAction({
       contactId: "",

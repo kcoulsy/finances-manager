@@ -27,9 +27,21 @@ export const getContactAction = actionClient
         throw new Error("Contact not found");
       }
 
+      // Fetch addresses separately (polymorphic relationship)
+      const addresses = await db.address.findMany({
+        where: {
+          addressableType: "Contact",
+          addressableId: contact.id,
+        },
+        orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+      });
+
       return {
         success: true,
-        contact,
+        contact: {
+          ...contact,
+          addresses,
+        },
       };
     } catch (error) {
       console.error("Get contact error:", error);

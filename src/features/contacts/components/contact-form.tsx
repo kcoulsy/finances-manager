@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ContactStatus } from "@prisma/client";
 import { Building, ChevronDown, Edit, Phone, User } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -33,6 +33,7 @@ import {
   createContactSchema,
   updateContactSchema,
 } from "../schemas/contact.schema";
+import { ContactAddressesField } from "./contact-addresses-field";
 import { ContactTypeSelector } from "./contact-type-selector";
 
 interface ContactFormProps {
@@ -59,6 +60,20 @@ interface ContactFormProps {
     registrationNumber?: string | null;
     accountsEmail?: string | null;
     position?: string | null;
+    addresses?: Array<{
+      type: "HOME" | "WORK" | "BILLING" | "SHIPPING" | "OTHER";
+      label?: string | null;
+      addressLine1: string;
+      addressLine2?: string | null;
+      locality?: string | null;
+      city: string;
+      county?: string | null;
+      postalCode: string;
+      country: string;
+      isPrimary?: boolean;
+      isActive?: boolean;
+      notes?: string | null;
+    }>;
   };
 }
 
@@ -90,14 +105,7 @@ export function ContactForm({ contactId, initialData }: ContactFormProps) {
   const [companyInfoOpen, setCompanyInfoOpen] = useState(false);
   const [additionalInfoOpen, setAdditionalInfoOpen] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-    setValue,
-    watch,
-  } = useForm({
+  const methods = useForm({
     resolver: zodResolver(isEdit ? updateContactSchema : createContactSchema),
     defaultValues: initialData
       ? {
@@ -134,12 +142,38 @@ export function ContactForm({ contactId, initialData }: ContactFormProps) {
           registrationNumber: initialData.registrationNumber || undefined,
           accountsEmail: initialData.accountsEmail || undefined,
           position: initialData.position || undefined,
+          addresses: initialData.addresses
+            ? initialData.addresses.map((addr) => ({
+                type: addr.type,
+                label: addr.label ?? undefined,
+                addressLine1: addr.addressLine1,
+                addressLine2: addr.addressLine2 ?? undefined,
+                locality: addr.locality ?? undefined,
+                city: addr.city,
+                county: addr.county ?? undefined,
+                postalCode: addr.postalCode,
+                country: addr.country,
+                isPrimary: addr.isPrimary ?? false,
+                isActive: addr.isActive ?? true,
+                notes: addr.notes ?? undefined,
+              }))
+            : [],
           ...(isEdit ? { contactId } : {}),
         }
       : {
           status: "PERSONAL" as const,
+          addresses: [],
         },
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    setValue,
+    watch,
+  } = methods;
 
   const watchedStatus = watch("status") as ContactStatus | undefined;
 
@@ -162,506 +196,536 @@ export function ContactForm({ contactId, initialData }: ContactFormProps) {
     isSubmitting || createContact.isPending || updateContact.isPending;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{isEdit ? "Edit Contact" : "Create New Contact"}</CardTitle>
-        <CardDescription>
-          {isEdit
-            ? "Update your contact information"
-            : "Add a new contact to your address book"}
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-6">
-          {errors.root && (
-            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {errors.root.message}
-            </div>
-          )}
-
-          {/* Contact Type Selection - only show on create */}
-          {!isEdit && (
-            <>
-              <ContactTypeSelector
-                value={watchedStatus}
-                onChange={(type) => setValue("status", type)}
-              />
-              <input type="hidden" {...register("status")} />
-              {errors.status && (
-                <p className="text-sm text-destructive">
-                  {errors.status.message}
-                </p>
-              )}
-            </>
-          )}
-
-          {/* Personal Information Section */}
-          {watchedStatus && (
-            <div className="space-y-4 pt-2 border-t">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">Personal Information</h3>
+    <FormProvider {...methods}>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {isEdit ? "Edit Contact" : "Create New Contact"}
+          </CardTitle>
+          <CardDescription>
+            {isEdit
+              ? "Update your contact information"
+              : "Add a new contact to your address book"}
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <CardContent className="space-y-6">
+            {errors.root && (
+              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                {errors.root.message}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium">
-                    First Name <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="firstName"
-                    placeholder="John"
-                    disabled={isLoading}
-                    aria-invalid={errors.firstName ? "true" : "false"}
-                    {...register("firstName")}
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-destructive">
-                      {errors.firstName.message}
-                    </p>
-                  )}
-                </div>
+            )}
 
-                <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium">
-                    Last Name <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="lastName"
-                    placeholder="Doe"
-                    disabled={isLoading}
-                    aria-invalid={errors.lastName ? "true" : "false"}
-                    {...register("lastName")}
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-destructive">
-                      {errors.lastName.message}
-                    </p>
-                  )}
-                </div>
+            {/* Contact Type Selection - only show on create */}
+            {!isEdit && (
+              <>
+                <ContactTypeSelector
+                  value={watchedStatus}
+                  onChange={(type) => setValue("status", type)}
+                />
+                <input type="hidden" {...register("status")} />
+                {errors.status && (
+                  <p className="text-sm text-destructive">
+                    {errors.status.message}
+                  </p>
+                )}
+              </>
+            )}
 
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email Address <span className="text-destructive">*</span>
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john.doe@example.com"
-                    disabled={isLoading}
-                    aria-invalid={errors.email ? "true" : "false"}
-                    {...register("email")}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">
-                      {errors.email.message}
-                    </p>
-                  )}
+            {/* Personal Information Section */}
+            {watchedStatus && (
+              <div className="space-y-4 pt-2 border-t pb-6">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold">
+                    Personal Information
+                  </h3>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="firstName" className="text-sm font-medium">
+                      First Name <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      disabled={isLoading}
+                      aria-invalid={errors.firstName ? "true" : "false"}
+                      {...register("firstName")}
+                    />
+                    {errors.firstName && (
+                      <p className="text-sm text-destructive">
+                        {errors.firstName.message}
+                      </p>
+                    )}
+                  </div>
 
-                <div className="space-y-2">
-                  <label
-                    htmlFor="personalWebsite"
-                    className="text-sm font-medium"
-                  >
-                    Personal Website{" "}
-                    <span className="text-muted-foreground">(optional)</span>
-                  </label>
-                  <Input
-                    id="personalWebsite"
-                    type="url"
-                    placeholder="https://example.com"
-                    disabled={isLoading}
-                    aria-invalid={errors.personalWebsite ? "true" : "false"}
-                    {...register("personalWebsite")}
-                  />
-                  {errors.personalWebsite && (
-                    <p className="text-sm text-destructive">
-                      {errors.personalWebsite.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+                  <div className="space-y-2">
+                    <label htmlFor="lastName" className="text-sm font-medium">
+                      Last Name <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      disabled={isLoading}
+                      aria-invalid={errors.lastName ? "true" : "false"}
+                      {...register("lastName")}
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-destructive">
+                        {errors.lastName.message}
+                      </p>
+                    )}
+                  </div>
 
-          {/* Contact Information Section */}
-          {watchedStatus && (
-            <div className="space-y-4 pt-2 border-t">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold">Contact Information</h3>
-              </div>
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium">Phone Numbers</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">
+                      Email Address <span className="text-destructive">*</span>
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="john.doe@example.com"
+                      disabled={isLoading}
+                      aria-invalid={errors.email ? "true" : "false"}
+                      {...register("email")}
+                    />
+                    {errors.email && (
+                      <p className="text-sm text-destructive">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <label
-                      htmlFor="phoneMobile"
+                      htmlFor="personalWebsite"
                       className="text-sm font-medium"
                     >
-                      Mobile
+                      Personal Website{" "}
+                      <span className="text-muted-foreground">(optional)</span>
                     </label>
                     <Input
-                      id="phoneMobile"
-                      type="tel"
-                      placeholder="07123 456789"
+                      id="personalWebsite"
+                      type="url"
+                      placeholder="https://example.com"
                       disabled={isLoading}
-                      aria-invalid={errors.phoneMobile ? "true" : "false"}
-                      {...register("phoneMobile")}
+                      aria-invalid={errors.personalWebsite ? "true" : "false"}
+                      {...register("personalWebsite")}
                     />
-                    {errors.phoneMobile && (
+                    {errors.personalWebsite && (
                       <p className="text-sm text-destructive">
-                        {errors.phoneMobile.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="phoneHome" className="text-sm font-medium">
-                      Home
-                    </label>
-                    <Input
-                      id="phoneHome"
-                      type="tel"
-                      placeholder="01234 567890"
-                      disabled={isLoading}
-                      aria-invalid={errors.phoneHome ? "true" : "false"}
-                      {...register("phoneHome")}
-                    />
-                    {errors.phoneHome && (
-                      <p className="text-sm text-destructive">
-                        {errors.phoneHome.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="phoneWork" className="text-sm font-medium">
-                      Work
-                    </label>
-                    <Input
-                      id="phoneWork"
-                      type="tel"
-                      placeholder="020 1234 5678"
-                      disabled={isLoading}
-                      aria-invalid={errors.phoneWork ? "true" : "false"}
-                      {...register("phoneWork")}
-                    />
-                    {errors.phoneWork && (
-                      <p className="text-sm text-destructive">
-                        {errors.phoneWork.message}
+                        {errors.personalWebsite.message}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Social Media Section */}
-          {watchedStatus && (
-            <div className="space-y-4 pt-2 border-t">
-              <h3 className="text-sm font-semibold">Social Media</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="linkedinUrl" className="text-sm font-medium">
-                    LinkedIn Profile URL
-                  </label>
-                  <Input
-                    id="linkedinUrl"
-                    type="url"
-                    placeholder="https://linkedin.com/in/username"
-                    disabled={isLoading}
-                    aria-invalid={errors.linkedinUrl ? "true" : "false"}
-                    {...register("linkedinUrl")}
-                  />
-                  {errors.linkedinUrl && (
-                    <p className="text-sm text-destructive">
-                      {errors.linkedinUrl.message}
-                    </p>
-                  )}
+            {/* Contact Information Section */}
+            {watchedStatus && (
+              <div className="space-y-4 pt-2 border-t pb-6">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold">Contact Information</h3>
                 </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Phone Numbers</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="phoneMobile"
+                        className="text-sm font-medium"
+                      >
+                        Mobile
+                      </label>
+                      <Input
+                        id="phoneMobile"
+                        type="tel"
+                        placeholder="07123 456789"
+                        disabled={isLoading}
+                        aria-invalid={errors.phoneMobile ? "true" : "false"}
+                        {...register("phoneMobile")}
+                      />
+                      {errors.phoneMobile && (
+                        <p className="text-sm text-destructive">
+                          {errors.phoneMobile.message}
+                        </p>
+                      )}
+                    </div>
 
-                <div className="space-y-2">
-                  <label
-                    htmlFor="twitterHandle"
-                    className="text-sm font-medium"
-                  >
-                    Twitter/X Handle
-                  </label>
-                  <Input
-                    id="twitterHandle"
-                    placeholder="@username"
-                    disabled={isLoading}
-                    aria-invalid={errors.twitterHandle ? "true" : "false"}
-                    {...register("twitterHandle")}
-                  />
-                  {errors.twitterHandle && (
-                    <p className="text-sm text-destructive">
-                      {errors.twitterHandle.message}
-                    </p>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="phoneHome"
+                        className="text-sm font-medium"
+                      >
+                        Home
+                      </label>
+                      <Input
+                        id="phoneHome"
+                        type="tel"
+                        placeholder="01234 567890"
+                        disabled={isLoading}
+                        aria-invalid={errors.phoneHome ? "true" : "false"}
+                        {...register("phoneHome")}
+                      />
+                      {errors.phoneHome && (
+                        <p className="text-sm text-destructive">
+                          {errors.phoneHome.message}
+                        </p>
+                      )}
+                    </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="facebookUrl" className="text-sm font-medium">
-                    Facebook URL
-                  </label>
-                  <Input
-                    id="facebookUrl"
-                    type="url"
-                    placeholder="https://facebook.com/username"
-                    disabled={isLoading}
-                    aria-invalid={errors.facebookUrl ? "true" : "false"}
-                    {...register("facebookUrl")}
-                  />
-                  {errors.facebookUrl && (
-                    <p className="text-sm text-destructive">
-                      {errors.facebookUrl.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="instagramHandle"
-                    className="text-sm font-medium"
-                  >
-                    Instagram Handle
-                  </label>
-                  <Input
-                    id="instagramHandle"
-                    placeholder="@username"
-                    disabled={isLoading}
-                    aria-invalid={errors.instagramHandle ? "true" : "false"}
-                    {...register("instagramHandle")}
-                  />
-                  {errors.instagramHandle && (
-                    <p className="text-sm text-destructive">
-                      {errors.instagramHandle.message}
-                    </p>
-                  )}
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="phoneWork"
+                        className="text-sm font-medium"
+                      >
+                        Work
+                      </label>
+                      <Input
+                        id="phoneWork"
+                        type="tel"
+                        placeholder="020 1234 5678"
+                        disabled={isLoading}
+                        aria-invalid={errors.phoneWork ? "true" : "false"}
+                        {...register("phoneWork")}
+                      />
+                      {errors.phoneWork && (
+                        <p className="text-sm text-destructive">
+                          {errors.phoneWork.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Company Information - collapsible section */}
-          {watchedStatus && (
+            {/* Social Media Section */}
+            {watchedStatus && (
+              <div className="space-y-4 pt-2 border-t pb-6">
+                <h3 className="text-sm font-semibold">Social Media</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="linkedinUrl"
+                      className="text-sm font-medium"
+                    >
+                      LinkedIn Profile URL
+                    </label>
+                    <Input
+                      id="linkedinUrl"
+                      type="url"
+                      placeholder="https://linkedin.com/in/username"
+                      disabled={isLoading}
+                      aria-invalid={errors.linkedinUrl ? "true" : "false"}
+                      {...register("linkedinUrl")}
+                    />
+                    {errors.linkedinUrl && (
+                      <p className="text-sm text-destructive">
+                        {errors.linkedinUrl.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="twitterHandle"
+                      className="text-sm font-medium"
+                    >
+                      Twitter/X Handle
+                    </label>
+                    <Input
+                      id="twitterHandle"
+                      placeholder="@username"
+                      disabled={isLoading}
+                      aria-invalid={errors.twitterHandle ? "true" : "false"}
+                      {...register("twitterHandle")}
+                    />
+                    {errors.twitterHandle && (
+                      <p className="text-sm text-destructive">
+                        {errors.twitterHandle.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="facebookUrl"
+                      className="text-sm font-medium"
+                    >
+                      Facebook URL
+                    </label>
+                    <Input
+                      id="facebookUrl"
+                      type="url"
+                      placeholder="https://facebook.com/username"
+                      disabled={isLoading}
+                      aria-invalid={errors.facebookUrl ? "true" : "false"}
+                      {...register("facebookUrl")}
+                    />
+                    {errors.facebookUrl && (
+                      <p className="text-sm text-destructive">
+                        {errors.facebookUrl.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="instagramHandle"
+                      className="text-sm font-medium"
+                    >
+                      Instagram Handle
+                    </label>
+                    <Input
+                      id="instagramHandle"
+                      placeholder="@username"
+                      disabled={isLoading}
+                      aria-invalid={errors.instagramHandle ? "true" : "false"}
+                      {...register("instagramHandle")}
+                    />
+                    {errors.instagramHandle && (
+                      <p className="text-sm text-destructive">
+                        {errors.instagramHandle.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Company Information - collapsible section */}
+            {watchedStatus && (
+              <Collapsible
+                open={companyInfoOpen}
+                onOpenChange={setCompanyInfoOpen}
+                className="space-y-4 pt-2 border-t"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full justify-between h-auto font-semibold"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">Company Information</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 text-muted-foreground transition-transform",
+                        companyInfoOpen && "transform rotate-180",
+                      )}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="companyName"
+                        className="text-sm font-medium"
+                      >
+                        Company Name
+                      </label>
+                      <Input
+                        id="companyName"
+                        placeholder="Enter company name"
+                        disabled={isLoading}
+                        aria-invalid={errors.companyName ? "true" : "false"}
+                        {...register("companyName")}
+                      />
+                      {errors.companyName && (
+                        <p className="text-sm text-destructive">
+                          {errors.companyName.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="companyWebsite"
+                        className="text-sm font-medium"
+                      >
+                        Company Website
+                      </label>
+                      <Input
+                        id="companyWebsite"
+                        placeholder="example.com"
+                        disabled={isLoading}
+                        aria-invalid={errors.companyWebsite ? "true" : "false"}
+                        {...register("companyWebsite")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        We'll automatically add https:// if needed
+                      </p>
+                      {errors.companyWebsite && (
+                        <p className="text-sm text-destructive">
+                          {errors.companyWebsite.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="vatNumber"
+                        className="text-sm font-medium"
+                      >
+                        VAT Number{" "}
+                        <span className="text-muted-foreground">
+                          (Optional)
+                        </span>
+                      </label>
+                      <Input
+                        id="vatNumber"
+                        placeholder="Enter VAT number"
+                        disabled={isLoading}
+                        aria-invalid={errors.vatNumber ? "true" : "false"}
+                        {...register("vatNumber")}
+                      />
+                      {errors.vatNumber && (
+                        <p className="text-sm text-destructive">
+                          {errors.vatNumber.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="registrationNumber"
+                        className="text-sm font-medium"
+                      >
+                        Company Registration Number{" "}
+                        <span className="text-muted-foreground">
+                          (Optional)
+                        </span>
+                      </label>
+                      <Input
+                        id="registrationNumber"
+                        placeholder="Enter registration number"
+                        disabled={isLoading}
+                        aria-invalid={
+                          errors.registrationNumber ? "true" : "false"
+                        }
+                        {...register("registrationNumber")}
+                      />
+                      {errors.registrationNumber && (
+                        <p className="text-sm text-destructive">
+                          {errors.registrationNumber.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="accountsEmail"
+                        className="text-sm font-medium"
+                      >
+                        Accounts Email{" "}
+                        <span className="text-muted-foreground">
+                          (Optional)
+                        </span>
+                      </label>
+                      <Input
+                        id="accountsEmail"
+                        type="email"
+                        placeholder="accounts@company.com"
+                        disabled={isLoading}
+                        aria-invalid={errors.accountsEmail ? "true" : "false"}
+                        {...register("accountsEmail")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Company accounting/payment email
+                      </p>
+                      {errors.accountsEmail && (
+                        <p className="text-sm text-destructive">
+                          {errors.accountsEmail.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="position" className="text-sm font-medium">
+                        Role/Position
+                      </label>
+                      <Input
+                        id="position"
+                        placeholder="e.g., Director, Manager, Owner"
+                        disabled={isLoading}
+                        aria-invalid={errors.position ? "true" : "false"}
+                        {...register("position")}
+                      />
+                      {errors.position && (
+                        <p className="text-sm text-destructive">
+                          {errors.position.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {/* Addresses Section */}
+            <ContactAddressesField />
+
+            {/* Additional Information */}
             <Collapsible
-              open={companyInfoOpen}
-              onOpenChange={setCompanyInfoOpen}
+              open={additionalInfoOpen}
+              onOpenChange={setAdditionalInfoOpen}
               className="space-y-4 pt-2 border-t"
             >
               <CollapsibleTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full justify-between p-0 h-auto font-semibold"
+                  className="w-full justify-between h-auto font-semibold"
                 >
                   <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Company Information</span>
+                    <Edit className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Additional Information</span>
                   </div>
                   <ChevronDown
                     className={cn(
                       "h-4 w-4 text-muted-foreground transition-transform",
-                      companyInfoOpen && "transform rotate-180",
+                      additionalInfoOpen && "transform rotate-180",
                     )}
                   />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="companyName"
-                      className="text-sm font-medium"
-                    >
-                      Company Name
-                    </label>
-                    <Input
-                      id="companyName"
-                      placeholder="Enter company name"
-                      disabled={isLoading}
-                      aria-invalid={errors.companyName ? "true" : "false"}
-                      {...register("companyName")}
-                    />
-                    {errors.companyName && (
-                      <p className="text-sm text-destructive">
-                        {errors.companyName.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="companyWebsite"
-                      className="text-sm font-medium"
-                    >
-                      Company Website
-                    </label>
-                    <Input
-                      id="companyWebsite"
-                      placeholder="example.com"
-                      disabled={isLoading}
-                      aria-invalid={errors.companyWebsite ? "true" : "false"}
-                      {...register("companyWebsite")}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      We'll automatically add https:// if needed
-                    </p>
-                    {errors.companyWebsite && (
-                      <p className="text-sm text-destructive">
-                        {errors.companyWebsite.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="vatNumber" className="text-sm font-medium">
-                      VAT Number{" "}
-                      <span className="text-muted-foreground">(Optional)</span>
-                    </label>
-                    <Input
-                      id="vatNumber"
-                      placeholder="Enter VAT number"
-                      disabled={isLoading}
-                      aria-invalid={errors.vatNumber ? "true" : "false"}
-                      {...register("vatNumber")}
-                    />
-                    {errors.vatNumber && (
-                      <p className="text-sm text-destructive">
-                        {errors.vatNumber.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="registrationNumber"
-                      className="text-sm font-medium"
-                    >
-                      Company Registration Number{" "}
-                      <span className="text-muted-foreground">(Optional)</span>
-                    </label>
-                    <Input
-                      id="registrationNumber"
-                      placeholder="Enter registration number"
-                      disabled={isLoading}
-                      aria-invalid={
-                        errors.registrationNumber ? "true" : "false"
-                      }
-                      {...register("registrationNumber")}
-                    />
-                    {errors.registrationNumber && (
-                      <p className="text-sm text-destructive">
-                        {errors.registrationNumber.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="accountsEmail"
-                      className="text-sm font-medium"
-                    >
-                      Accounts Email{" "}
-                      <span className="text-muted-foreground">(Optional)</span>
-                    </label>
-                    <Input
-                      id="accountsEmail"
-                      type="email"
-                      placeholder="accounts@company.com"
-                      disabled={isLoading}
-                      aria-invalid={errors.accountsEmail ? "true" : "false"}
-                      {...register("accountsEmail")}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Company accounting/payment email
-                    </p>
-                    {errors.accountsEmail && (
-                      <p className="text-sm text-destructive">
-                        {errors.accountsEmail.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="position" className="text-sm font-medium">
-                      Role/Position
-                    </label>
-                    <Input
-                      id="position"
-                      placeholder="e.g., Director, Manager, Owner"
-                      disabled={isLoading}
-                      aria-invalid={errors.position ? "true" : "false"}
-                      {...register("position")}
-                    />
-                    {errors.position && (
-                      <p className="text-sm text-destructive">
-                        {errors.position.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
+              <CollapsibleContent className="space-y-2 pt-4 pb-6">
+                <Textarea
+                  id="notes"
+                  placeholder="Add additional information about this contact (e.g., preferences, special requirements, etc.)..."
+                  disabled={isLoading}
+                  aria-invalid={errors.notes ? "true" : "false"}
+                  rows={4}
+                  {...register("notes")}
+                />
+                {errors.notes && (
+                  <p className="text-sm text-destructive">
+                    {errors.notes.message}
+                  </p>
+                )}
               </CollapsibleContent>
             </Collapsible>
-          )}
-
-          {/* Additional Information */}
-          <Collapsible
-            open={additionalInfoOpen}
-            onOpenChange={setAdditionalInfoOpen}
-            className="space-y-4 pt-2 border-t"
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-between p-0 h-auto font-semibold"
-              >
-                <div className="flex items-center gap-2">
-                  <Edit className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Additional Information</span>
-                </div>
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 text-muted-foreground transition-transform",
-                    additionalInfoOpen && "transform rotate-180",
-                  )}
-                />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pt-4">
-              <Textarea
-                id="notes"
-                placeholder="Add additional information about this contact (e.g., preferences, special requirements, etc.)..."
-                disabled={isLoading}
-                aria-invalid={errors.notes ? "true" : "false"}
-                rows={4}
-                {...register("notes")}
-              />
-              {errors.notes && (
-                <p className="text-sm text-destructive">
-                  {errors.notes.message}
-                </p>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-        </CardContent>
-        <CardFooter className="mt-6">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading
-              ? isEdit
-                ? "Updating..."
-                : "Creating..."
-              : isEdit
-                ? "Update Contact"
-                : "Create Contact"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          </CardContent>
+          <CardFooter className="mt-6">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading
+                ? isEdit
+                  ? "Updating..."
+                  : "Creating..."
+                : isEdit
+                  ? "Update Contact"
+                  : "Create Contact"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </FormProvider>
   );
 }

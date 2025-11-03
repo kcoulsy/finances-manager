@@ -1,6 +1,6 @@
 "use client";
 
-import type { Contact } from "@prisma/client";
+import type { Address, Contact } from "@prisma/client";
 import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,7 @@ import {
 import { useArchiveContact } from "../hooks/use-archive-contact";
 import { useDeleteContact } from "../hooks/use-delete-contact";
 import { useRestoreContact } from "../hooks/use-restore-contact";
+import { AddressesSection } from "./addresses-section";
 import { ContactForm } from "./contact-form";
 
 interface ContactDetailViewProps {
@@ -105,6 +106,30 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
             registrationNumber: contact.registrationNumber,
             accountsEmail: contact.accountsEmail,
             position: contact.position,
+            addresses:
+              "addresses" in contact &&
+              contact.addresses &&
+              Array.isArray(contact.addresses)
+                ? contact.addresses.map((addr: Address) => ({
+                    type: addr.type as
+                      | "HOME"
+                      | "WORK"
+                      | "BILLING"
+                      | "SHIPPING"
+                      | "OTHER",
+                    label: addr.label,
+                    addressLine1: addr.addressLine1,
+                    addressLine2: addr.addressLine2,
+                    locality: addr.locality,
+                    city: addr.city,
+                    county: addr.county,
+                    postalCode: addr.postalCode,
+                    country: addr.country,
+                    isPrimary: addr.isPrimary,
+                    isActive: addr.isActive,
+                    notes: addr.notes,
+                  }))
+                : [],
           }}
         />
       </div>
@@ -421,6 +446,18 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               </div>
             </div>
           )}
+
+          {/* Addresses */}
+          <div className="space-y-4 pt-2 border-t">
+            <AddressesSection
+              contactId={contact.id}
+              initialAddresses={
+                "addresses" in contact && contact.addresses
+                  ? (contact.addresses as Address[])
+                  : []
+              }
+            />
+          </div>
 
           {/* Timestamps */}
           <div className="space-y-4 pt-4 border-t">

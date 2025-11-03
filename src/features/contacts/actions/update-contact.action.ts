@@ -82,6 +82,63 @@ export const updateContactAction = actionClient
         },
       });
 
+      // Handle addresses - delete existing and create new ones
+      if (parsedInput.addresses !== undefined) {
+        // Delete all existing addresses for this contact
+        await db.address.deleteMany({
+          where: {
+            addressableType: "Contact",
+            addressableId: contact.id,
+          },
+        });
+
+        // Create new addresses if provided
+        if (parsedInput.addresses.length > 0) {
+          // If any address is marked as primary, unset others first
+          const hasPrimary = parsedInput.addresses.some(
+            (addr) => addr.isPrimary,
+          );
+          if (hasPrimary) {
+            // Keep only first primary
+            const primaryAddresses = parsedInput.addresses
+              .map((addr, index) => (addr.isPrimary ? index : null))
+              .filter((idx) => idx !== null) as number[];
+
+            if (primaryAddresses.length > 1) {
+              // Unset all but first
+              for (let i = 1; i < primaryAddresses.length; i++) {
+                const addrIndex = primaryAddresses[i];
+                if (addrIndex !== null && addrIndex !== undefined) {
+                  const address = parsedInput.addresses[addrIndex];
+                  if (address) {
+                    address.isPrimary = false;
+                  }
+                }
+              }
+            }
+          }
+
+          await db.address.createMany({
+            data: parsedInput.addresses.map((addr) => ({
+              addressableType: "Contact",
+              addressableId: contact.id,
+              type: addr.type,
+              label: addr.label ?? null,
+              addressLine1: addr.addressLine1,
+              addressLine2: addr.addressLine2 ?? null,
+              locality: addr.locality ?? null,
+              city: addr.city,
+              county: addr.county ?? null,
+              postalCode: addr.postalCode,
+              country: addr.country,
+              isPrimary: addr.isPrimary,
+              isActive: addr.isActive ?? true,
+              notes: addr.notes ?? null,
+            })),
+          });
+        }
+      }
+
       revalidatePath("/contacts");
       revalidatePath(`/contacts/${contact.id}`);
 
