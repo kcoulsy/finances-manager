@@ -1,9 +1,9 @@
 "use server";
 
-import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { auth } from "@/features/shared/lib/auth/config";
 
 export const logoutAction = actionClient.action(async () => {
   try {

@@ -1,5 +1,5 @@
-import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form";
+import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function ResetPasswordPage() {
   await requireNoAuth();

@@ -1,7 +1,7 @@
-import { getProjectAction } from "../actions/get-project.action";
-import { ProjectDetailView } from "./project-detail-view";
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/features/shared/components/ui/card";
+import { getProjectAction } from "../actions/get-project.action";
+import { ProjectDetailView } from "./project-detail-view";
 
 interface ProjectDetailProps {
   projectId: string;

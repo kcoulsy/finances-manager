@@ -1,11 +1,8 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useDeleteContact } from "../hooks/use-delete-contact";
-import { deleteContactSchema } from "../schemas/contact.schema";
-import type { DeleteContactInput } from "../schemas/contact.schema";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -15,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { useDeleteContact } from "../hooks/use-delete-contact";
+import type { DeleteContactInput } from "../schemas/contact.schema";
+import { deleteContactSchema } from "../schemas/contact.schema";
 
 interface DeleteContactFormProps {
   contactId: string;

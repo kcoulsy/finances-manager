@@ -1,15 +1,14 @@
 "use client";
 
-import * as React from "react";
-import { ChevronDownIcon, CheckIcon } from "lucide-react";
-import { cn } from "@/features/shared/lib/utils/index";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/features/shared/components/ui/dropdown-menu";
-import { Button } from "@/features/shared/components/ui/button";
+import { cn } from "@/features/shared/lib/utils/index";
 
 interface SelectOption {
   value: string;

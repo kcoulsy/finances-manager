@@ -1,9 +1,9 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import Link from "next/link";
 import { getContactAction } from "@/features/contacts/actions/get-contact.action";
 import { ContactDetail } from "@/features/contacts/components/contact-detail";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
 import { Button } from "@/features/shared/components/ui/button";
-import Link from "next/link";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 interface ContactDetailPageProps {
   params: Promise<{ id: string }>;

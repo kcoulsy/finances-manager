@@ -1,13 +1,8 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { changePasswordAction } from "../actions/change-password.action";
-import { changePasswordSchema } from "../schemas/auth.schema";
-import type { ChangePasswordInput } from "../schemas/auth.schema";
-import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
-import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -16,6 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { PasswordInput } from "@/features/shared/components/ui/password-input";
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { changePasswordAction } from "../actions/change-password.action";
+import type { ChangePasswordInput } from "../schemas/auth.schema";
+import { changePasswordSchema } from "../schemas/auth.schema";
 
 export function ChangePasswordForm() {
   const {

@@ -1,18 +1,18 @@
 "use client";
 
-import { ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
 import { Button } from "@/features/shared/components/ui/button";
-import { Skeleton } from "@/features/shared/components/ui/skeleton";
-import { cn } from "@/features/shared/lib/utils/index";
 import {
   CompactTable,
-  CompactTableHeader,
   CompactTableBody,
-  CompactTableRow,
-  CompactTableHead,
   CompactTableCell,
+  CompactTableHead,
+  CompactTableHeader,
+  CompactTableRow,
 } from "@/features/shared/components/ui/compact-table";
-import { DataTableFilters, type DataTableFilter } from "./data-table-filters";
+import { Skeleton } from "@/features/shared/components/ui/skeleton";
+import { cn } from "@/features/shared/lib/utils/index";
+import { type DataTableFilter, DataTableFilters } from "./data-table-filters";
 import { DataTableFooter, type DataTablePagination } from "./data-table-footer";
 
 export type SortDirection = "asc" | "desc" | null;

@@ -1,5 +1,5 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { ContactsList } from "@/features/contacts/components/contacts-list";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function ContactsPage() {
   await requireAuth();

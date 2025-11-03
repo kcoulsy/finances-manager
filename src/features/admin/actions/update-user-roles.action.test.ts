@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { UserRole } from "@/features/auth/constants/roles";
-import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
   createTestRole,
@@ -62,7 +61,7 @@ describe("updateUserRolesAction", () => {
 
   it("replaces existing roles with new ones", async () => {
     // Initially assign USER role
-    const userRole = await createTestRole(UserRole.USER);
+    const _userRole = await createTestRole(UserRole.USER);
     await assignRolesToUser(testUser.id, [UserRole.USER]);
 
     // Update to MODERATOR role only

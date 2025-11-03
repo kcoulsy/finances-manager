@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { restoreContactAction } from "../actions/restore-contact.action";
 import type { GetContactInput } from "../schemas/contact.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useRestoreContact() {
   const queryClient = useQueryClient();

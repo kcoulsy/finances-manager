@@ -1,8 +1,8 @@
 "use client";
 
-import { User, MessageCircle, Building, Truck, Tag } from "lucide-react";
-import { cn } from "@/features/shared/lib/utils/index";
 import type { ContactStatus } from "@prisma/client";
+import { Building, MessageCircle, Tag, Truck, User } from "lucide-react";
+import { cn } from "@/features/shared/lib/utils/index";
 
 interface ContactType {
   value: ContactStatus;
@@ -56,7 +56,9 @@ export function ContactTypeSelector({
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Tag className="h-4 w-4 text-muted-foreground" />
-        <label className="text-sm font-medium">Contact Type</label>
+        <label htmlFor="contact-type" className="text-sm font-medium">
+          Contact Type
+        </label>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {contactTypes.map((type) => {

@@ -1,4 +1,6 @@
+import type { Project } from "@prisma/client";
 import Link from "next/link";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
-import type { Project } from "@prisma/client";
 
 interface ProjectsListProps {
   projects: Project[];

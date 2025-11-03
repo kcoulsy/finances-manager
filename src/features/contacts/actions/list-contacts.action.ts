@@ -19,7 +19,7 @@ export const listContactsAction = actionClient
       const offset = parsedInput.offset ?? 0;
 
       // Build where clause
-      const where: any = {
+      const where: Record<string, unknown> = {
         userId: session.user.id,
       };
 

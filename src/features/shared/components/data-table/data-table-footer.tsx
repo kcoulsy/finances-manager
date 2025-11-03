@@ -83,7 +83,7 @@ export function DataTableFooter({
       ) {
         continue; // Skip duplicate ellipsis
       }
-      filteredPages.push(pages[i]!);
+      filteredPages.push(pages[i]);
     }
 
     return filteredPages;
@@ -120,6 +120,7 @@ export function DataTableFooter({
           {getPageNumbers().map((pageNum, index) => {
             if (pageNum === "ellipsis") {
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: happy to reuse the index
                 <PaginationItem key={`ellipsis-${index}`}>
                   <PaginationEllipsis />
                 </PaginationItem>

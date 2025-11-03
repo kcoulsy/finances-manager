@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 import { vi } from "vitest";
 
 // Mock next/headers since it's a Next.js server API that doesn't work in Node.js

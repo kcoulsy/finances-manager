@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "@/features/shared/lib/auth/config";
 import {
-  mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
   setupTestUserWithSession,
@@ -10,13 +9,13 @@ import {
 import { logoutAction } from "./logout.action";
 
 describe("logoutAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("logs out a user successfully", async () => {

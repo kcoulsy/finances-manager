@@ -1,14 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { signUp } from "@/features/shared/lib/auth/client";
-import { registerSchema } from "../schemas/auth.schema";
-import type { RegisterInput } from "../schemas/auth.schema";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
-import { Input } from "@/features/shared/components/ui/input";
-import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -17,6 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { Input } from "@/features/shared/components/ui/input";
+import { PasswordInput } from "@/features/shared/components/ui/password-input";
+import { signUp } from "@/features/shared/lib/auth/client";
+import type { RegisterInput } from "../schemas/auth.schema";
+import { registerSchema } from "../schemas/auth.schema";
 
 export function RegisterForm() {
   const router = useRouter();

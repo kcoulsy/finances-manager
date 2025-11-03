@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "@/features/shared/lib/auth/config";
-import {
-  mockNoAuthSession,
-  setupTestHooks,
-} from "@/features/shared/testing/helpers";
+import { setupTestHooks } from "@/features/shared/testing/helpers";
 import { loginAction } from "./login.action";
 
 describe("loginAction", () => {
@@ -26,6 +23,7 @@ describe("loginAction", () => {
 
     vi.mocked(auth.api.signInEmail).mockResolvedValue({
       user: mockUser,
+      // biome-ignore lint/suspicious/noExplicitAny: happy to use any
     } as any);
 
     const result = await loginAction({

@@ -16,6 +16,7 @@ describe("resetPasswordAction", () => {
         id: "test-user-id",
         email: "test@example.com",
       },
+      // biome-ignore lint/suspicious/noExplicitAny: happy to use any
     } as any);
 
     const result = await resetPasswordAction({

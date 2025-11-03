@@ -1,14 +1,10 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { resetPasswordAction } from "../actions/reset-password.action";
-import { resetPasswordSchema } from "../schemas/auth.schema";
-import type { ResetPasswordInput } from "../schemas/auth.schema";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
-import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -17,6 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { PasswordInput } from "@/features/shared/components/ui/password-input";
+import { resetPasswordAction } from "../actions/reset-password.action";
+import type { ResetPasswordInput } from "../schemas/auth.schema";
+import { resetPasswordSchema } from "../schemas/auth.schema";
 
 export function ResetPasswordForm() {
   const router = useRouter();

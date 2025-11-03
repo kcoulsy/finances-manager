@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { deleteContactAction } from "../actions/delete-contact.action";
 import type { DeleteContactInput } from "../schemas/contact.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useDeleteContact() {
   const queryClient = useQueryClient();

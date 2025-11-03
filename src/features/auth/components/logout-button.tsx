@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { logoutAction } from "../actions/logout.action";
+import { useState } from "react";
 import { Button } from "@/features/shared/components/ui/button";
+import { logoutAction } from "../actions/logout.action";
 
 interface LogoutButtonProps {
   variant?:

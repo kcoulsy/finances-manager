@@ -464,7 +464,7 @@ export const importContactsAction = actionClient
           }
 
           const contact = await db.contact.create({
-            data: data as any, // Using 'as any' because Prisma client types may be out of date - run 'npx prisma generate' after schema changes
+            data: data as Parameters<typeof db.contact.create>[0]["data"],
           });
 
           createdContacts.push(contact);

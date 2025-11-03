@@ -7,7 +7,7 @@ import { markAllNotificationsReadSchema } from "../schemas/notification.schema";
 
 export const markAllNotificationsReadAction = actionClient
   .inputSchema(markAllNotificationsReadSchema)
-  .action(async ({ parsedInput }) => {
+  .action(async () => {
     try {
       const session = await getSession();
 

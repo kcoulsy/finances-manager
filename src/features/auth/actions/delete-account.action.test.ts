@@ -106,7 +106,7 @@ describe("deleteAccountAction", () => {
 
   it("deletes associated data when account is deleted", async () => {
     // Create a project for the user
-    const project = await db.project.create({
+    const _project = await db.project.create({
       data: {
         name: "Test Project",
         userId: testUser.id,

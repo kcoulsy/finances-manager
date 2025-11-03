@@ -9,13 +9,13 @@ import {
 import { changePasswordAction } from "./change-password.action";
 
 describe("changePasswordAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("changes password successfully with valid data", async () => {

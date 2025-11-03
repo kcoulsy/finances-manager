@@ -1,10 +1,10 @@
 "use server";
 
-import { actionClient } from "@/features/shared/lib/actions/client";
+import { Permission } from "@/features/auth/constants/permissions";
 import { requirePermission } from "@/features/auth/lib/require-permission";
+import { actionClient } from "@/features/shared/lib/actions/client";
 import { db } from "@/features/shared/lib/db/client";
 import { verifyUserSchema } from "../schemas/admin.schema";
-import { Permission } from "@/features/auth/constants/permissions";
 
 /**
  * Verify a user's email manually

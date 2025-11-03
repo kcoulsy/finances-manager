@@ -1,6 +1,6 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { getProjectAction } from "@/features/projects/actions/get-project.action";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 interface ProjectDashboardPageProps {
   params: Promise<{ id: string }>;

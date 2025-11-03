@@ -1,10 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { archiveContactAction } from "../actions/archive-contact.action";
-import { getContactSchema } from "../schemas/contact.schema";
-import type { GetContactInput } from "../schemas/contact.schema";
 import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { archiveContactAction } from "../actions/archive-contact.action";
+import type { GetContactInput } from "../schemas/contact.schema";
 
 export function useArchiveContact() {
   const queryClient = useQueryClient();

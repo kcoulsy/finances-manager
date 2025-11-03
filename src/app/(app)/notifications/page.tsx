@@ -1,6 +1,6 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { getNotificationsAction } from "@/features/notifications/actions/get-notifications.action";
 import { NotificationsList } from "@/features/notifications/components/notifications-list";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 interface NotificationsPageProps {
   searchParams: Promise<{ id?: string }>;
@@ -9,7 +9,7 @@ interface NotificationsPageProps {
 export default async function NotificationsPage({
   searchParams,
 }: NotificationsPageProps) {
-  const session = await requireAuth();
+  const _session = await requireAuth();
   const { id } = await searchParams;
 
   const result = await getNotificationsAction({

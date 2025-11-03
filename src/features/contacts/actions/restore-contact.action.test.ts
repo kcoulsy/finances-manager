@@ -7,18 +7,17 @@ import {
   setupTestUserWithSession,
   type TestUser,
 } from "@/features/shared/testing/helpers";
-import { createContactAction } from "./create-contact.action";
 import { archiveContactAction } from "./archive-contact.action";
+import { createContactAction } from "./create-contact.action";
 import { restoreContactAction } from "./restore-contact.action";
-import { vi } from "vitest";
 
 describe("restoreContactAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("restores an archived contact successfully", async () => {
@@ -33,7 +32,8 @@ describe("restoreContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Archive the contact
     await archiveContactAction({ contactId });
@@ -104,7 +104,8 @@ describe("restoreContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Try to restore a non-archived contact
     const result = await restoreContactAction({
@@ -131,7 +132,8 @@ describe("restoreContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     await archiveContactAction({ contactId });
 
     // Switch to another user
@@ -163,7 +165,8 @@ describe("restoreContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     await archiveContactAction({ contactId });
 
     // Mock no auth session
@@ -171,7 +174,11 @@ describe("restoreContactAction", () => {
 
     // Try to restore contact without authentication
     // Action throws error, so we need to catch it
-    let result;
+    let result:
+      | Awaited<ReturnType<typeof restoreContactAction>>
+      | {
+          serverError: string;
+        };
     try {
       result = await restoreContactAction({
         contactId,
@@ -203,7 +210,8 @@ describe("restoreContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     await archiveContactAction({ contactId });
 
     const result = await restoreContactAction({

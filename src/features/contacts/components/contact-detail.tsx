@@ -1,7 +1,6 @@
+import { Card, CardContent } from "@/features/shared/components/ui/card";
 import { getContactAction } from "../actions/get-contact.action";
 import { ContactDetailView } from "./contact-detail-view";
-import { redirect } from "next/navigation";
-import { Card, CardContent } from "@/features/shared/components/ui/card";
 
 interface ContactDetailProps {
   contactId: string;

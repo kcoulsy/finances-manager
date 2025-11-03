@@ -1,11 +1,8 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useDeleteProject } from "../hooks/use-delete-project";
-import { deleteProjectSchema } from "../schemas/project.schema";
-import type { DeleteProjectInput } from "../schemas/project.schema";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -15,6 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { useDeleteProject } from "../hooks/use-delete-project";
+import type { DeleteProjectInput } from "../schemas/project.schema";
+import { deleteProjectSchema } from "../schemas/project.schema";
 
 interface DeleteProjectFormProps {
   projectId: string;

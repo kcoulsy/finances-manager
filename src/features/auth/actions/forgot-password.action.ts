@@ -1,11 +1,11 @@
 "use server";
 
-import { actionClient } from "@/features/shared/lib/actions/client";
-import { auth } from "@/features/shared/lib/auth/config";
-import { forgotPasswordSchema } from "../schemas/auth.schema";
 // TODO: Implement email utility
 // import { sendPasswordResetEmail } from "@/features/shared/lib/utils/email";
 import { headers } from "next/headers";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { auth } from "@/features/shared/lib/auth/config";
+import { forgotPasswordSchema } from "../schemas/auth.schema";
 
 export const forgotPasswordAction = actionClient
   .inputSchema(forgotPasswordSchema)
@@ -30,7 +30,7 @@ export const forgotPasswordAction = actionClient
         success: true,
         message: "Password reset email sent",
       };
-    } catch (error) {
+    } catch (_error) {
       // Better Auth doesn't reveal if email exists, so we always return success
       // to prevent email enumeration attacks
       return {

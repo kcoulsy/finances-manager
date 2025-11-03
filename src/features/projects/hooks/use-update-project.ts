@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { updateProjectAction } from "../actions/update-project.action";
 import type { UpdateProjectInput } from "../schemas/project.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useUpdateProject() {
   const queryClient = useQueryClient();

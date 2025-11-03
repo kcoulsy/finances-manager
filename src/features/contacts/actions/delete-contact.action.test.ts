@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -12,12 +12,12 @@ import { createContactAction } from "./create-contact.action";
 import { deleteContactAction } from "./delete-contact.action";
 
 describe("deleteContactAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("deletes a contact successfully with soft delete", async () => {
@@ -30,7 +30,8 @@ describe("deleteContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     // Delete the contact
@@ -86,7 +87,8 @@ describe("deleteContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Create another user and try to delete the contact
     const otherUser = await setupTestUserWithSession({
@@ -115,7 +117,8 @@ describe("deleteContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     mockNoAuthSession();
@@ -140,7 +143,8 @@ describe("deleteContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     const result = await deleteContactAction({
@@ -163,7 +167,8 @@ describe("deleteContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     // Delete the contact first (permanent delete)
@@ -201,8 +206,10 @@ describe("deleteContactAction", () => {
 
     expect(contact1.data?.success).toBe(true);
     expect(contact2.data?.success).toBe(true);
-    const contact1Id = contact1.data?.contact.id!;
-    const contact2Id = contact2.data?.contact.id!;
+    expect(contact1.data?.contact?.id).toBeDefined();
+    expect(contact2.data?.contact?.id).toBeDefined();
+    const contact1Id = contact1.data?.contact?.id as string;
+    const contact2Id = contact2.data?.contact?.id as string;
     expect(contact1Id).toBeDefined();
     expect(contact2Id).toBeDefined();
 

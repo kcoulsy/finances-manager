@@ -1,6 +1,6 @@
+import { UserRole } from "@/features/auth/constants/roles";
 import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
-import { UserRole } from "@/features/auth/constants/roles";
 
 /**
  * Mock headers for seed context (better-auth requires headers)

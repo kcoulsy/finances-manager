@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as React from "react";
 import ReactMarkdown from "react-markdown";
 
 import { Button } from "@/features/shared/components/ui/button";
@@ -14,12 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/features/shared/components/ui/dialog";
-import { markNotificationReadAction } from "../actions/mark-notification-read.action";
-import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read.action";
-import { deleteAllNotificationsAction } from "../actions/delete-all-notifications.action";
-import { getNotificationsAction } from "../actions/get-notifications.action";
 import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { cn } from "@/features/shared/lib/utils/index";
+import { deleteAllNotificationsAction } from "../actions/delete-all-notifications.action";
+import { getNotificationsAction } from "../actions/get-notifications.action";
+import { markAllNotificationsReadAction } from "../actions/mark-all-notifications-read.action";
+import { markNotificationReadAction } from "../actions/mark-notification-read.action";
 
 interface Notification {
   id: string;

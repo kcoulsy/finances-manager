@@ -1,5 +1,5 @@
-import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function LoginPage() {
   await requireNoAuth();

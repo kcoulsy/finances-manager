@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ContactStatus } from "@prisma/client";
 import { Building, ChevronDown, Edit, Phone, User } from "lucide-react";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -20,10 +20,7 @@ import {
   CollapsibleTrigger,
 } from "@/features/shared/components/ui/collapsible";
 import { Input } from "@/features/shared/components/ui/input";
-import {
-  Select,
-  type SelectOption,
-} from "@/features/shared/components/ui/select";
+import type { SelectOption } from "@/features/shared/components/ui/select";
 import { Textarea } from "@/features/shared/components/ui/textarea";
 import { cn } from "@/features/shared/lib/utils/index";
 import { useCreateContact } from "../hooks/use-create-contact";
@@ -65,7 +62,7 @@ interface ContactFormProps {
   };
 }
 
-const roleOptions: SelectOption[] = [
+const _roleOptions: SelectOption[] = [
   { value: "Client", label: "Client" },
   { value: "Contractor", label: "Contractor" },
   { value: "Supplier", label: "Supplier" },
@@ -73,14 +70,14 @@ const roleOptions: SelectOption[] = [
   { value: "Other", label: "Other" },
 ];
 
-const statusOptions: SelectOption[] = [
+const _statusOptions: SelectOption[] = [
   { value: "PERSONAL", label: "Personal Contact" },
   { value: "ENQUIRY", label: "Enquiry" },
   { value: "CLIENT", label: "Client" },
   { value: "SUPPLIER", label: "Supplier" },
 ];
 
-const engagementOptions: SelectOption[] = [
+const _engagementOptions: SelectOption[] = [
   { value: "ACTIVE", label: "Active" },
   { value: "INACTIVE", label: "Inactive" },
   { value: "SUSPENDED", label: "Suspended" },
@@ -96,7 +93,6 @@ export function ContactForm({ contactId, initialData }: ContactFormProps) {
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors, isSubmitting },
     setError,
     setValue,

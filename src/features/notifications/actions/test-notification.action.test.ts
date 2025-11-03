@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
-  mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
   setupTestUserWithSession,

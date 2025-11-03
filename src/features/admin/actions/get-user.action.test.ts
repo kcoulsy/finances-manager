@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { UserRole } from "@/features/auth/constants/roles";
-import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
   createTestUser,

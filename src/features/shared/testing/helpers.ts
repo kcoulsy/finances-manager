@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { afterAll, beforeAll, beforeEach, vi } from "vitest";
+import { beforeAll, beforeEach, vi } from "vitest";
 import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
 
@@ -73,7 +73,7 @@ export async function createTestUser(
  */
 export function mockAuthSession(user: TestUser, roles: string[] = []): void {
   // Mock headers() to return mock headers
-  vi.mocked(headers).mockResolvedValue(new Headers() as any);
+  vi.mocked(headers).mockResolvedValue(new Headers());
 
   // Mock auth.api.getSession to return a valid session with roles
   vi.mocked(auth.api.getSession).mockResolvedValue({
@@ -97,14 +97,14 @@ export function mockAuthSession(user: TestUser, roles: string[] = []): void {
       userAgent: null,
     },
     roles, // Include roles in the session
-  } as any);
+  });
 }
 
 /**
  * Mocks the auth API to return no session (unauthenticated)
  */
 export function mockNoAuthSession(): void {
-  vi.mocked(headers).mockResolvedValue(new Headers() as any);
+  vi.mocked(headers).mockResolvedValue(new Headers());
   vi.mocked(auth.api.getSession).mockResolvedValue(null);
 }
 
@@ -216,12 +216,12 @@ export function setupTestHooks(): void {
   beforeAll(async () => {
     vi.resetAllMocks();
     // Ensure headers mock is initialized
-    vi.mocked(headers).mockResolvedValue(new Headers() as any);
+    vi.mocked(headers).mockResolvedValue(new Headers());
   });
 
   // Initialize headers mock before each test
   beforeEach(async () => {
     // Just ensure headers mock is initialized
-    vi.mocked(headers).mockResolvedValue(new Headers() as any);
+    vi.mocked(headers).mockResolvedValue(new Headers());
   });
 }

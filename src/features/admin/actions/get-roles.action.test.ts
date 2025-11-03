@@ -90,7 +90,7 @@ describe("getRolesAction", () => {
 
   it("throws error when user lacks admin permissions", async () => {
     // Create regular user without admin permissions - use unique email
-    const regularUser = await setupTestUserWithSession({
+    const _regularUser = await setupTestUserWithSession({
       name: "Regular User",
       email: `regular-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@example.com`,
     });

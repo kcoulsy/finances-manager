@@ -19,8 +19,13 @@ export function TestNotificationButton() {
         description: "Check your notifications to see it.",
       },
       // Handle refresh in onSuccess callback
-      onSuccess: ({ data }: { data: any }) => {
-        if (data?.success) {
+      onSuccess: ({ data }) => {
+        if (
+          data &&
+          typeof data === "object" &&
+          "success" in data &&
+          data.success
+        ) {
           // Refresh the page to revalidate server components
           router.refresh();
           // Trigger notification count refresh

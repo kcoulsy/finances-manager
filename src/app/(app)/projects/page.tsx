@@ -1,9 +1,9 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { getProjectsAction } from "@/features/projects/actions/get-projects.action";
 import { ProjectsList } from "@/features/projects/components/projects-list";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function ProjectsPage() {
-  const session = await requireAuth();
+  const _session = await requireAuth();
 
   const result = await getProjectsAction();
 

@@ -1,7 +1,7 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import Link from "next/link";
 import { ProjectForm } from "@/features/projects/components/project-form";
 import { Button } from "@/features/shared/components/ui/button";
-import Link from "next/link";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function NewProjectPage() {
   await requireAuth();

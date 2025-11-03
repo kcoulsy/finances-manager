@@ -1,23 +1,21 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
-  mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
   setupTestUserWithSession,
   type TestUser,
 } from "@/features/shared/testing/helpers";
-import { createContactAction } from "./create-contact.action";
 import { bulkArchiveContactsAction } from "./bulk-archive-contacts.action";
-import { vi } from "vitest";
+import { createContactAction } from "./create-contact.action";
 
 describe("bulkArchiveContactsAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("archives multiple contacts successfully", async () => {
@@ -51,10 +49,13 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact2.data?.contact).toBeDefined();
     expect(contact3.data?.contact).toBeDefined();
 
+    expect(contact1.data?.contact?.id).toBeDefined();
+    expect(contact2.data?.contact?.id).toBeDefined();
+    expect(contact3.data?.contact?.id).toBeDefined();
     const contactIds = [
-      contact1.data?.contact.id!,
-      contact2.data?.contact.id!,
-      contact3.data?.contact.id!,
+      contact1.data?.contact?.id as string,
+      contact2.data?.contact?.id as string,
+      contact3.data?.contact?.id as string,
     ];
 
     // Verify contacts are not archived
@@ -104,7 +105,8 @@ describe("bulkArchiveContactsAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Archive contact
     const result = await bulkArchiveContactsAction({
@@ -171,9 +173,11 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact1.data?.contact).toBeDefined();
     expect(contact2.data?.contact).toBeDefined();
 
+    expect(contact1.data?.contact?.id).toBeDefined();
+    expect(contact2.data?.contact?.id).toBeDefined();
     const contactIds = [
-      contact1.data?.contact.id!,
-      contact2.data?.contact.id!,
+      contact1.data?.contact?.id as string,
+      contact2.data?.contact?.id as string,
       "non-existent-id",
     ];
 
@@ -188,7 +192,12 @@ describe("bulkArchiveContactsAction", () => {
     // Verify only valid contacts are archived
     const archivedContacts = await db.contact.findMany({
       where: {
-        id: { in: [contact1.data?.contact.id!, contact2.data?.contact.id!] },
+        id: {
+          in: [
+            contact1.data?.contact?.id as string,
+            contact2.data?.contact?.id as string,
+          ],
+        },
       },
     });
 
@@ -220,8 +229,10 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact1.data?.contact).toBeDefined();
     expect(contact2.data?.contact).toBeDefined();
 
-    const contact1Id = contact1.data?.contact.id!;
-    const contact2Id = contact2.data?.contact.id!;
+    expect(contact1.data?.contact?.id).toBeDefined();
+    expect(contact2.data?.contact?.id).toBeDefined();
+    const contact1Id = contact1.data?.contact?.id as string;
+    const contact2Id = contact2.data?.contact?.id as string;
 
     const contactIds = [contact1Id, contact2Id];
 
@@ -269,14 +280,23 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact1.data?.contact).toBeDefined();
     expect(contact2.data?.contact).toBeDefined();
 
-    const contactIds = [contact1.data?.contact.id!, contact2.data?.contact.id!];
+    expect(contact1.data?.contact?.id).toBeDefined();
+    expect(contact2.data?.contact?.id).toBeDefined();
+    const contactIds = [
+      contact1.data?.contact?.id as string,
+      contact2.data?.contact?.id as string,
+    ];
 
     // Mock no auth session
     mockNoAuthSession();
 
     // Try to archive contacts without authentication
     // Action throws error, so we need to catch it
-    let result;
+    let result:
+      | Awaited<ReturnType<typeof bulkArchiveContactsAction>>
+      | {
+          serverError: string;
+        };
     try {
       result = await bulkArchiveContactsAction({
         contactIds,
@@ -309,7 +329,7 @@ describe("bulkArchiveContactsAction", () => {
     expect(createResult.data?.contact).toBeDefined();
 
     const result = await bulkArchiveContactsAction({
-      contactIds: [createResult.data?.contact.id!],
+      contactIds: [createResult.data?.contact?.id as string],
     });
 
     expect(result.data?.success).toBe(true);
@@ -341,7 +361,10 @@ describe("bulkArchiveContactsAction", () => {
     expect(contact2.data?.contact).toBeDefined();
 
     const result = await bulkArchiveContactsAction({
-      contactIds: [contact1.data?.contact.id!, contact2.data?.contact.id!],
+      contactIds: [
+        contact1.data?.contact?.id as string,
+        contact2.data?.contact?.id as string,
+      ],
     });
 
     expect(result.data?.success).toBe(true);

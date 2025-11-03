@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import type { Contact } from "@prisma/client";
 import { Archive, RotateCcw, Trash2 } from "lucide-react";
-import { ContactForm } from "./contact-form";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -21,15 +21,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/features/shared/components/ui/dialog";
-import {
-  CONTACT_STATUS_CONFIG,
-  CONTACT_ENGAGEMENT_CONFIG,
-} from "../constants/contact-constants";
-import type { Contact } from "@prisma/client";
 import { cn } from "@/features/shared/lib/utils/index";
+import {
+  CONTACT_ENGAGEMENT_CONFIG,
+  CONTACT_STATUS_CONFIG,
+} from "../constants/contact-constants";
 import { useArchiveContact } from "../hooks/use-archive-contact";
 import { useDeleteContact } from "../hooks/use-delete-contact";
 import { useRestoreContact } from "../hooks/use-restore-contact";
+import { ContactForm } from "./contact-form";
 
 interface ContactDetailViewProps {
   contact: Contact;

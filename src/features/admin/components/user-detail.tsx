@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "../hooks/use-user";
-import { useRoles } from "../hooks/use-roles";
-import { useUpdateUserRoles } from "../hooks/use-update-user-roles";
-import { useVerifyUser } from "../hooks/use-verify-user";
+import { useEffect, useState } from "react";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -13,7 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
+import { useRoles } from "../hooks/use-roles";
+import { useUpdateUserRoles } from "../hooks/use-update-user-roles";
+import { useUser } from "../hooks/use-user";
+import { useVerifyUser } from "../hooks/use-verify-user";
 import { UserProjectsTable } from "./user-projects-table";
 
 interface UserDetailProps {

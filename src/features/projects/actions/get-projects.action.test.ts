@@ -19,7 +19,7 @@ describe("getProjectsAction", () => {
 
   it("gets all projects for the authenticated user successfully", async () => {
     // Create multiple projects for the test user
-    const project1 = await db.project.create({
+    const _project1 = await db.project.create({
       data: {
         name: "Project 1",
         description: "First project",
@@ -27,7 +27,7 @@ describe("getProjectsAction", () => {
       },
     });
 
-    const project2 = await db.project.create({
+    const _project2 = await db.project.create({
       data: {
         name: "Project 2",
         description: "Second project",
@@ -35,7 +35,7 @@ describe("getProjectsAction", () => {
       },
     });
 
-    const project3 = await db.project.create({
+    const _project3 = await db.project.create({
       data: {
         name: "Project 3",
         description: "Third project",

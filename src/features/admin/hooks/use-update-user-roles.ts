@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateUserRolesAction } from "../actions/update-user-roles.action";
 import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { updateUserRolesAction } from "../actions/update-user-roles.action";
 
 export function useUpdateUserRoles() {
   const queryClient = useQueryClient();
@@ -24,7 +24,7 @@ export function useUpdateUserRoles() {
 
       throw new Error("Failed to update user roles");
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       // Invalidate and refetch users list
       queryClient.invalidateQueries({ queryKey: ["users"] });
       // Invalidate and refetch the specific user

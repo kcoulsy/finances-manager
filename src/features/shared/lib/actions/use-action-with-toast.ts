@@ -3,6 +3,18 @@
 import { useAction } from "next-safe-action/hooks";
 import { showToastFromAction, type ToastConfig } from "./toast";
 
+interface UseActionWithToastOptions {
+  showToasts?: boolean;
+  successToast?: ToastConfig;
+  errorToast?: ToastConfig;
+  onSuccess?: (args: { data: unknown; input: unknown }) => void | Promise<void>;
+  onError?: (args: { error: unknown; input: unknown }) => void | Promise<void>;
+  onExecute?: (args: { input: unknown }) => void | Promise<void>;
+  onSettled?: (args: {
+    result: unknown;
+    input: unknown;
+  }) => void | Promise<void>;
+}
 /**
  * Hook that wraps useAction from next-safe-action with automatic toast handling
  * using hook callbacks (onSuccess, onError).
@@ -10,24 +22,9 @@ import { showToastFromAction, type ToastConfig } from "./toast";
  * @see https://next-safe-action.dev/docs/execute-actions/hooks/hook-callbacks
  */
 export function useActionWithToast(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: happy to use any
   action: any,
-  options?: {
-    /** Custom toast config to show on success (overrides toast from action result) */
-    successToast?: ToastConfig;
-    /** Custom toast config to show on error (overrides error toast) */
-    errorToast?: ToastConfig;
-    /** Whether to show toasts automatically (default: true) */
-    showToasts?: boolean;
-    /** Custom onSuccess callback (runs after toast is shown) */
-    onSuccess?: (args: { data: any; input: any }) => void | Promise<void>;
-    /** Custom onError callback (runs after toast is shown) */
-    onError?: (args: { error: any; input: any }) => void | Promise<void>;
-    /** Custom onExecute callback */
-    onExecute?: (args: { input: any }) => void | Promise<void>;
-    /** Custom onSettled callback */
-    onSettled?: (args: { result: any; input: any }) => void | Promise<void>;
-  },
+  options?: UseActionWithToastOptions,
 ) {
   const {
     showToasts = true,

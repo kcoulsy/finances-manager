@@ -1,15 +1,8 @@
 "use client";
 
+import type { Project } from "@prisma/client";
 import Link from "next/link";
-import { useUserProjects } from "../hooks/use-user-projects";
-import {
-  CompactTable,
-  CompactTableHeader,
-  CompactTableBody,
-  CompactTableRow,
-  CompactTableHead,
-  CompactTableCell,
-} from "@/features/shared/components/ui/compact-table";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,8 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
-import type { Project } from "@prisma/client";
+import {
+  CompactTable,
+  CompactTableBody,
+  CompactTableCell,
+  CompactTableHead,
+  CompactTableHeader,
+  CompactTableRow,
+} from "@/features/shared/components/ui/compact-table";
+import { useUserProjects } from "../hooks/use-user-projects";
 
 interface UserProjectsTableProps {
   userId: string;

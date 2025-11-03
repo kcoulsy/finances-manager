@@ -1,15 +1,10 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { deleteAccountAction } from "../actions/delete-account.action";
-import { deleteAccountSchema } from "../schemas/auth.schema";
-import type { DeleteAccountInput } from "../schemas/auth.schema";
-import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
-import { PasswordInput } from "@/features/shared/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -18,6 +13,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { PasswordInput } from "@/features/shared/components/ui/password-input";
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
+import { deleteAccountAction } from "../actions/delete-account.action";
+import type { DeleteAccountInput } from "../schemas/auth.schema";
+import { deleteAccountSchema } from "../schemas/auth.schema";
 
 export function DeleteAccountForm() {
   const router = useRouter();

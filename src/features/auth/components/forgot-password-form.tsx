@@ -1,13 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { forgotPasswordAction } from "../actions/forgot-password.action";
-import { forgotPasswordSchema } from "../schemas/auth.schema";
-import type { ForgotPasswordInput } from "../schemas/auth.schema";
+import { useForm } from "react-hook-form";
 import { Button } from "@/features/shared/components/ui/button";
-import { Input } from "@/features/shared/components/ui/input";
 import {
   Card,
   CardContent,
@@ -16,6 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
+import { Input } from "@/features/shared/components/ui/input";
+import { forgotPasswordAction } from "../actions/forgot-password.action";
+import type { ForgotPasswordInput } from "../schemas/auth.schema";
+import { forgotPasswordSchema } from "../schemas/auth.schema";
 
 export function ForgotPasswordForm() {
   const [success, setSuccess] = useState(false);

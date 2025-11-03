@@ -7,17 +7,16 @@ import {
   setupTestUserWithSession,
   type TestUser,
 } from "@/features/shared/testing/helpers";
-import { createContactAction } from "./create-contact.action";
 import { archiveContactAction } from "./archive-contact.action";
-import { vi } from "vitest";
+import { createContactAction } from "./create-contact.action";
 
 describe("archiveContactAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("archives a contact successfully", async () => {
@@ -32,7 +31,8 @@ describe("archiveContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data.contact.id;
 
     // Verify contact exists and is not archived
     const contactBefore = await db.contact.findUnique({
@@ -101,7 +101,8 @@ describe("archiveContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data.contact.id;
 
     // Archive it
     await archiveContactAction({ contactId });
@@ -131,7 +132,8 @@ describe("archiveContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data.contact.id;
 
     // Switch to another user
     const otherUser = await setupTestUserWithSession();
@@ -162,14 +164,19 @@ describe("archiveContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data.contact.id;
 
     // Mock no auth session
     mockNoAuthSession();
 
     // Try to archive contact without authentication
     // Action throws error, so we need to catch it
-    let result;
+    let result:
+      | Awaited<ReturnType<typeof archiveContactAction>>
+      | {
+          serverError: string;
+        };
     try {
       result = await archiveContactAction({
         contactId,
@@ -201,7 +208,8 @@ describe("archiveContactAction", () => {
 
     expect(createResult.data?.success).toBe(true);
     expect(createResult.data?.contact).toBeDefined();
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data.contact.id;
 
     const result = await archiveContactAction({
       contactId,

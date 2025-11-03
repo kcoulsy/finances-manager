@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { importContactsAction } from "../actions/import-contacts.action";
-import type { ImportContactsInput } from "../schemas/contact.schema";
+import { AlertCircle, FileSpreadsheet, FileText, Upload } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/features/shared/components/ui/dialog";
-import { Button } from "@/features/shared/components/ui/button";
-import { Upload, FileText, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { importContactsAction } from "../actions/import-contacts.action";
+import type { ImportContactsInput } from "../schemas/contact.schema";
 
 interface ImportContactsModalProps {
   open: boolean;
@@ -159,7 +159,8 @@ export function ImportContactsModal({
                 commonly used by email clients and address book applications.
               </p>
 
-              <div
+              <section
+                aria-label="Drag and drop zone for file upload"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -185,12 +186,12 @@ export function ImportContactsModal({
                     <span>Select vCard File</span>
                   </Button>
                 </label>
-                {file && file.name.endsWith(".vcf") && (
+                {file?.name.endsWith(".vcf") && (
                   <p className="text-sm text-muted-foreground mt-4">
                     Selected: {file.name}
                   </p>
                 )}
-              </div>
+              </section>
             </div>
           ) : (
             <div className="space-y-4">
@@ -224,7 +225,8 @@ export function ImportContactsModal({
                 </div>
               </div>
 
-              <div
+              <section
+                aria-label="Drag and drop zone for file upload"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -250,12 +252,12 @@ export function ImportContactsModal({
                     <span>Select CSV File</span>
                   </Button>
                 </label>
-                {file && file.name.endsWith(".csv") && (
+                {file?.name.endsWith(".csv") && (
                   <p className="text-sm text-muted-foreground mt-4">
                     Selected: {file.name}
                   </p>
                 )}
-              </div>
+              </section>
             </div>
           )}
         </div>

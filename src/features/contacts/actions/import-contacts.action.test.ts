@@ -125,7 +125,9 @@ John,Doe,variations-john@example.com,07123 456789,Acme Corp`;
       expect(contact?.firstName).toBe("John");
       expect(contact?.lastName).toBe("Doe");
       expect(contact?.phoneMobile).toBe("07123 456789");
-      expect((contact as any)?.companyName).toBe("Acme Corp");
+      expect((contact as Record<string, unknown>)?.companyName).toBe(
+        "Acme Corp",
+      );
     });
   });
 
@@ -176,8 +178,12 @@ END:VCARD`;
       expect(johnContact?.phoneMobile).toBe("07123 456789");
       expect(johnContact?.phoneHome).toBe("01234 567890");
       expect(johnContact?.phoneWork).toBe("020 1234 5678");
-      expect((johnContact as any)?.companyName).toBe("Acme Corp");
-      expect((johnContact as any)?.position).toBe("Director");
+      expect((johnContact as Record<string, unknown>)?.companyName).toBe(
+        "Acme Corp",
+      );
+      expect((johnContact as Record<string, unknown>)?.position).toBe(
+        "Director",
+      );
     });
 
     it("imports vCard with minimal fields", async () => {
@@ -379,7 +385,7 @@ John,Doe,company-website-john@example.com,Acme Corp,acmecorp.com`;
       where: { email: "company-website-john@example.com" },
     });
 
-    expect((contact as any)?.companyName).toBe("Acme Corp");
+    expect((contact as Record<string, unknown>)?.companyName).toBe("Acme Corp");
     // Note: Company website normalization might happen in createContactAction,
     // but for imports it uses personalWebsite field
   });

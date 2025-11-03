@@ -1,22 +1,22 @@
 "use client";
 
-import * as React from "react";
+import { ChevronDown, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, Shield, ChevronDown } from "lucide-react";
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/features/shared/components/ui/sidebar";
+import * as React from "react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/features/shared/components/ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/features/shared/components/ui/sidebar";
 
 interface AdminNavProps {
   isAdmin: boolean;

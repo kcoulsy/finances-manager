@@ -1,11 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 
 export interface BreadcrumbItem {
   label: string;

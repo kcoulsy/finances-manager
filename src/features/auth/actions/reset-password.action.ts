@@ -1,9 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { auth } from "@/features/shared/lib/auth/config";
 import { resetPasswordSchema } from "../schemas/auth.schema";
-import { headers } from "next/headers";
 
 export const resetPasswordAction = actionClient
   .inputSchema(resetPasswordSchema)

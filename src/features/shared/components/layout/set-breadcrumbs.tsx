@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useBreadcrumbs, type BreadcrumbItem } from "./breadcrumb-context";
+import { type BreadcrumbItem, useBreadcrumbs } from "./breadcrumb-context";
 
 interface SetBreadcrumbsProps {
   breadcrumbs: BreadcrumbItem[];

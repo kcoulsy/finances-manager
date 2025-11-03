@@ -65,7 +65,7 @@ describe("deleteAllNotificationsAction", () => {
     });
 
     // Create notification for testUser
-    const testUserNotification = await createNotificationAction({
+    const _testUserNotification = await createNotificationAction({
       userId: testUser.id,
       title: "Test User Notification",
     });
@@ -115,7 +115,7 @@ describe("deleteAllNotificationsAction", () => {
   });
 
   it("deletes both read and unread notifications", async () => {
-    const notification1 = await createNotificationAction({
+    const _notification1 = await createNotificationAction({
       userId: testUser.id,
       title: "Unread Notification",
     });

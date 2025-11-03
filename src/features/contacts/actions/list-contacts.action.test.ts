@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -235,7 +235,8 @@ describe("listContactsAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     // Soft delete the contact
@@ -260,7 +261,7 @@ describe("listContactsAction", () => {
     });
 
     // Create another user and their contact
-    const otherUser = await setupTestUserWithSession({
+    const _otherUser = await setupTestUserWithSession({
       email: generateUniqueContactEmail("list-other-user"),
     });
 

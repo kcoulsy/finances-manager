@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useUsers } from "../hooks/use-users";
-import { useDebounce } from "@/features/shared/hooks/use-debounce";
+import { useCallback, useState } from "react";
+import { UserRole } from "@/features/auth/constants/roles";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableFilter,
+  type SortDirection,
+} from "@/features/shared/components/data-table";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,14 +17,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
-import {
-  DataTable,
-  type DataTableColumn,
-  type SortDirection,
-  type DataTableFilter,
-} from "@/features/shared/components/data-table";
-import { UserRole } from "@/features/auth/constants/roles";
+import { useDebounce } from "@/features/shared/hooks/use-debounce";
+import { useUsers } from "../hooks/use-users";
 
 type User = {
   id: string;

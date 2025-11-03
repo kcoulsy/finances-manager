@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { createContactAction } from "../actions/create-contact.action";
 import type { CreateContactInput } from "../schemas/contact.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useCreateContact() {
   const queryClient = useQueryClient();

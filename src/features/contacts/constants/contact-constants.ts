@@ -1,4 +1,4 @@
-import type { ContactStatus, ContactEngagement } from "@prisma/client";
+import type { ContactEngagement, ContactStatus } from "@prisma/client";
 
 export const CONTACT_ROLES = [
   "Client",

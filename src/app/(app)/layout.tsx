@@ -25,8 +25,14 @@ export default async function AppLayout({
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8 min-w-0 max-w-full overflow-hidden">
             {children}
           </div>
-
-          <Toaster richColors />
+          <Toaster
+            richColors
+            position="top-right"
+            closeButton
+            offset={{
+              top: "5rem",
+            }}
+          />
         </BreadcrumbProvider>
       </SidebarInset>
     </SidebarProvider>

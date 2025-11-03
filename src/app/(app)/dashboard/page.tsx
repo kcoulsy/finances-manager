@@ -1,4 +1,6 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import Link from "next/link";
+import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,9 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
-import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
-import Link from "next/link";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function DashboardPage() {
   const session = await requireAuth();

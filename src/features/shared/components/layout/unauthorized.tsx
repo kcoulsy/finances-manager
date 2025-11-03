@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -6,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import Link from "next/link";
 
 interface UnauthorizedProps {
   message?: string;

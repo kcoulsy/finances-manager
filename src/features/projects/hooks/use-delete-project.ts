@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { deleteProjectAction } from "../actions/delete-project.action";
 import type { DeleteProjectInput } from "../schemas/project.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useDeleteProject() {
   const queryClient = useQueryClient();

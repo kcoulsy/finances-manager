@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -29,7 +29,8 @@ describe("getContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Get the contact
     const result = await getContactAction({
@@ -58,7 +59,8 @@ describe("getContactAction", () => {
       position: "Director",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     const result = await getContactAction({
       contactId,
@@ -103,7 +105,8 @@ describe("getContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Create another user and try to access the contact
     const otherUser = await setupTestUserWithSession({
@@ -132,7 +135,8 @@ describe("getContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     mockNoAuthSession();
@@ -157,7 +161,8 @@ describe("getContactAction", () => {
     });
 
     expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
     expect(contactId).toBeDefined();
 
     // Soft delete the contact

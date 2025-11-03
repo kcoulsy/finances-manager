@@ -1,6 +1,6 @@
-import { requireRole } from "@/features/auth/lib/require-role";
-import { UserRole } from "@/features/auth/constants/roles";
 import { UsersList } from "@/features/admin/components/users-list";
+import { UserRole } from "@/features/auth/constants/roles";
+import { requireRole } from "@/features/auth/lib/require-role";
 
 export default async function AdminUsersPage() {
   await requireRole(UserRole.ADMIN);

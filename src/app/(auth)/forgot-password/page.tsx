@@ -1,5 +1,5 @@
-import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
+import { requireNoAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function ForgotPasswordPage() {
   await requireNoAuth();

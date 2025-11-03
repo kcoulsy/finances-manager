@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserRole } from "@/features/auth/constants/roles";
-import { db } from "@/features/shared/lib/db/client";
 import {
   assignRolesToUser,
-  createTestRole,
   createTestUser,
   mockAuthSession,
   mockNoAuthSession,
@@ -15,7 +13,7 @@ import { getUsersAction } from "./get-users.action";
 
 describe("getUsersAction", () => {
   let adminUser: TestUser;
-  let regularUser: TestUser;
+  let _regularUser: TestUser;
 
   setupTestHooks();
 
@@ -34,7 +32,7 @@ describe("getUsersAction", () => {
 
     // Create regular user without admin permissions - use unique email
     const regularEmail = `regular-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@example.com`;
-    regularUser = await setupTestUserWithSession({
+    _regularUser = await setupTestUserWithSession({
       name: "Regular User",
       email: regularEmail,
     });
@@ -46,11 +44,11 @@ describe("getUsersAction", () => {
     mockAuthSession(adminUser, roleNames);
 
     // Create additional test users
-    const user1 = await createTestUser({
+    const _user1 = await createTestUser({
       name: "User 1",
       email: `user1-${Date.now()}@example.com`,
     });
-    const user2 = await createTestUser({
+    const _user2 = await createTestUser({
       name: "User 2",
       email: `user2-${Date.now()}@example.com`,
     });
@@ -304,7 +302,7 @@ describe("getUsersAction", () => {
 
   it("throws error when user lacks admin permissions", async () => {
     // Create a regular user without admin permissions - use unique email
-    const regularUser = await setupTestUserWithSession({
+    const _regularUser = await setupTestUserWithSession({
       name: "Regular User 2",
       email: `regular2-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@example.com`,
     });

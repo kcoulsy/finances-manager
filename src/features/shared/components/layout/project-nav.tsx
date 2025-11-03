@@ -1,27 +1,27 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
+  ChevronDown,
   FileText,
   FolderKanban,
-  ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/features/shared/components/ui/sidebar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import * as React from "react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/features/shared/components/ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/features/shared/components/ui/sidebar";
 
 export function ProjectNav() {
   const pathname = usePathname();

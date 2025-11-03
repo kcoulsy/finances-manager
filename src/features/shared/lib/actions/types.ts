@@ -1,5 +1,3 @@
-import { toast } from "sonner";
-
 /**
  * Toast configuration that can be returned from server actions
  */

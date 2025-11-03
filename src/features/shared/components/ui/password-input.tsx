@@ -1,10 +1,10 @@
 "use client";
 
-import * as React from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Input } from "./input";
-import { Button } from "./button";
+import * as React from "react";
 import { cn } from "@/features/shared/lib/utils";
+import { Button } from "./button";
+import { Input } from "./input";
 
 interface PasswordInputProps extends React.ComponentProps<typeof Input> {
   showToggle?: boolean;

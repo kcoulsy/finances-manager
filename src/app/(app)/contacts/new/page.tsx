@@ -1,7 +1,7 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import Link from "next/link";
 import { ContactForm } from "@/features/contacts/components/contact-form";
 import { Button } from "@/features/shared/components/ui/button";
-import Link from "next/link";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function NewContactPage() {
   await requireAuth();

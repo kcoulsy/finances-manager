@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useBreadcrumbs } from "./breadcrumb-context";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/features/shared/components/ui/breadcrumb";
+import { useBreadcrumbs } from "./breadcrumb-context";
 
 /**
  * Route metadata for generating breadcrumb labels
@@ -30,7 +30,7 @@ const routeLabels: Record<string, string> = {
 function getRouteLabel(segment: string): string {
   // Handle dynamic segments (UUIDs, IDs, etc.)
   if (segment.match(/^[a-f0-9-]{36}$/i) || segment.match(/^\d+$/)) {
-    return segment.slice(0, 8) + "...";
+    return `${segment.slice(0, 8)}...`;
   }
 
   // Return label from routeLabels or capitalize the segment
@@ -114,10 +114,10 @@ function AutoBreadcrumbs({ pathname }: { pathname: string }) {
     const path = segments.slice(0, index + 1);
     // If first segment is not dashboard, build path from root
     if (pathSegments[0] !== "dashboard") {
-      return "/" + path.join("/");
+      return `/${path.join("/")}`;
     }
     // Otherwise build path with dashboard prefix
-    return "/dashboard/" + path.join("/");
+    return `/dashboard/${path.join("/")}`;
   };
 
   return (

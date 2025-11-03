@@ -1,12 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
-
-import { useIsMobile } from "@/features/shared/hooks/use-mobile";
-import { cn } from "@/features/shared/lib/utils/index";
+import * as React from "react";
 import { Button } from "@/features/shared/components/ui/button";
 import { Input } from "@/features/shared/components/ui/input";
 import { Separator } from "@/features/shared/components/ui/separator";
@@ -24,9 +21,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/features/shared/components/ui/tooltip";
+import { useIsMobile } from "@/features/shared/hooks/use-mobile";
+import { cn } from "@/features/shared/lib/utils/index";
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state";
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const SIDEBAR_STORAGE_KEY = "sidebar_state";
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
@@ -82,8 +80,12 @@ function SidebarProvider({
         _setOpen(openState);
       }
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+      // Store sidebar state in localStorage
+      try {
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(openState));
+      } catch (_error) {
+        // Ignore localStorage errors (e.g., in private browsing mode)
+      }
     },
     [setOpenProp, open],
   );
@@ -91,7 +93,7 @@ function SidebarProvider({
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+  }, [isMobile, setOpen]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -123,7 +125,7 @@ function SidebarProvider({
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [state, open, setOpen, isMobile, openMobile, toggleSidebar],
   );
 
   return (

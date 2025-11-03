@@ -1,6 +1,6 @@
-import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 import { ChangePasswordForm } from "@/features/auth/components/change-password-form";
 import { DeleteAccountForm } from "@/features/auth/components/delete-account-form";
+import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function SettingsPage() {
   await requireAuth();

@@ -1,15 +1,16 @@
 "use client";
 
-import * as React from "react";
+import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings, User } from "lucide-react";
-
+import * as React from "react";
+import { logoutAction } from "@/features/auth/actions/logout.action";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/features/shared/components/ui/avatar";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/features/shared/components/ui/dropdown-menu";
-import { logoutAction } from "@/features/auth/actions/logout.action";
-import { Button } from "@/features/shared/components/ui/button";
 
 interface UserNavProps {
   user: {

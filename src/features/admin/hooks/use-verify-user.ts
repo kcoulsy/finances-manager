@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { verifyUserAction } from "../actions/verify-user.action";
 import { showToastFromAction } from "@/features/shared/lib/actions/toast";
+import { verifyUserAction } from "../actions/verify-user.action";
 
 export function useVerifyUser() {
   const queryClient = useQueryClient();
@@ -24,7 +24,7 @@ export function useVerifyUser() {
 
       throw new Error("Failed to verify user");
     },
-    onSuccess: (data, userId) => {
+    onSuccess: (_data, userId) => {
       // Invalidate and refetch users list
       queryClient.invalidateQueries({ queryKey: ["users"] });
       // Invalidate and refetch the specific user

@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 import { bulkArchiveContactsAction } from "../actions/bulk-archive-contacts.action";
 import type { BulkArchiveContactsInput } from "../schemas/contact.schema";
-import { showToastFromAction } from "@/features/shared/lib/actions/toast";
 
 export function useBulkArchiveContacts() {
   const queryClient = useQueryClient();

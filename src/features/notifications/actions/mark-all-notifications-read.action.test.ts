@@ -98,12 +98,12 @@ describe("markAllNotificationsReadAction", () => {
     // Verify only testUser's notification is marked as read
     expect(testUserNotification.data?.notification.id).toBeDefined();
     const updatedTestUser = await db.notification.findUnique({
-      where: { id: testUserNotification.data!.notification.id },
+      where: { id: testUserNotification.data?.notification.id },
     });
 
     expect(otherUserNotification.data?.notification.id).toBeDefined();
     const updatedOtherUser = await db.notification.findUnique({
-      where: { id: otherUserNotification.data!.notification.id },
+      where: { id: otherUserNotification.data?.notification.id },
     });
 
     expect(updatedTestUser?.read).toBe(true);

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import type { Project } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { ProjectForm } from "./project-form";
-import { DeleteProjectForm } from "./delete-project-form";
+import { useState } from "react";
+import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { Button } from "@/features/shared/components/ui/button";
-import type { Project } from "@prisma/client";
+import { DeleteProjectForm } from "./delete-project-form";
+import { ProjectForm } from "./project-form";
 
 interface ProjectDetailViewProps {
   project: Project;

@@ -1,8 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
-  mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
   setupTestUserWithSession,
@@ -12,12 +11,12 @@ import { createContactAction } from "./create-contact.action";
 import { updateContactAction } from "./update-contact.action";
 
 describe("updateContactAction", () => {
-  let testUser: TestUser;
+  let _testUser: TestUser;
 
   setupTestHooks();
 
   beforeEach(async () => {
-    testUser = await setupTestUserWithSession();
+    _testUser = await setupTestUserWithSession();
   });
 
   it("updates a contact successfully", async () => {
@@ -29,7 +28,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     // Update the contact
     const result = await updateContactAction({
@@ -66,7 +66,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     const result = await updateContactAction({
       contactId,
@@ -113,7 +114,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     const result = await updateContactAction({
       contactId,
@@ -136,7 +138,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     const result = await updateContactAction({
       contactId,
@@ -198,7 +201,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = contact1.data?.contact.id!;
+    expect(contact1.data?.contact?.id).toBeDefined();
+    const contactId = contact1.data?.contact?.id as string;
 
     // Try to update first contact with second contact's email
     const result = await updateContactAction({
@@ -228,7 +232,7 @@ describe("updateContactAction", () => {
     mockNoAuthSession();
 
     const result = await updateContactAction({
-      contactId: createResult.data?.contact.id!,
+      contactId: createResult.data?.contact?.id as string,
       firstName: "Test",
       lastName: "User",
       email: "update-unauth-test@example.com",
@@ -250,7 +254,8 @@ describe("updateContactAction", () => {
       status: "PERSONAL",
     });
 
-    const contactId = createResult.data?.contact.id!;
+    expect(createResult.data?.contact?.id).toBeDefined();
+    const contactId = createResult.data?.contact?.id as string;
 
     const result = await updateContactAction({
       contactId,

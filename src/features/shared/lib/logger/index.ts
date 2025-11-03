@@ -3,7 +3,7 @@ import pino, { type Logger } from "pino";
 // Create logger instance based on environment
 // Based on: https://blog.arcjet.com/structured-logging-in-json-for-next-js/
 export const logger: Logger =
-  process.env["NODE_ENV"] === "production"
+  process.env.NODE_ENV === "production"
     ? // JSON in production
       pino({
         level: process.env.LOG_LEVEL || "warn",
