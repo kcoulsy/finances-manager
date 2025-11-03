@@ -27,22 +27,8 @@ export async function setup() {
     },
   });
 
-  try {
-    // Clean up test data in the correct order to avoid foreign key violations
-    await prisma.project.deleteMany();
-    await prisma.notification.deleteMany();
-    await prisma.contact.deleteMany();
-    await prisma.userRole.deleteMany();
-    await prisma.session.deleteMany();
-    await prisma.account.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.role.deleteMany();
-  } catch (error) {
-    // Ignore cleanup errors - database might not be set up yet
-    console.warn("Global cleanup warning (this is usually fine):", error);
-  } finally {
     await prisma.$disconnect();
-  }
+
 
   // Return teardown function that runs after all tests complete
   return async () => {
@@ -54,22 +40,7 @@ export async function setup() {
       },
     });
 
-    try {
-      // Clean up test data after all tests complete
-      await teardownPrisma.project.deleteMany();
-      await teardownPrisma.notification.deleteMany();
-      await teardownPrisma.contact.deleteMany();
-      await teardownPrisma.userRole.deleteMany();
-      await teardownPrisma.session.deleteMany();
-      await teardownPrisma.account.deleteMany();
-      await teardownPrisma.user.deleteMany();
-      await teardownPrisma.role.deleteMany();
-    } catch (error) {
-      // Ignore cleanup errors
-      console.warn("Global teardown warning (this is usually fine):", error);
-    } finally {
-      await teardownPrisma.$disconnect();
-    }
+    await teardownPrisma.$disconnect();
   };
 }
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -10,7 +10,6 @@ import {
 } from "@/features/shared/testing/helpers";
 import { createContactAction } from "./create-contact.action";
 import { deleteContactAction } from "./delete-contact.action";
-import { vi } from "vitest";
 
 describe("deleteContactAction", () => {
   let testUser: TestUser;
@@ -70,7 +69,9 @@ describe("deleteContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find|contact.*found/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find|contact.*found/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2025");
     expect(result.serverError).not.toContain("undefined");
@@ -99,7 +100,9 @@ describe("deleteContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
@@ -122,42 +125,10 @@ describe("deleteContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/unauthorized|need.*logged|must.*sign/i);
-    expect(result.serverError).not.toContain("PrismaClient");
-  });
-
-  it("returns user-friendly error messages for toast display on database errors", async () => {
-    const createResult = await createContactAction({
-      firstName: "Test",
-      lastName: "User",
-      email: "delete-db-error-test@example.com",
-      status: "PERSONAL",
-    });
-
-    expect(createResult.data?.success).toBe(true);
-    const contactId = createResult.data?.contact.id!;
-    expect(contactId).toBeDefined();
-
-    // Mock database error on delete
-    vi.spyOn(db.contact, "delete").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: P2025")
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unauthorized|need.*logged|must.*sign/i,
     );
-
-    const result = await deleteContactAction({
-      contactId,
-    });
-
-    expect(result.serverError).toBeDefined();
     expect(result.serverError).not.toContain("PrismaClient");
-    expect(result.serverError).not.toContain("P2025");
-    expect(result.serverError).not.toContain("Database");
-    // Error message should be user-friendly (e.g., "Contact not found." or generic failure)
-    expect(
-      result.serverError?.toLowerCase().includes("contact not found") ||
-      result.serverError?.toLowerCase().includes("unable") ||
-      result.serverError?.toLowerCase().includes("failed") ||
-      result.serverError?.toLowerCase().includes("error")
-    ).toBe(true);
   });
 
   it("returns success toast with proper description", async () => {
@@ -208,7 +179,9 @@ describe("deleteContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /not found|could not find/i,
+    );
   });
 
   it("deletes multiple contacts independently", async () => {

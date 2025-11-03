@@ -148,24 +148,6 @@ describe("getContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
-  it("returns user-friendly error messages for toast display on database errors", async () => {
-    // Mock database error
-    vi.spyOn(db.contact, "findFirst").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: Connection timeout"),
-    );
-
-    const result = await getContactAction({
-      contactId: "test-id",
-    });
-
-    expect(result.serverError).toBeDefined();
-    expect(result.serverError).not.toContain("PrismaClient");
-    expect(result.serverError).not.toContain("Connection timeout");
-    expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(
-      /unable|failed|error|fetch/i,
-    );
-  });
 
   it("does not return deleted contacts", async () => {
     const createResult = await createContactAction({

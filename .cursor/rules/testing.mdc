@@ -133,6 +133,88 @@ describe("isExpired", () => {
 });
 ```
 
+### What NOT to Mock
+
+**Never mock Prisma database operations to simulate errors.**
+
+Mocking Prisma database methods (`db.contact.create`, `db.contact.update`, `db.contact.delete`, etc.) to simulate database errors causes problems:
+1. **Breaks subsequent tests**: Spies on Prisma methods can interfere with later tests, causing "is not a function" errors
+2. **Not necessary**: Error handling can be tested by using real database operations with invalid data (e.g., non-existent IDs)
+3. **Unreliable**: Manual spy cleanup interferes with Vitest's automatic cleanup mechanism
+4. **Doesn't test real behavior**: Mocking database operations doesn't test actual database interactions or error handling
+
+```typescript
+// ❌ Bad - Don't mock Prisma database errors
+it("returns user-friendly error messages for toast display on database errors", async () => {
+  vi.spyOn(db.contact, "update").mockRejectedValue(
+    new Error("PrismaClientKnownRequestError: P2025")
+  );
+
+  const result = await updateContactAction({
+    contactId: "test-id",
+    // ...
+  });
+
+  expect(result.serverError).toBeDefined();
+  // This test is unnecessary and causes problems in subsequent tests
+});
+
+// ✅ Good - Test error handling with real database operations
+it("returns user-friendly error when contact not found", async () => {
+  const result = await updateContactAction({
+    contactId: "non-existent-id",
+    firstName: "Test",
+    lastName: "User",
+    email: "test@example.com",
+    status: "PERSONAL",
+  });
+
+  expect(result.serverError).toBeDefined();
+  expect(result.serverError?.toLowerCase()).toMatch(/not found|could not find/i);
+  // This tests real behavior without mocking
+});
+
+// ✅ Good - Test error handling with invalid data
+it("returns user-friendly error when email already exists", async () => {
+  // Create first contact
+  await createContactAction({
+    firstName: "First",
+    lastName: "User",
+    email: "duplicate@example.com",
+    status: "PERSONAL",
+  });
+
+  // Create second contact
+  const secondContact = await createContactAction({
+    firstName: "Second",
+    lastName: "User",
+    email: "other@example.com",
+    status: "PERSONAL",
+  });
+
+  // Try to update second contact with first contact's email
+  const result = await updateContactAction({
+    contactId: secondContact.data?.contact.id!,
+    firstName: "Second",
+    lastName: "User",
+    email: "duplicate@example.com", // Already exists
+    status: "PERSONAL",
+  });
+
+  expect(result.serverError).toBeDefined();
+  expect(result.serverError?.toLowerCase()).toMatch(/already exists|email.*exists/i);
+  // This tests real database constraint violations
+});
+```
+
+**Key Principles:**
+
+- **Test real error scenarios**: Use actual database operations with invalid data instead of mocking
+- **Test with non-existent IDs**: Use IDs that don't exist to test "not found" error handling
+- **Test with constraint violations**: Create real database constraint violations (e.g., duplicate emails) to test error handling
+- **Avoid mocking database methods**: Never use `vi.spyOn()` on Prisma database methods (`db.*.*`)
+- **Remove unnecessary tests**: If a test only verifies error message formatting and requires mocking, consider removing it
+
 ### 2. Test Real User Interactions
 
 Use Testing Library's user-centric queries and interactions rather than testing implementation details.
@@ -608,6 +690,129 @@ describe("project actions", () => {
   });
 });
 ```
+
+### Mock and Spy Cleanup
+
+**Always clean up spies and mocks so they don't interfere with subsequent tests.**
+
+When using `vi.spyOn()` or other mocking functions, Vitest automatically cleans up spies after each test completes. However, you should avoid manually calling `mockRestore()` or storing spy references that might interfere with Vitest's automatic cleanup mechanism.
+
+**Key Principles:**
+
+1. **Let Vitest handle cleanup automatically**: Vitest automatically restores spies after each test completes
+2. **Don't store spy references unnecessarily**: Only store spy references if you need to access them later in the same test
+3. **Never manually restore in try/finally blocks**: This can interfere with Vitest's automatic cleanup and cause problems in subsequent tests
+4. **Avoid restoring spies that were auto-cleaned**: Manually restoring an already-cleaned spy can break the original implementation
+
+```typescript
+// ✅ Good - Let Vitest handle cleanup automatically
+it("returns user-friendly error messages for toast display on database errors", async () => {
+  // Create spy without storing reference
+  vi.spyOn(db.contact, "update").mockRejectedValue(
+    new Error("PrismaClientKnownRequestError: P2025"),
+  );
+
+  const result = await updateContactAction({
+    contactId: "test-id",
+    firstName: "Test",
+    lastName: "User",
+    email: "test@example.com",
+    status: "PERSONAL",
+  });
+
+  expect(result.serverError).toBeDefined();
+  expect(result.serverError).not.toContain("PrismaClient");
+  // Vitest automatically restores the spy after this test completes
+});
+
+// ❌ Bad - Manual restore interferes with Vitest's automatic cleanup
+it("returns user-friendly error messages for toast display on database errors", async () => {
+  const updateSpy = vi.spyOn(db.contact, "update").mockRejectedValue(
+    new Error("PrismaClientKnownRequestError: P2025"),
+  );
+
+  try {
+    const result = await updateContactAction({
+      contactId: "test-id",
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      status: "PERSONAL",
+    });
+
+    expect(result.serverError).toBeDefined();
+  } finally {
+    // ❌ Don't manually restore - Vitest handles this automatically
+    // Manual restore can break the original implementation for subsequent tests
+    updateSpy.mockRestore();
+  }
+});
+```
+
+**Why Manual Restore Causes Problems:**
+
+1. **Breaks original implementation**: Calling `mockRestore()` after Vitest has already cleaned up can remove the original function entirely
+2. **Race conditions**: Manual restore in `finally` blocks can execute at the wrong time relative to Vitest's cleanup
+3. **Interference between tests**: A manually restored spy from one test can break the same function for subsequent tests
+4. **Function becomes undefined**: The original function may become `undefined` or `null`, causing errors like "is not a function"
+
+**When You Need Spy References:**
+
+Only store spy references if you need to:
+- Assert that the spy was called with specific arguments
+- Check call counts within the same test
+- Restore only if you need to restore mid-test (rare)
+
+```typescript
+// ✅ Good - Store reference only when needed for assertions
+it("calls database method with correct arguments", async () => {
+  const createSpy = vi.spyOn(db.project, "create");
+
+  await createProjectAction({
+    name: "Test Project",
+  });
+
+  // Use spy reference for assertions
+  expect(createSpy).toHaveBeenCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({
+        name: "Test Project",
+      }),
+    }),
+  );
+  // Vitest automatically restores after test completes
+});
+```
+
+**Common Error Pattern:**
+
+```typescript
+// ❌ This pattern causes "db.contact.update is not a function" errors
+it("test with spy", async () => {
+  const spy = vi.spyOn(db.contact, "update").mockRejectedValue(new Error("test"));
+
+  try {
+    // Test code
+  } finally {
+    spy.mockRestore(); // ❌ Breaks for subsequent tests
+  }
+});
+
+// ✅ Correct pattern - let Vitest handle cleanup
+it("test with spy", async () => {
+  vi.spyOn(db.contact, "update").mockRejectedValue(new Error("test"));
+
+  // Test code
+  // Vitest automatically cleans up after test completes
+});
+```
+
+**Remember:**
+
+- Vitest automatically restores all spies after each test
+- Never manually restore spies unless you have a specific need to restore mid-test
+- Manual restore in `finally` blocks causes problems in subsequent tests
+- If you see "is not a function" errors, check for manual `mockRestore()` calls
 
 ### Test Isolation
 

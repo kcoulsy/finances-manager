@@ -242,36 +242,6 @@ describe("updateContactAction", () => {
     expect(result.serverError).not.toContain("PrismaClient");
   });
 
-  it("returns user-friendly error messages for toast display on database errors", async () => {
-    const createResult = await createContactAction({
-      firstName: "Test",
-      lastName: "User",
-      email: "update-db-error-test@example.com",
-      status: "PERSONAL",
-    });
-
-    const contactId = createResult.data?.contact.id!;
-
-    // Mock database error
-    vi.spyOn(db.contact, "update").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: P2025"),
-    );
-
-    const result = await updateContactAction({
-      contactId,
-      firstName: "Updated",
-      lastName: "User",
-      email: "update-db-error-updated@example.com",
-      status: "PERSONAL",
-    });
-
-    expect(result.serverError).toBeDefined();
-    expect(result.serverError).not.toContain("PrismaClient");
-    expect(result.serverError).not.toContain("P2025");
-    expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(/unable|failed|error/i);
-  });
-
   it("returns success toast with proper description", async () => {
     const createResult = await createContactAction({
       firstName: "Toast",

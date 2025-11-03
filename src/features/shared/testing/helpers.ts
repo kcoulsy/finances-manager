@@ -187,25 +187,6 @@ export async function assignRolesToUser(userId: string, roleNames: string[]) {
   );
 }
 
-/**
- * Cleans up test data from the database
- */
-export async function cleanupTestData(): Promise<void> {
-  try {
-    // Delete in reverse order of foreign key dependencies to avoid constraint violations
-    await db.project.deleteMany();
-    await db.notification.deleteMany();
-    await db.contact.deleteMany();
-    await db.userRole.deleteMany();
-    await db.session.deleteMany();
-    await db.account.deleteMany();
-    await db.user.deleteMany();
-    await db.role.deleteMany();
-  } catch (error) {
-    // Tables might not exist yet, which is fine
-    // They'll be created on first use
-  }
-}
 
 /**
  * Generates a unique email address for testing contacts

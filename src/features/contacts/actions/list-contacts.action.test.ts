@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -10,7 +10,6 @@ import {
 } from "@/features/shared/testing/helpers";
 import { createContactAction } from "./create-contact.action";
 import { listContactsAction } from "./list-contacts.action";
-import { vi } from "vitest";
 
 describe("listContactsAction", () => {
   let testUser: TestUser;
@@ -68,7 +67,9 @@ describe("listContactsAction", () => {
     });
 
     expect(result.data?.success).toBe(true);
-    expect(result.data?.contacts.every((c) => c.status === "CLIENT")).toBe(true);
+    expect(result.data?.contacts.every((c) => c.status === "CLIENT")).toBe(
+      true,
+    );
     expect(result.data?.total).toBeGreaterThanOrEqual(1);
   });
 
@@ -94,7 +95,9 @@ describe("listContactsAction", () => {
     });
 
     expect(result.data?.success).toBe(true);
-    expect(result.data?.contacts.every((c) => c.engagement === "ACTIVE")).toBe(true);
+    expect(result.data?.contacts.every((c) => c.engagement === "ACTIVE")).toBe(
+      true,
+    );
   });
 
   it("filters contacts by role", async () => {
@@ -144,7 +147,9 @@ describe("listContactsAction", () => {
     expect(result.data?.success).toBe(true);
     expect(
       result.data?.contacts.some(
-        (c) => c.firstName.includes("Searchable") || c.lastName.includes("Searchable"),
+        (c) =>
+          c.firstName.includes("Searchable") ||
+          c.lastName.includes("Searchable"),
       ),
     ).toBe(true);
   });
@@ -162,7 +167,9 @@ describe("listContactsAction", () => {
     });
 
     expect(result.data?.success).toBe(true);
-    expect(result.data?.contacts.some((c) => c.email.includes("list-email-search"))).toBe(true);
+    expect(
+      result.data?.contacts.some((c) => c.email.includes("list-email-search")),
+    ).toBe(true);
   });
 
   it("applies limit and offset for pagination", async () => {
@@ -213,24 +220,12 @@ describe("listContactsAction", () => {
     const result = await listContactsAction({});
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/unauthorized|need.*logged|must.*sign/i);
-    expect(result.serverError).not.toContain("PrismaClient");
-  });
-
-  it("returns user-friendly error messages for toast display on database errors", async () => {
-    // Mock database error
-    vi.spyOn(db.contact, "findMany").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: Connection timeout")
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /unauthorized|need.*logged|must.*sign/i,
     );
-
-    const result = await listContactsAction({});
-
-    expect(result.serverError).toBeDefined();
     expect(result.serverError).not.toContain("PrismaClient");
-    expect(result.serverError).not.toContain("Connection timeout");
-    expect(result.serverError).not.toContain("Database");
-    expect(result.serverError?.toLowerCase()).toMatch(/unable|failed|error|fetch/i);
   });
+
 
   it("does not return deleted contacts", async () => {
     const createResult = await createContactAction({
@@ -283,6 +278,8 @@ describe("listContactsAction", () => {
     const result = await listContactsAction({});
 
     expect(result.data?.success).toBe(true);
-    expect(result.data?.contacts.every((c) => c.userId === testUser.id)).toBe(true);
+    expect(result.data?.contacts.every((c) => c.userId === testUser.id)).toBe(
+      true,
+    );
   });
 });

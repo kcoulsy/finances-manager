@@ -1,11 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { auth } from "@/features/shared/lib/auth/config";
 import { db } from "@/features/shared/lib/db/client";
 import { updateContactSchema } from "../schemas/contact.schema";
-import { headers } from "next/headers";
-import { revalidatePath } from "next/cache";
 
 export const updateContactAction = actionClient
   .inputSchema(updateContactSchema)
@@ -49,7 +49,10 @@ export const updateContactAction = actionClient
 
       // Normalize company website - add https:// if needed
       let normalizedCompanyWebsite = parsedInput.companyWebsite || null;
-      if (normalizedCompanyWebsite && !normalizedCompanyWebsite.match(/^https?:\/\//i)) {
+      if (
+        normalizedCompanyWebsite &&
+        !normalizedCompanyWebsite.match(/^https?:\/\//i)
+      ) {
         normalizedCompanyWebsite = `https://${normalizedCompanyWebsite}`;
       }
 
@@ -82,6 +85,8 @@ export const updateContactAction = actionClient
         },
       });
 
+      console.log("contact", contact);
+
       revalidatePath("/contacts");
       revalidatePath(`/contacts/${contact.id}`);
 
@@ -96,32 +101,41 @@ export const updateContactAction = actionClient
       };
     } catch (error) {
       console.error("Update contact error:", error);
-      
+
       // Provide user-friendly error messages
       let errorMessage = "Failed to update contact";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         // Handle authentication errors
         if (errorStr.includes("Unauthorized")) {
           errorMessage = "You need to be logged in to update contacts.";
         }
         // Handle not found errors
-        else if (errorStr.includes("not found") || errorStr.includes("Not found")) {
+        else if (
+          errorStr.includes("not found") ||
+          errorStr.includes("Not found")
+        ) {
           errorMessage = "Contact not found.";
         }
         // Handle unique constraint violations
-        else if (errorStr.includes("Unique constraint") || errorStr.includes("already exists")) {
+        else if (
+          errorStr.includes("Unique constraint") ||
+          errorStr.includes("already exists")
+        ) {
           errorMessage = "A contact with this email already exists.";
         }
         // Use the error message if it's already user-friendly
-        else if (!errorStr.includes("Prisma") && !errorStr.includes("TURBOPACK") && !errorStr.includes("P2025")) {
+        else if (
+          !errorStr.includes("Prisma") &&
+          !errorStr.includes("TURBOPACK") &&
+          !errorStr.includes("P2025")
+        ) {
           errorMessage = errorStr;
         }
       }
-      
+
       throw new Error(errorMessage);
     }
   });
-

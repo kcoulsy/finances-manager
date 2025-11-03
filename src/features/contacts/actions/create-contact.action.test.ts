@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
 import {
   generateUniqueContactEmail,
@@ -9,7 +9,6 @@ import {
   type TestUser,
 } from "@/features/shared/testing/helpers";
 import { createContactAction } from "./create-contact.action";
-import { vi } from "vitest";
 
 describe("createContactAction", () => {
   let testUser: TestUser;
@@ -146,7 +145,9 @@ describe("createContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/already exists|email.*exists/i);
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /already exists|email.*exists/i,
+    );
     expect(result.serverError).not.toContain("PrismaClient");
     expect(result.serverError).not.toContain("P2002");
     expect(result.serverError).not.toContain("Unique constraint");
@@ -163,39 +164,16 @@ describe("createContactAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError?.toLowerCase()).toMatch(/need.*logged|unauthorized|must.*sign/i);
-    expect(result.serverError).not.toContain("PrismaClient");
-  });
-
-  it("returns user-friendly error messages for toast display on database errors", async () => {
-    // Mock database error
-    vi.spyOn(db.contact, "create").mockRejectedValue(
-      new Error("PrismaClientKnownRequestError: P2002")
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /need.*logged|unauthorized|must.*sign/i,
     );
-
-    const result = await createContactAction({
-      firstName: "Test",
-      lastName: "User",
-      email: "create-db-error-test@example.com",
-      status: "PERSONAL",
-    });
-
-    expect(result.serverError).toBeDefined();
     expect(result.serverError).not.toContain("PrismaClient");
-    expect(result.serverError).not.toContain("P2002");
-    expect(result.serverError).not.toContain("Database");
-    // Error message should be user-friendly - either "already exists" or generic failure
-    expect(
-      result.serverError?.toLowerCase().includes("already exists") ||
-      result.serverError?.toLowerCase().includes("failed") ||
-      result.serverError?.toLowerCase().includes("unable")
-    ).toBe(true);
   });
 
   it("creates multiple contacts for the same user", async () => {
     const email1 = generateUniqueContactEmail("create-multiple-1");
     const email2 = generateUniqueContactEmail("create-multiple-2");
-    
+
     const contact1 = await createContactAction({
       firstName: "Contact",
       lastName: "One",
