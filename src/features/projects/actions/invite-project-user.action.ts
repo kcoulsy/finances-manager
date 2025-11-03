@@ -1,0 +1,155 @@
+"use server";
+
+import { randomBytes } from "node:crypto";
+import { revalidatePath } from "next/cache";
+import { actionClient } from "@/features/shared/lib/actions/client";
+import { getSession } from "@/features/shared/lib/auth/get-session";
+import { db } from "@/features/shared/lib/db/client";
+import { sendEmail } from "@/features/shared/lib/utils/email";
+import { getBaseUrl } from "@/features/shared/lib/utils/get-base-url";
+import { inviteProjectUserSchema } from "../schemas/project-user.schema";
+
+export const inviteProjectUserAction = actionClient
+  .inputSchema(inviteProjectUserSchema)
+  .action(async ({ parsedInput }) => {
+    try {
+      const session = await getSession();
+
+      if (!session?.user) {
+        throw new Error("You must be logged in to invite users.");
+      }
+
+      // Verify project exists and user owns it
+      const project = await db.project.findUnique({
+        where: { id: parsedInput.projectId },
+      });
+
+      if (!project) {
+        throw new Error("Project not found.");
+      }
+
+      if (project.userId !== session.user.id) {
+        throw new Error(
+          "You don't have permission to invite users to this project.",
+        );
+      }
+
+      // Check if user is already on the project
+      const existingUser = await db.user.findUnique({
+        where: { email: parsedInput.email },
+        include: {
+          projectUsers: {
+            where: { projectId: parsedInput.projectId },
+          },
+        },
+      });
+
+      if (existingUser && existingUser.projectUsers.length > 0) {
+        throw new Error("This user is already on the project.");
+      }
+
+      // Check if there's a pending invitation for this email
+      const existingInvitation = await db.projectInvitation.findFirst({
+        where: {
+          projectId: parsedInput.projectId,
+          email: parsedInput.email,
+          status: "PENDING",
+        },
+      });
+
+      if (existingInvitation && existingInvitation.expiresAt > new Date()) {
+        throw new Error("An invitation has already been sent to this email.");
+      }
+
+      // Generate invitation token
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      // Create invitation
+      const invitation = await db.projectInvitation.create({
+        data: {
+          projectId: parsedInput.projectId,
+          email: parsedInput.email,
+          userId: existingUser?.id || null,
+          userType: parsedInput.userType,
+          token,
+          status: "PENDING",
+          expiresAt,
+          invitedById: session.user.id,
+        },
+      });
+
+      // Prepare invitation details for email and notification
+      const baseUrl = getBaseUrl();
+      const invitationUrl = `${baseUrl}/invitations/accept?token=${token}`;
+
+      const projectName = project.name;
+      const inviterName = session.user.name || "Someone";
+
+      // Send invitation email
+      await sendEmail({
+        to: parsedInput.email,
+        subject: `You've been invited to join ${projectName}`,
+        html: `
+          <h1>Project Invitation</h1>
+          <p>Hello,</p>
+          <p><strong>${inviterName}</strong> has invited you to join the project <strong>${projectName}</strong> as a <strong>${parsedInput.userType}</strong>.</p>
+          <p>Click the link below to accept the invitation:</p>
+          <p><a href="${invitationUrl}">${invitationUrl}</a></p>
+          <p>This invitation will expire in 7 days.</p>
+          <p>If you don't have an account, you'll be prompted to create one when you click the link.</p>
+        `,
+        text: `
+          Project Invitation
+          
+          Hello,
+          
+          ${inviterName} has invited you to join the project ${projectName} as a ${parsedInput.userType}.
+          
+          Click the link below to accept the invitation:
+          ${invitationUrl}
+          
+          This invitation will expire in 7 days.
+          
+          If you don't have an account, you'll be prompted to create one when you click the link.
+        `,
+      });
+
+      // If user already exists, create a notification for them
+      if (existingUser) {
+        await db.notification.create({
+          data: {
+            userId: existingUser.id,
+            title: `You've been invited to join ${projectName}`,
+            subtitle: `${inviterName} has invited you as a ${parsedInput.userType}`,
+            detail: `## Project Invitation\n\nYou have been invited to join the project **${projectName}** as a **${parsedInput.userType}**.\n\nClick to view and accept the invitation.`,
+            link: `/invitations/accept?token=${token}`,
+            read: false,
+          },
+        });
+      }
+
+      revalidatePath(`/projects/${parsedInput.projectId}/users`);
+      revalidatePath("/invitations/pending");
+      revalidatePath("/notifications");
+
+      return {
+        success: true,
+        invitation,
+        toast: {
+          message: "Invitation sent successfully",
+          type: "success",
+          description: `An invitation has been sent to ${parsedInput.email}`,
+        },
+      };
+    } catch (error) {
+      console.error("Invite project user error:", error);
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error("Failed to send invitation. Please try again.");
+    }
+  });

@@ -24,19 +24,22 @@ enum ContactEngagement {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String
-  email         String         @unique
-  emailVerified Boolean        @default(false)
-  image         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  userRoles     UserRole[]
-  projects      Project[]
-  notifications Notification[]
-  contacts      Contact[]
+  id                        String              @id @default(cuid())
+  name                      String
+  email                     String              @unique
+  emailVerified             Boolean             @default(false)
+  image                     String?
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  accounts                  Account[]
+  sessions                  Session[]
+  userRoles                 UserRole[]
+  projects                  Project[]
+  projectUsers              ProjectUser[]
+  projectInvitations        ProjectInvitation[] @relation("InvitationUser")
+  invitedProjectInvitations ProjectInvitation[] @relation("InvitedByUser")
+  notifications             Notification[]
+  contacts                  Contact[]
 
   @@map("user")
 }
@@ -114,13 +117,15 @@ model Verification {
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?
+  userId             String
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectUsers       ProjectUser[]
+  projectInvitations ProjectInvitation[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   @@index([userId])
   @@map("project")
@@ -212,4 +217,59 @@ model Address {
   @@index([isPrimary])
   @@index([isActive])
   @@map("address")
+}
+
+enum ProjectUserType {
+  Client
+  Contractor
+  Employee
+  Legal
+}
+
+model ProjectUser {
+  id        String          @id @default(cuid())
+  projectId String
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userType  ProjectUserType // Client, Contractor, Employee, Legal
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_user")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model ProjectInvitation {
+  id          String           @id @default(cuid())
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  email       String // Email address to invite
+  userId      String? // User ID if user already exists
+  user        User?            @relation("InvitationUser", fields: [userId], references: [id], onDelete: Cascade)
+  userType    ProjectUserType // Client, Contractor, Employee, Legal
+  token       String           @unique // Invitation token for the link
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime // Invitation expiration date
+  invitedById String // User ID who sent the invitation
+  invitedBy   User             @relation("InvitedByUser", fields: [invitedById], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  acceptedAt  DateTime?
+
+  @@unique([projectId, email])
+  @@index([projectId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@map("project_invitation")
 }

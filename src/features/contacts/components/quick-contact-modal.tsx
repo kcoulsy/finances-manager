@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Controller,
   type Resolver,
@@ -41,11 +41,13 @@ const statusOptions: SelectOption[] = [
 interface QuickContactModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialEmail?: string;
 }
 
 export function QuickContactModal({
   open,
   onOpenChange,
+  initialEmail,
 }: QuickContactModalProps) {
   const queryClient = useQueryClient();
   const [isClosing, setIsClosing] = useState(false);
@@ -81,12 +83,21 @@ export function QuickContactModal({
     formState: { errors, isSubmitting },
     setError,
     reset,
+    setValue,
   } = useForm<QuickContactInput>({
     resolver: zodResolver(quickContactSchema) as Resolver<QuickContactInput>,
     defaultValues: {
       status: "ENQUIRY" as const,
+      email: initialEmail || "",
     },
   });
+
+  // Update email when initialEmail changes or modal opens
+  useEffect(() => {
+    if (open && initialEmail) {
+      setValue("email", initialEmail, { shouldValidate: true });
+    }
+  }, [open, initialEmail, setValue]);
 
   const onSubmit: SubmitHandler<QuickContactInput> = async (data) => {
     try {
@@ -111,7 +122,10 @@ export function QuickContactModal({
         position: undefined,
       });
       // Close modal after successful creation
-      reset();
+      reset({
+        status: "ENQUIRY" as const,
+        email: initialEmail || "",
+      });
       onOpenChange(false);
     } catch (error) {
       setError("root", {

@@ -5,6 +5,7 @@ import {
   FileText,
   FolderKanban,
   LayoutDashboard,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,7 +32,7 @@ export function ProjectNav() {
   const projectId = projectMatch?.[1];
 
   // Check if we're inside a project route
-  const isInProject = projectId !== undefined;
+  const isInProject = projectId !== undefined && projectId !== "new";
 
   const [open, setOpen] = React.useState(isInProject ?? false);
 
@@ -55,6 +56,11 @@ export function ProjectNav() {
       title: "Details",
       url: `${projectBasePath}/details`,
       icon: FileText,
+    },
+    {
+      title: "Users",
+      url: `${projectBasePath}/users`,
+      icon: Users,
     },
   ];
 

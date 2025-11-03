@@ -190,14 +190,35 @@ export async function assignRolesToUser(userId: string, roleNames: string[]) {
 }
 
 /**
+ * Generates a unique email address for testing
+ * @param prefix - A prefix to identify the test (e.g., "create", "update", "delete")
+ * @returns A unique email address
+ */
+export function generateUniqueEmail(prefix: string): string {
+  const hrTime =
+    typeof performance !== "undefined" ? performance.now() : Date.now();
+  return `${prefix}-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}@example.com`;
+}
+
+/**
+ * Generates a unique string for testing (tokens, IDs, etc.)
+ * @param prefix - A prefix to identify the test (e.g., "token", "invitation", "test")
+ * @returns A unique string
+ */
+export function generateUniqueString(prefix: string): string {
+  const hrTime =
+    typeof performance !== "undefined" ? performance.now() : Date.now();
+  return `${prefix}-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}`;
+}
+
+/**
+ * @deprecated Use generateUniqueEmail instead
  * Generates a unique email address for testing contacts
  * @param prefix - A prefix to identify the test (e.g., "create", "update", "delete")
  * @returns A unique email address
  */
 export function generateUniqueContactEmail(prefix: string): string {
-  const hrTime =
-    typeof performance !== "undefined" ? performance.now() : Date.now();
-  return `${prefix}-${Date.now()}-${hrTime}-${Math.random().toString(36).substring(2, 15)}@example.com`;
+  return generateUniqueEmail(prefix);
 }
 
 /**
