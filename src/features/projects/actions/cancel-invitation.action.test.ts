@@ -97,7 +97,8 @@ describe("cancelInvitationAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("logged in");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/login");
   });
 
   it("throws error when invitation not found", async () => {
@@ -137,7 +138,8 @@ describe("cancelInvitationAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("permission");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/unauthorized");
   });
 
   it("throws error when invitation already accepted", async () => {

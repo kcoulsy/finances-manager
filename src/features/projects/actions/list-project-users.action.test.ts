@@ -340,7 +340,8 @@ describe("listProjectUsersAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("logged in");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/login");
   });
 
   it("throws error when project not found", async () => {
@@ -351,7 +352,7 @@ describe("listProjectUsersAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("Project not found");
+    expect(result.serverError).toContain("NEXT_NOT_FOUND");
   });
 
   it("throws error when user does not have permission", async () => {
@@ -369,7 +370,8 @@ describe("listProjectUsersAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("permission");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/unauthorized");
   });
 
   it("allows project users to view users for the project", async () => {

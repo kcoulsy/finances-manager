@@ -2,21 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
+import { ProjectPermission } from "../constants/project-permissions";
+import { requireProjectPermission } from "../lib/require-project-permission";
 import { cancelInvitationSchema } from "../schemas/project-user.schema";
 
 export const cancelInvitationAction = actionClient
   .inputSchema(cancelInvitationSchema)
   .action(async ({ parsedInput }) => {
     try {
-      const session = await getSession();
-
-      if (!session?.user) {
-        throw new Error("You must be logged in to cancel invitations.");
-      }
-
-      // Find invitation
+      // Find invitation first to get project ID
       const invitation = await db.projectInvitation.findUnique({
         where: { id: parsedInput.invitationId },
         include: {
@@ -33,10 +28,11 @@ export const cancelInvitationAction = actionClient
         throw new Error("Invitation not found.");
       }
 
-      // Check if user owns the project
-      if (invitation.project.userId !== session.user.id) {
-        throw new Error("You don't have permission to cancel this invitation.");
-      }
+      // Check permission before canceling
+      await requireProjectPermission(
+        invitation.projectId,
+        ProjectPermission.Users.CANCEL_INVITATION,
+      );
 
       // Check if invitation is still pending
       if (invitation.status !== "PENDING") {

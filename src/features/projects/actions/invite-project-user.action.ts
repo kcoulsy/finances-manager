@@ -7,31 +7,33 @@ import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { sendEmail } from "@/features/shared/lib/utils/email";
 import { getBaseUrl } from "@/features/shared/lib/utils/get-base-url";
+import { ProjectPermission } from "../constants/project-permissions";
+import { requireProjectPermission } from "../lib/require-project-permission";
 import { inviteProjectUserSchema } from "../schemas/project-user.schema";
 
 export const inviteProjectUserAction = actionClient
   .inputSchema(inviteProjectUserSchema)
   .action(async ({ parsedInput }) => {
     try {
+      // Check permission before inviting
+      await requireProjectPermission(
+        parsedInput.projectId,
+        ProjectPermission.Users.INVITE,
+      );
+
       const session = await getSession();
 
       if (!session?.user) {
         throw new Error("You must be logged in to invite users.");
       }
 
-      // Verify project exists and user owns it
+      // Verify project exists
       const project = await db.project.findUnique({
         where: { id: parsedInput.projectId },
       });
 
       if (!project) {
         throw new Error("Project not found.");
-      }
-
-      if (project.userId !== session.user.id) {
-        throw new Error(
-          "You don't have permission to invite users to this project.",
-        );
       }
 
       // Check if user is already on the project

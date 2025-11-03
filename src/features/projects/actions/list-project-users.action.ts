@@ -3,12 +3,20 @@
 import { actionClient } from "@/features/shared/lib/actions/client";
 import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
+import { ProjectPermission } from "../constants/project-permissions";
+import { requireProjectPermission } from "../lib/require-project-permission";
 import { listProjectUsersSchema } from "../schemas/project-user.schema";
 
 export const listProjectUsersAction = actionClient
   .inputSchema(listProjectUsersSchema)
   .action(async ({ parsedInput }) => {
     try {
+      // Check permission before listing
+      await requireProjectPermission(
+        parsedInput.projectId,
+        ProjectPermission.Users.VIEW,
+      );
+
       const session = await getSession();
 
       if (!session?.user) {
@@ -22,23 +30,6 @@ export const listProjectUsersAction = actionClient
 
       if (!project) {
         throw new Error("Project not found.");
-      }
-
-      // Check if user owns the project or is a project user
-      const isOwner = project.userId === session.user.id;
-      const isProjectUser = await db.projectUser.findUnique({
-        where: {
-          projectId_userId: {
-            projectId: parsedInput.projectId,
-            userId: session.user.id,
-          },
-        },
-      });
-
-      if (!isOwner && !isProjectUser) {
-        throw new Error(
-          "You don't have permission to view users for this project.",
-        );
       }
 
       const limit = parsedInput.limit;

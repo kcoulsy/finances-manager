@@ -13,7 +13,7 @@ export default async function ProjectUsersPage({
   await requireAuth();
   const { id } = await params;
 
-  // Fetch project to get the name for breadcrumbs
+  // Fetch project to get the name and owner for breadcrumbs
   const result = await getProjectAction({ projectId: id });
   const project = result?.data?.success ? result.data.project : null;
 
@@ -28,6 +28,7 @@ export default async function ProjectUsersPage({
       <ProjectUsersPageClient
         projectId={id}
         projectName={project?.name || "Project"}
+        projectOwnerId={project?.userId}
       />
     </SetBreadcrumbs>
   );

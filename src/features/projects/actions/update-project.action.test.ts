@@ -176,7 +176,7 @@ describe("updateProjectAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("Project not found");
+    expect(result.serverError).toContain("NEXT_NOT_FOUND");
   });
 
   it("throws error when user is not authenticated", async () => {
@@ -188,7 +188,8 @@ describe("updateProjectAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("Unauthorized");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/login");
   });
 
   it("throws error when user tries to update another user's project without permission", async () => {

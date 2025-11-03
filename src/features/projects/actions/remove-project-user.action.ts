@@ -5,31 +5,33 @@ import { actionClient } from "@/features/shared/lib/actions/client";
 import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
 import { sendEmail } from "@/features/shared/lib/utils/email";
+import { ProjectPermission } from "../constants/project-permissions";
+import { requireProjectPermission } from "../lib/require-project-permission";
 import { removeProjectUserSchema } from "../schemas/project-user.schema";
 
 export const removeProjectUserAction = actionClient
   .inputSchema(removeProjectUserSchema)
   .action(async ({ parsedInput }) => {
     try {
+      // Check permission before removing
+      await requireProjectPermission(
+        parsedInput.projectId,
+        ProjectPermission.Users.REMOVE,
+      );
+
       const session = await getSession();
 
       if (!session?.user) {
         throw new Error("You must be logged in to remove users.");
       }
 
-      // Verify project exists and user owns it
+      // Verify project exists
       const project = await db.project.findUnique({
         where: { id: parsedInput.projectId },
       });
 
       if (!project) {
         throw new Error("Project not found.");
-      }
-
-      if (project.userId !== session.user.id) {
-        throw new Error(
-          "You don't have permission to remove users from this project.",
-        );
       }
 
       // Can't remove project owner

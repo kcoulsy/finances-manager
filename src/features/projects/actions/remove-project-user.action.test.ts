@@ -122,7 +122,8 @@ describe("removeProjectUserAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("logged in");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/login");
   });
 
   it("throws error when project not found", async () => {
@@ -132,7 +133,7 @@ describe("removeProjectUserAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("Project not found");
+    expect(result.serverError).toContain("NEXT_NOT_FOUND");
   });
 
   it("throws error when user does not own project", async () => {
@@ -158,7 +159,8 @@ describe("removeProjectUserAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("permission");
+    expect(result.serverError).toContain("NEXT_REDIRECT");
+    expect(result.serverError).toContain("/unauthorized");
   });
 
   it("throws error when trying to remove project owner", async () => {

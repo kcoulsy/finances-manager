@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Contact, Mail, Trash2, X } from "lucide-react";
+import { CheckCircle2, Contact, Info, Mail, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,6 +38,11 @@ import {
   type SelectOption,
 } from "@/features/shared/components/ui/select";
 import { useDebounce } from "@/features/shared/hooks/use-debounce";
+import {
+  PROJECT_PERMISSION_CATEGORIES,
+  PROJECT_PERMISSION_DESCRIPTIONS,
+  PROJECT_ROLE_PERMISSIONS,
+} from "../constants/project-permissions";
 import { useCancelInvitation } from "../hooks/use-cancel-invitation";
 import { useInviteProjectUser } from "../hooks/use-invite-project-user";
 import { useListProjectUsers } from "../hooks/use-list-project-users";
@@ -46,6 +51,7 @@ import {
   type InviteProjectUserInput,
   inviteProjectUserSchema,
 } from "../schemas/project-user.schema";
+import { ProjectPermissionsModal } from "./project-permissions-modal";
 
 const userTypeOptions: SelectOption[] = [
   { value: "Client", label: "Client" },
@@ -57,6 +63,7 @@ const userTypeOptions: SelectOption[] = [
 interface ProjectUsersPageClientProps {
   projectId: string;
   projectName: string;
+  projectOwnerId?: string;
 }
 
 type ProjectUserEntry = {
@@ -81,6 +88,7 @@ type ProjectUserEntry = {
 export function ProjectUsersPageClient({
   projectId,
   projectName,
+  projectOwnerId,
 }: ProjectUsersPageClientProps) {
   const [page, setPage] = useState(1);
   const [searchContact, setSearchContact] = useState("");
@@ -88,6 +96,10 @@ export function ProjectUsersPageClient({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quickContactOpen, setQuickContactOpen] = useState(false);
   const [quickContactEmail, setQuickContactEmail] = useState<string>("");
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<
+    "OWNER" | "MEMBER" | "INVITED"
+  >("MEMBER");
   const [userToDelete, setUserToDelete] = useState<{
     id: string;
     userType: "Client" | "Contractor" | "Employee" | "Legal";
@@ -154,6 +166,58 @@ export function ProjectUsersPageClient({
 
   const userType = watch("userType");
   const emailValue = watch("email");
+
+  // Component to display permissions for selected user type
+  // Note: All user types (Client, Contractor, Employee, Legal) receive MEMBER role permissions
+  function UserTypePermissionsDisplay({
+    userType: _userType,
+  }: {
+    userType: "Client" | "Contractor" | "Employee" | "Legal";
+  }) {
+    // All user types (Client, Contractor, Employee, Legal) receive MEMBER role permissions
+    const userPermissions = new Set(PROJECT_ROLE_PERMISSIONS.MEMBER || []);
+
+    // Filter categories to only show those with at least one permission the user has
+    const visibleCategories = PROJECT_PERMISSION_CATEGORIES.filter((category) =>
+      category.permissions.some((perm) => userPermissions.has(perm)),
+    );
+
+    return (
+      <div className="space-y-2">
+        {visibleCategories.map((category) => {
+          // Get permissions in this category that the user actually has
+          const categoryPermissions = category.permissions.filter((perm) =>
+            userPermissions.has(perm),
+          );
+
+          if (categoryPermissions.length === 0) {
+            return null;
+          }
+
+          return (
+            <div key={category.name} className="space-y-1">
+              <div className="font-medium text-xs">{category.name}</div>
+              <ul className="list-none space-y-0.5 pl-2">
+                {categoryPermissions.map((permission) => {
+                  const description =
+                    PROJECT_PERMISSION_DESCRIPTIONS[permission];
+                  return (
+                    <li
+                      key={permission}
+                      className="text-xs text-muted-foreground"
+                    >
+                      <span className="text-muted-foreground">•</span>{" "}
+                      {description}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   // Update email when contact is selected
   const handleContactSelect = useCallback(
@@ -314,7 +378,33 @@ export function ProjectUsersPageClient({
     {
       key: "userType",
       header: "Type",
-      render: (entry) => <span className="text-sm">{entry.userType}</span>,
+      render: (entry) => {
+        // Determine role based on entry type and project owner
+        const role =
+          entry.type === "invitation"
+            ? ("INVITED" as const)
+            : entry.user?.id === projectOwnerId
+              ? ("OWNER" as const)
+              : ("MEMBER" as const);
+
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-sm">{entry.userType}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedRole(role);
+                setPermissionsModalOpen(true);
+              }}
+              className="h-6 px-2 text-xs"
+              title="View permissions for this role"
+            >
+              <Info className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      },
     },
     {
       key: "actions",
@@ -484,6 +574,15 @@ export function ProjectUsersPageClient({
                     {errors.userType.message}
                   </p>
                 )}
+                {/* Permissions Display */}
+                {userType && (
+                  <div className="mt-2 rounded-md border bg-muted/50 p-3 text-xs">
+                    <div className="font-semibold mb-2">
+                      Permissions for {userType}
+                    </div>
+                    <UserTypePermissionsDisplay userType={userType} />
+                  </div>
+                )}
               </div>
 
               {/* Submit Button */}
@@ -577,6 +676,13 @@ export function ProjectUsersPageClient({
           }
         }}
         initialEmail={quickContactEmail}
+      />
+
+      {/* Project Permissions Modal */}
+      <ProjectPermissionsModal
+        open={permissionsModalOpen}
+        onOpenChange={setPermissionsModalOpen}
+        role={selectedRole}
       />
     </div>
   );

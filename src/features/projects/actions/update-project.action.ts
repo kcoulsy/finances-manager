@@ -1,10 +1,9 @@
 "use server";
 
-import { Permission } from "@/features/auth/constants/permissions";
-import { requirePermission } from "@/features/auth/lib/require-permission";
 import { actionClient } from "@/features/shared/lib/actions/client";
-import { getSession } from "@/features/shared/lib/auth/get-session";
 import { db } from "@/features/shared/lib/db/client";
+import { ProjectPermission } from "../constants/project-permissions";
+import { requireProjectPermission } from "../lib/require-project-permission";
 import { updateProjectSchema } from "../schemas/project.schema";
 
 /**
@@ -25,7 +24,13 @@ export const updateProjectAction = actionClient
   .inputSchema(updateProjectSchema)
   .action(async ({ parsedInput }) => {
     try {
-      // First check if project exists
+      // Check permission before updating
+      await requireProjectPermission(
+        parsedInput.projectId,
+        ProjectPermission.Details.UPDATE,
+      );
+
+      // Check if project exists
       const existingProject = await db.project.findUnique({
         where: {
           id: parsedInput.projectId,
@@ -34,18 +39,6 @@ export const updateProjectAction = actionClient
 
       if (!existingProject) {
         throw new Error("Project not found");
-      }
-
-      // Get current user session
-      const session = await getSession();
-
-      if (!session?.user) {
-        throw new Error("Unauthorized");
-      }
-
-      // Check if user owns the project or has admin permission to update any project
-      if (existingProject.userId !== session.user.id) {
-        await requirePermission(Permission.Project.ALL);
       }
 
       const project = await db.project.update({
