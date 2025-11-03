@@ -93,7 +93,6 @@ export function EmailLogsPageClient() {
 
   // Load more pagination
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,6 +100,8 @@ export function EmailLogsPageClient() {
 
   // Track if we're resetting
   const resetRef = useRef(false);
+  // Track cursor to avoid recreating loadEmailLogs callback when cursor changes
+  const cursorRef = useRef<string | undefined>(undefined);
 
   // Actions
   const { execute: executeListLogs } = useActionWithToast(listEmailLogsAction, {
@@ -127,7 +128,8 @@ export function EmailLogsPageClient() {
           hasMore?: boolean;
           totalCount?: number;
         };
-        setCursor(pagination.nextCursor);
+        const nextCursor = pagination.nextCursor;
+        cursorRef.current = nextCursor;
         setHasMore(pagination.hasMore || false);
         setTotalCount(pagination.totalCount || 0);
       }
@@ -177,7 +179,7 @@ export function EmailLogsPageClient() {
       setIsLoading(true);
       resetRef.current = reset;
       if (reset) {
-        setCursor(undefined);
+        cursorRef.current = undefined;
         setHasMore(true);
       }
       executeListLogs({
@@ -189,7 +191,7 @@ export function EmailLogsPageClient() {
         dateTo: dateTo || undefined,
         sortBy: "sentAt",
         sortDirection: "desc",
-        cursor: reset ? undefined : cursor,
+        cursor: reset ? undefined : cursorRef.current,
         limit: 20,
       });
     },
@@ -200,7 +202,6 @@ export function EmailLogsPageClient() {
       readStatusFilter,
       dateFrom,
       dateTo,
-      cursor,
       executeListLogs,
     ],
   );
@@ -259,7 +260,7 @@ export function EmailLogsPageClient() {
 
   // Refresh list
   const handleRefresh = useCallback(() => {
-    setCursor(undefined);
+    cursorRef.current = undefined;
     setHasMore(true);
     loadEmailLogs(true);
     loadStats();
