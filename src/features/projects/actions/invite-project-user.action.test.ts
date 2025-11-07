@@ -296,4 +296,122 @@ describe("inviteProjectUserAction", () => {
     expect(Math.abs(diff)).toBeLessThan(60 * 1000); // 1 minute
     expect(invitationExpiresAt > beforeInvite).toBe(true);
   });
+
+  it("adds existing user directly as primary client when no primary client exists", async () => {
+    const clientUser = await createTestUser({
+      name: "Client User",
+      email: generateUniqueEmail("client"),
+    });
+
+    const result = await inviteProjectUserAction({
+      projectId: testProject.id,
+      email: clientUser.email,
+      userType: "Client",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.invitation).toBeDefined();
+    expect(result.data?.invitation.status).toBe("ACCEPTED");
+    expect(result.data?.invitation.userId).toBe(clientUser.id);
+    expect(result.data?.toast?.message).toBe("Client added successfully");
+
+    // Verify user was added to project
+    const projectUser = await db.projectUser.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: testProject.id,
+          userId: clientUser.id,
+        },
+      },
+    });
+
+    expect(projectUser).toBeDefined();
+    expect(projectUser?.userType).toBe("Client");
+
+    // Verify primary client was set
+    const project = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(project?.primaryClientId).toBe(clientUser.id);
+
+    // Verify notification was created
+    const notification = await db.notification.findFirst({
+      where: {
+        userId: clientUser.id,
+      },
+    });
+
+    expect(notification).toBeDefined();
+    expect(notification?.title).toContain("added to");
+    expect(notification?.title).toContain("primary client");
+
+    // No email should be sent when adding directly
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("invites user normally when project already has primary client", async () => {
+    const existingPrimaryClient = await createTestUser({
+      name: "Existing Primary Client",
+      email: generateUniqueEmail("primary"),
+    });
+
+    // Set existing primary client
+    await db.project.update({
+      where: { id: testProject.id },
+      data: {
+        primaryClientId: existingPrimaryClient.id,
+      },
+    });
+
+    const clientUser = await createTestUser({
+      name: "Another Client",
+      email: generateUniqueEmail("another"),
+    });
+
+    const result = await inviteProjectUserAction({
+      projectId: testProject.id,
+      email: clientUser.email,
+      userType: "Client",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.invitation).toBeDefined();
+    expect(result.data?.invitation.status).toBe("PENDING");
+    expect(result.data?.invitation.userId).toBe(clientUser.id);
+    expect(result.data?.toast?.message).toBe("Invitation sent successfully");
+
+    // Verify primary client is unchanged
+    const project = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(project?.primaryClientId).toBe(existingPrimaryClient.id);
+
+    // Verify email was sent
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("only sets primary client when adding Client user type", async () => {
+    const contractorUser = await createTestUser({
+      name: "Contractor User",
+      email: generateUniqueEmail("contractor"),
+    });
+
+    const result = await inviteProjectUserAction({
+      projectId: testProject.id,
+      email: contractorUser.email,
+      userType: "Contractor",
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.invitation.status).toBe("PENDING");
+
+    // Verify primary client is NOT set
+    const project = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(project?.primaryClientId).toBeNull();
+  });
 });

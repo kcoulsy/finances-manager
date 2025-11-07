@@ -23,9 +23,13 @@ export const listProjectUsersAction = actionClient
         throw new Error("You must be logged in to view project users.");
       }
 
-      // Verify project exists
+      // Verify project exists and get primary client
       const project = await db.project.findUnique({
         where: { id: parsedInput.projectId },
+        select: {
+          id: true,
+          primaryClientId: true,
+        },
       });
 
       if (!project) {
@@ -159,6 +163,7 @@ export const listProjectUsersAction = actionClient
         limit,
         totalPages: Math.ceil(total / limit),
         emailToContactMap, // Map of normalized email -> contactId
+        primaryClientId: project.primaryClientId,
       };
     } catch (error) {
       console.error("List project users error:", error);

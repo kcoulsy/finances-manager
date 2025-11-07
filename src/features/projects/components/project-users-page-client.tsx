@@ -42,6 +42,7 @@ import { useCancelInvitation } from "../hooks/use-cancel-invitation";
 import { useInviteProjectUser } from "../hooks/use-invite-project-user";
 import { useListProjectUsers } from "../hooks/use-list-project-users";
 import { useRemoveProjectUser } from "../hooks/use-remove-project-user";
+import { useSetPrimaryClient } from "../hooks/use-set-primary-client";
 import {
   type InviteProjectUserInput,
   inviteProjectUserSchema,
@@ -112,6 +113,7 @@ export function ProjectUsersPageClient({
   const inviteUser = useInviteProjectUser();
   const removeUser = useRemoveProjectUser();
   const cancelInvitation = useCancelInvitation();
+  const setPrimaryClient = useSetPrimaryClient();
 
   const { data, isLoading, error } = useListProjectUsers({
     projectId,
@@ -249,6 +251,32 @@ export function ProjectUsersPageClient({
 
   const entries = data?.entries || [];
   const total = data?.total || 0;
+  const primaryClientId = data?.primaryClientId || null;
+
+  const handleSetPrimaryClient = useCallback(
+    async (userId: string) => {
+      try {
+        await setPrimaryClient.mutateAsync({
+          projectId,
+          userId,
+        });
+      } catch {
+        // Error handled by toast
+      }
+    },
+    [projectId, setPrimaryClient],
+  );
+
+  const handleClearPrimaryClient = useCallback(async () => {
+    try {
+      await setPrimaryClient.mutateAsync({
+        projectId,
+        userId: undefined,
+      });
+    } catch {
+      // Error handled by toast
+    }
+  }, [projectId, setPrimaryClient]);
 
   const columns: DataTableColumn<ProjectUserEntry>[] = [
     {
@@ -330,9 +358,20 @@ export function ProjectUsersPageClient({
               ? ("OWNER" as const)
               : ("MEMBER" as const);
 
+        const isPrimaryClient =
+          entry.type === "user" &&
+          entry.user &&
+          entry.user.id === primaryClientId;
+
         return (
           <div className="flex items-center gap-2">
             <span className="text-sm">{entry.userType}</span>
+            {isPrimaryClient && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <CheckCircle2 className="h-3 w-3" />
+                Primary Client
+              </span>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -352,27 +391,71 @@ export function ProjectUsersPageClient({
     {
       key: "actions",
       header: "Actions",
-      render: (entry) =>
-        entry.type === "user" && entry.user ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteClick(entry)}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        ) : entry.type === "invitation" ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleCancelInvitation(entry.id)}
-            disabled={cancelInvitation.isPending}
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        ) : null,
+      render: (entry) => {
+        if (entry.type === "user" && entry.user) {
+          const isPrimaryClient = entry.user.id === primaryClientId;
+          const isClient = entry.userType === "Client";
+
+          return (
+            <div className="flex items-center gap-2">
+              {isClient && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (isPrimaryClient) {
+                      handleClearPrimaryClient();
+                    } else if (entry.user) {
+                      handleSetPrimaryClient(entry.user.id);
+                    }
+                  }}
+                  disabled={setPrimaryClient.isPending}
+                  className={
+                    isPrimaryClient
+                      ? "text-primary hover:text-primary"
+                      : "text-muted-foreground hover:text-primary"
+                  }
+                  title={
+                    isPrimaryClient
+                      ? "Clear primary client"
+                      : "Set as primary client"
+                  }
+                >
+                  {isPrimaryClient ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteClick(entry)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        }
+
+        if (entry.type === "invitation") {
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCancelInvitation(entry.id)}
+              disabled={cancelInvitation.isPending}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          );
+        }
+
+        return null;
+      },
     },
   ];
 

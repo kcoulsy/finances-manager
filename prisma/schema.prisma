@@ -35,6 +35,7 @@ model User {
   sessions                  Session[]
   userRoles                 UserRole[]
   projects                  Project[]
+  primaryClientProjects     Project[]           @relation("PrimaryClient")
   projectUsers              ProjectUser[]
   projectInvitations        ProjectInvitation[] @relation("InvitationUser")
   invitedProjectInvitations ProjectInvitation[] @relation("InvitedByUser")
@@ -124,12 +125,15 @@ model Project {
   description        String?
   userId             String
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryClientId    String?
+  primaryClient      User?               @relation("PrimaryClient", fields: [primaryClientId], references: [id], onDelete: SetNull)
   projectUsers       ProjectUser[]
   projectInvitations ProjectInvitation[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
   @@index([userId])
+  @@index([primaryClientId])
   @@map("project")
 }
 

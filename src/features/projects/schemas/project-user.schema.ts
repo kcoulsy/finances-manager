@@ -37,6 +37,11 @@ export const cancelInvitationSchema = z.object({
   invitationId: z.string().min(1, "Invitation ID is required"),
 });
 
+export const setPrimaryClientSchema = z.object({
+  projectId: z.string().min(1, "Project ID is required"),
+  userId: z.string().min(1, "User ID is required").optional(),
+});
+
 export type InviteProjectUserInput = z.infer<typeof inviteProjectUserSchema>;
 export type ListProjectUsersInput = z.infer<typeof listProjectUsersSchema>;
 export type RemoveProjectUserInput = z.infer<typeof removeProjectUserSchema>;
@@ -45,3 +50,4 @@ export type ListPendingInvitationsInput = z.infer<
   typeof listPendingInvitationsSchema
 >;
 export type CancelInvitationInput = z.infer<typeof cancelInvitationSchema>;
+export type SetPrimaryClientInput = z.infer<typeof setPrimaryClientSchema>;

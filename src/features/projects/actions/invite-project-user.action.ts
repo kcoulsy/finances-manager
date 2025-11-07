@@ -30,6 +30,11 @@ export const inviteProjectUserAction = actionClient
       // Verify project exists
       const project = await db.project.findUnique({
         where: { id: parsedInput.projectId },
+        select: {
+          id: true,
+          name: true,
+          primaryClientId: true,
+        },
       });
 
       if (!project) {
@@ -50,6 +55,13 @@ export const inviteProjectUserAction = actionClient
         throw new Error("This user is already on the project.");
       }
 
+      // Check if project has no primary client and we're adding a Client
+      // If user already exists and is being added as Client, we can add them directly
+      const needsPrimaryClient =
+        !project.primaryClientId &&
+        parsedInput.userType === "Client" &&
+        existingUser;
+
       // Check if there's a pending invitation for this email
       const existingInvitation = await db.projectInvitation.findFirst({
         where: {
@@ -63,10 +75,72 @@ export const inviteProjectUserAction = actionClient
         throw new Error("An invitation has already been sent to this email.");
       }
 
-      // Generate invitation token
+      // Generate invitation token and expiration (used in both paths)
       const token = randomBytes(32).toString("hex");
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // Expires in 7 days
+
+      // If user exists and needs to be added as primary client, add them directly
+      // and create an invitation marked as ACCEPTED
+      if (needsPrimaryClient && existingUser) {
+        // Add user directly to project as Client
+        await db.projectUser.create({
+          data: {
+            projectId: parsedInput.projectId,
+            userId: existingUser.id,
+            userType: "Client",
+          },
+        });
+
+        // Set as primary client
+        await db.project.update({
+          where: { id: parsedInput.projectId },
+          data: {
+            primaryClientId: existingUser.id,
+          },
+        });
+
+        // Create invitation marked as ACCEPTED since user is already added
+        const invitation = await db.projectInvitation.create({
+          data: {
+            projectId: parsedInput.projectId,
+            email: parsedInput.email,
+            userId: existingUser.id,
+            userType: "Client",
+            token,
+            status: "ACCEPTED",
+            expiresAt,
+            invitedById: session.user.id,
+            acceptedAt: new Date(),
+          },
+        });
+
+        // Create notification for the user
+        await db.notification.create({
+          data: {
+            userId: existingUser.id,
+            title: `You've been added to ${project.name}`,
+            subtitle: `${session.user.name || "Someone"} has added you as a Client and set you as the primary client.`,
+            detail: `## Added to Project\n\nYou have been added to the project **${project.name}** as a **Client** and set as the primary client.\n\nYou can now access this project.`,
+            link: `/projects/${parsedInput.projectId}`,
+            read: false,
+          },
+        });
+
+        revalidatePath(`/projects/${parsedInput.projectId}/users`);
+        revalidatePath(`/projects/${parsedInput.projectId}`);
+        revalidatePath("/notifications");
+
+        return {
+          success: true,
+          invitation,
+          toast: {
+            message: "Client added successfully",
+            type: "success",
+            description: `${existingUser.name || existingUser.email} has been added as the primary client.`,
+          },
+        };
+      }
 
       // Create invitation
       const invitation = await db.projectInvitation.create({

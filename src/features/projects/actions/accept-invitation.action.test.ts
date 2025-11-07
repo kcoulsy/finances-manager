@@ -521,4 +521,152 @@ describe("acceptInvitationAction", () => {
 
     expect(notification).toBeDefined();
   });
+
+  it("sets first Client as primary client when accepting invitation and no primary client exists", async () => {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const uniqueToken = generateUniqueString("primary-client-token");
+    const clientUserEmail = generateUniqueEmail("primaryclient");
+
+    await db.projectInvitation.create({
+      data: {
+        projectId: testProject.id,
+        email: clientUserEmail,
+        userType: "Client",
+        token: uniqueToken,
+        status: "PENDING",
+        expiresAt,
+        invitedById: testUser.id,
+      },
+    });
+
+    // Create and switch to client user
+    const clientUser = await setupTestUserWithSession({
+      name: "Primary Client User",
+      email: clientUserEmail,
+    });
+
+    // Verify project has no primary client
+    const projectBefore = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(projectBefore?.primaryClientId).toBeNull();
+
+    const result = await acceptInvitationAction({
+      token: uniqueToken,
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify user was added to project
+    const projectUser = await db.projectUser.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: testProject.id,
+          userId: clientUser.id,
+        },
+      },
+    });
+
+    expect(projectUser).toBeDefined();
+    expect(projectUser?.userType).toBe("Client");
+
+    // Verify primary client was set
+    const projectAfter = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(projectAfter?.primaryClientId).toBe(clientUser.id);
+  });
+
+  it("does not set primary client when accepting invitation as non-Client user type", async () => {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const uniqueToken = generateUniqueString("contractor-token");
+    const contractorEmail = generateUniqueEmail("contractor");
+
+    await db.projectInvitation.create({
+      data: {
+        projectId: testProject.id,
+        email: contractorEmail,
+        userType: "Contractor",
+        token: uniqueToken,
+        status: "PENDING",
+        expiresAt,
+        invitedById: testUser.id,
+      },
+    });
+
+    await setupTestUserWithSession({
+      name: "Contractor User",
+      email: contractorEmail,
+    });
+
+    const result = await acceptInvitationAction({
+      token: uniqueToken,
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify primary client is NOT set
+    const project = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(project?.primaryClientId).toBeNull();
+  });
+
+  it("does not change primary client when project already has one", async () => {
+    const existingPrimaryClient = await createTestUser({
+      name: "Existing Primary Client",
+      email: generateUniqueEmail("existing"),
+    });
+
+    // Set existing primary client
+    await db.project.update({
+      where: { id: testProject.id },
+      data: {
+        primaryClientId: existingPrimaryClient.id,
+      },
+    });
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const uniqueToken = generateUniqueString("another-client-token");
+    const anotherClientEmail = generateUniqueEmail("another");
+
+    await db.projectInvitation.create({
+      data: {
+        projectId: testProject.id,
+        email: anotherClientEmail,
+        userType: "Client",
+        token: uniqueToken,
+        status: "PENDING",
+        expiresAt,
+        invitedById: testUser.id,
+      },
+    });
+
+    await setupTestUserWithSession({
+      name: "Another Client",
+      email: anotherClientEmail,
+    });
+
+    const result = await acceptInvitationAction({
+      token: uniqueToken,
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify primary client remains unchanged
+    const project = await db.project.findUnique({
+      where: { id: testProject.id },
+    });
+
+    expect(project?.primaryClientId).toBe(existingPrimaryClient.id);
+  });
 });

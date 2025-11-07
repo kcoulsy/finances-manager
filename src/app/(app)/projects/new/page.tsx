@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ProjectForm } from "@/features/projects/components/project-form";
 import { Button } from "@/features/shared/components/ui/button";
+import { getSession } from "@/features/shared/lib/auth/get-session";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 export default async function NewProjectPage() {
   await requireAuth();
+  const session = await getSession();
 
   return (
     <div className="space-y-8">
@@ -18,7 +20,10 @@ export default async function NewProjectPage() {
         </Button>
       </div>
 
-      <ProjectForm />
+      <ProjectForm
+        currentUserId={session?.user?.id}
+        currentUserEmail={session?.user?.email}
+      />
     </div>
   );
 }

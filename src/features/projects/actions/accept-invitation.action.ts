@@ -27,6 +27,7 @@ export const acceptInvitationAction = actionClient
               id: true,
               name: true,
               userId: true,
+              primaryClientId: true,
             },
           },
           invitedBy: {
@@ -155,6 +156,19 @@ export const acceptInvitationAction = actionClient
           userType: invitation.userType,
         },
       });
+
+      // If project has no primary client and user is accepting as Client, set them as primary
+      if (
+        !invitation.project.primaryClientId &&
+        invitation.userType === "Client"
+      ) {
+        await db.project.update({
+          where: { id: invitation.projectId },
+          data: {
+            primaryClientId: session.user.id,
+          },
+        });
+      }
 
       // Update invitation to accepted
       await db.projectInvitation.update({

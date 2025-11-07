@@ -9,6 +9,10 @@ export const createProjectSchema = z.object({
     .string()
     .max(500, "Description must be less than 500 characters")
     .optional(),
+  primaryClientId: z
+    .string()
+    .min(1, "Primary client ID is required if provided")
+    .optional(),
 });
 
 export const updateProjectSchema = z.object({

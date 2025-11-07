@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/features/shared/lib/db/client";
+import { sendEmail } from "@/features/shared/lib/utils/email";
 import {
+  createTestUser,
+  generateUniqueEmail,
   mockAuthSession,
   mockNoAuthSession,
   setupTestHooks,
@@ -9,6 +12,11 @@ import {
 } from "@/features/shared/testing/helpers";
 import { createProjectAction } from "./create-project.action";
 
+// Mock the email utility
+vi.mock("@/features/shared/lib/utils/email", () => ({
+  sendEmail: vi.fn(),
+}));
+
 describe("createProjectAction", () => {
   let testUser: TestUser;
 
@@ -16,6 +24,11 @@ describe("createProjectAction", () => {
 
   beforeEach(async () => {
     testUser = await setupTestUserWithSession();
+    vi.clearAllMocks();
+    vi.mocked(sendEmail).mockResolvedValue({
+      success: true,
+      messageId: "test-message-id",
+    });
   });
 
   it("creates a project successfully with valid data", async () => {
@@ -179,6 +192,170 @@ describe("createProjectAction", () => {
     );
     expect(projects.map((p: { name: string }) => p.name)).toContain(
       "Project 2",
+    );
+  });
+
+  it("creates a project with self as primary client", async () => {
+    const result = await createProjectAction({
+      name: "Project with Primary Client",
+      description: "Project with self as primary client",
+      primaryClientId: testUser.id,
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.project).toBeDefined();
+    expect(result.data?.project.name).toBe("Project with Primary Client");
+
+    // Verify primary client is set
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+      include: {
+        primaryClient: true,
+      },
+    });
+
+    expect(project?.primaryClientId).toBe(testUser.id);
+    expect(project?.primaryClient?.id).toBe(testUser.id);
+    expect(project).not.toBeNull();
+
+    // Verify user was added to project as Client
+    const projectUser = await db.projectUser.findUnique({
+      where: {
+        projectId_userId: {
+          projectId: project?.id ?? "",
+          userId: testUser.id,
+        },
+      },
+    });
+
+    expect(projectUser).toBeDefined();
+    expect(projectUser?.userType).toBe("Client");
+
+    expect(result.data?.toast?.description).toContain(
+      "with you as the primary client",
+    );
+  });
+
+  it("creates a project with another user as primary client and invites them", async () => {
+    const primaryClientUser = await createTestUser({
+      name: "Primary Client User",
+      email: generateUniqueEmail("primary"),
+    });
+
+    const result = await createProjectAction({
+      name: "Project with External Primary Client",
+      description: "Project with another user as primary client",
+      primaryClientId: primaryClientUser.id,
+    });
+
+    expect(result.data?.success).toBe(true);
+    expect(result.data?.project).toBeDefined();
+
+    // Verify primary client is set
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+      include: {
+        primaryClient: true,
+      },
+    });
+
+    expect(project?.primaryClientId).toBe(primaryClientUser.id);
+    expect(project?.primaryClient?.id).toBe(primaryClientUser.id);
+
+    expect(project).not.toBeNull();
+
+    // Verify invitation was created
+    const invitation = await db.projectInvitation.findFirst({
+      where: {
+        projectId: project?.id ?? "",
+        email: primaryClientUser.email,
+        status: "PENDING",
+      },
+    });
+
+    expect(invitation).toBeDefined();
+    expect(invitation?.userType).toBe("Client");
+    expect(invitation?.userId).toBe(primaryClientUser.id);
+
+    // Verify email was sent
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: primaryClientUser.email,
+        subject: expect.stringContaining("invited to join"),
+      }),
+    );
+
+    // Verify notification was created
+    const notification = await db.notification.findFirst({
+      where: {
+        userId: primaryClientUser.id,
+      },
+    });
+
+    expect(notification).toBeDefined();
+    expect(notification?.title).toContain("invited to join");
+    expect(notification?.title).toContain("primary client");
+
+    expect(result.data?.toast?.description).toContain(
+      "primary client has been invited",
+    );
+  });
+
+  it("creates a project with primary client via email lookup", async () => {
+    const primaryClientUser = await createTestUser({
+      name: "Primary Client User",
+      email: generateUniqueEmail("primary"),
+    });
+
+    const result = await createProjectAction({
+      name: "Project with Email Primary Client",
+      primaryClientId: `email:${primaryClientUser.email}`,
+    });
+
+    expect(result.data?.success).toBe(true);
+
+    // Verify primary client is set
+    const project = await db.project.findUnique({
+      where: { id: result.data?.project.id },
+    });
+
+    expect(project?.primaryClientId).toBe(primaryClientUser.id);
+
+    expect(project).not.toBeNull();
+
+    // Verify invitation was created
+    const invitation = await db.projectInvitation.findFirst({
+      where: {
+        projectId: project?.id ?? "",
+        email: primaryClientUser.email,
+      },
+    });
+
+    expect(invitation).toBeDefined();
+  });
+
+  it("returns error when primary client user not found", async () => {
+    const result = await createProjectAction({
+      name: "Project with Invalid Primary Client",
+      primaryClientId: "non-existent-user-id",
+    });
+
+    expect(result.serverError).toBeDefined();
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /primary client.*not found/i,
+    );
+  });
+
+  it("returns error when primary client email not found", async () => {
+    const result = await createProjectAction({
+      name: "Project with Invalid Email",
+      primaryClientId: "email:nonexistent@example.com",
+    });
+
+    expect(result.serverError).toBeDefined();
+    expect(result.serverError?.toLowerCase()).toMatch(
+      /primary client.*not found|must have a user account/i,
     );
   });
 });
