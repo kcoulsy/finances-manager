@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAcceptInvitation } from "@/features/projects/hooks/use-accept-invitation";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -65,7 +66,7 @@ export default function AcceptInvitationPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <ContentLayout className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Accepting Invitation</CardTitle>
@@ -96,6 +97,6 @@ export default function AcceptInvitationPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ContentLayout>
   );
 }

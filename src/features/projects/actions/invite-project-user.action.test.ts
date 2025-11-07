@@ -50,15 +50,18 @@ describe("inviteProjectUserAction", () => {
   });
 
   it("invites a new user by email successfully", async () => {
+    // Use unique email to ensure it's a new user
+    const newUserEmail = generateUniqueEmail("newuser");
+
     const result = await inviteProjectUserAction({
       projectId: testProject.id,
-      email: "newuser@example.com",
+      email: newUserEmail,
       userType: "Client",
     });
 
     expect(result.data?.success).toBe(true);
     expect(result.data?.invitation).toBeDefined();
-    expect(result.data?.invitation.email).toBe("newuser@example.com");
+    expect(result.data?.invitation.email).toBe(newUserEmail);
     expect(result.data?.invitation.userType).toBe("Client");
     expect(result.data?.invitation.status).toBe("PENDING");
     expect(result.data?.toast).toBeDefined();
@@ -70,14 +73,14 @@ describe("inviteProjectUserAction", () => {
     });
 
     expect(invitation).toBeDefined();
-    expect(invitation?.email).toBe("newuser@example.com");
+    expect(invitation?.email).toBe(newUserEmail);
     expect(invitation?.projectId).toBe(testProject.id);
 
     // Verify email was sent with invitation link
     expect(sendEmail).toHaveBeenCalledTimes(1);
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "newuser@example.com",
+        to: newUserEmail,
         subject: expect.stringContaining("Test Project"),
         html: expect.stringContaining("/invitations/accept?token="),
         text: expect.stringContaining("/invitations/accept?token="),
@@ -344,7 +347,7 @@ describe("inviteProjectUserAction", () => {
 
     expect(notification).toBeDefined();
     expect(notification?.title).toContain("added to");
-    expect(notification?.title).toContain("primary client");
+    expect(notification?.subtitle).toContain("primary client");
 
     // No email should be sent when adding directly
     expect(sendEmail).not.toHaveBeenCalled();

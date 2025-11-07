@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProjectAction } from "@/features/projects/actions/get-project.action";
 import { ProjectDetail } from "@/features/projects/components/project-detail";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
 import { Button } from "@/features/shared/components/ui/button";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
@@ -27,7 +28,7 @@ export default async function ProjectDetailPage({
         { label: "Details" },
       ]}
     >
-      <div className="space-y-8">
+      <ContentLayout className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Project Details</h1>
@@ -41,7 +42,7 @@ export default async function ProjectDetailPage({
         </div>
 
         <ProjectDetail projectId={id} />
-      </div>
+      </ContentLayout>
     </SetBreadcrumbs>
   );
 }

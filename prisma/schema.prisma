@@ -43,6 +43,9 @@ model User {
   contacts                  Contact[]
   sentEmailLogs             EmailLog[]          @relation("SenderEmailLogs")
   receivedEmailLogs         EmailLog[]          @relation("RecipientEmailLogs")
+  notes                     Note[]
+  noteFolders               NoteFolder[]
+  noteCategories            NoteCategory[]
 
   @@map("user")
 }
@@ -129,6 +132,8 @@ model Project {
   primaryClient      User?               @relation("PrimaryClient", fields: [primaryClientId], references: [id], onDelete: SetNull)
   projectUsers       ProjectUser[]
   projectInvitations ProjectInvitation[]
+  notes              Note[]
+  noteFolders        NoteFolder[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -182,6 +187,7 @@ model Contact {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
+  contactNotes       Note[]
 
   @@unique([userId, email])
   @@index([userId])
@@ -337,4 +343,124 @@ model EmailLogRead {
   @@index([emailLogId])
   @@index([readAt])
   @@map("email_log_read")
+}
+
+enum NotePriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NoteStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum NoteCategoryColor {
+  GRAY
+  RED
+  BLUE
+  TEAL
+  AMBER
+  GREEN
+  PURPLE
+  SLATE
+  ORANGE
+  CYAN
+  INDIGO
+  PINK
+}
+
+model NoteCategory {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     NoteCategoryColor @default(GRAY)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  notes     Note[]
+
+  @@index([userId])
+  @@map("note_category")
+}
+
+model NoteFolder {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId    String?
+  parent      NoteFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    NoteFolder[] @relation("FolderHierarchy")
+  sortOrder   Int          @default(0)
+  isPublic    Boolean      @default(false)
+  metadata    String? // JSON string for additional metadata
+  context     String       @default("project") // 'project' or 'global'
+  projectId   String?
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  notes       Note[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([parentId])
+  @@index([context])
+  @@map("note_folder")
+}
+
+model NoteLink {
+  id        String   @id @default(cuid())
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  linkType  String // 'Contact' or 'Project' (extensible to other types)
+  linkId    String // ID of the linked entity
+  createdAt DateTime @default(now())
+
+  @@index([noteId])
+  @@index([linkType, linkId])
+  @@index([linkType])
+  @@map("note_link")
+}
+
+model Note {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  content     String
+  priority    NotePriority  @default(NORMAL)
+  status      NoteStatus    @default(ACTIVE)
+  metadata    String? // JSON string for additional metadata
+  categoryId  String?
+  category    NoteCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  folderId    String?
+  folder      NoteFolder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  // Legacy fields - kept for backward compatibility but prefer using noteLinks
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  // Polymorphic notable relation (using separate fields) - legacy
+  notableType String? // 'Contact' or 'Project'
+  notableId   String? // ID of the related Contact or Project
+  noteLinks   NoteLink[] // New flexible linking system
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([contactId])
+  @@index([categoryId])
+  @@index([folderId])
+  @@index([status])
+  @@index([priority])
+  @@index([notableType, notableId])
+  @@index([deletedAt])
+  @@map("note")
 }

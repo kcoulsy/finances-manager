@@ -183,8 +183,8 @@ describe("setPrimaryClientAction", () => {
     });
 
     expect(result.serverError).toBeDefined();
-    expect(result.serverError).toContain("NEXT_REDIRECT");
-    expect(result.serverError).toContain("/unauthorized");
+    // When checking for OWNER permission and user doesn't have it, throws notFound()
+    expect(result.serverError).toContain("NEXT_NOT_FOUND");
   });
 
   it("returns error when user is not on the project", async () => {

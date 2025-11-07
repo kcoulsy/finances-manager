@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserDetail } from "@/features/admin/components/user-detail";
 import { UserRole } from "@/features/auth/constants/roles";
 import { requireRole } from "@/features/auth/lib/require-role";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 
 interface AdminUserDetailPageProps {
@@ -15,7 +16,7 @@ export default async function AdminUserDetailPage({
   const { id } = await params;
 
   return (
-    <div className="space-y-6">
+    <ContentLayout className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">User Details</h1>
@@ -29,6 +30,6 @@ export default async function AdminUserDetailPage({
       </div>
 
       <UserDetail userId={id} />
-    </div>
+    </ContentLayout>
   );
 }

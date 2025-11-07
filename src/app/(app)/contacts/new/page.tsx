@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ContactForm } from "@/features/contacts/components/contact-form";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
@@ -7,7 +8,7 @@ export default async function NewContactPage() {
   await requireAuth();
 
   return (
-    <div className="space-y-8">
+    <ContentLayout className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">New Contact</h1>
@@ -21,6 +22,6 @@ export default async function NewContactPage() {
       </div>
 
       <ContactForm />
-    </div>
+    </ContentLayout>
   );
 }

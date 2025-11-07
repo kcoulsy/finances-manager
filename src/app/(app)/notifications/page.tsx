@@ -1,5 +1,6 @@
 import { getNotificationsAction } from "@/features/notifications/actions/get-notifications.action";
 import { NotificationsList } from "@/features/notifications/components/notifications-list";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
 interface NotificationsPageProps {
@@ -22,7 +23,7 @@ export default async function NotificationsPage({
   const unreadCount = result?.data?.unreadCount || 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <ContentLayout className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
@@ -39,6 +40,6 @@ export default async function NotificationsPage({
         initialUnreadCount={unreadCount}
         highlightNotificationId={id}
       />
-    </div>
+    </ContentLayout>
   );
 }

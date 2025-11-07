@@ -17,10 +17,10 @@ export const setPrimaryClientAction = actionClient
   .inputSchema(setPrimaryClientSchema)
   .action(async ({ parsedInput }) => {
     try {
-      // Check permission
+      // Check permission - only project owners can set primary client
       await requireProjectPermission(
         parsedInput.projectId,
-        ProjectPermission.Settings.EDIT,
+        ProjectPermission.OWNER,
       );
 
       const session = await getSession();
@@ -124,5 +124,3 @@ export const setPrimaryClientAction = actionClient
       throw new Error("Failed to set primary client. Please try again.");
     }
   });
-
-

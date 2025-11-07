@@ -1,6 +1,12 @@
 "use client";
 
-import { Contact, FolderKanban, LayoutDashboard, Settings } from "lucide-react";
+import {
+  Contact,
+  FolderKanban,
+  LayoutDashboard,
+  Settings,
+  StickyNote,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
@@ -36,6 +42,11 @@ const navItems = [
     title: "Contacts",
     url: "/contacts",
     icon: Contact,
+  },
+  {
+    title: "Notes",
+    url: "/notes",
+    icon: StickyNote,
   },
   {
     title: "Settings",

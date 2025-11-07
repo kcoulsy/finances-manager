@@ -1,5 +1,6 @@
 import { getProjectAction } from "@/features/projects/actions/get-project.action";
 import { ProjectUsersPageClient } from "@/features/projects/components/project-users-page-client";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
@@ -25,11 +26,13 @@ export default async function ProjectUsersPage({
         { label: "Users" },
       ]}
     >
-      <ProjectUsersPageClient
-        projectId={id}
-        projectName={project?.name || "Project"}
-        projectOwnerId={project?.userId}
-      />
+      <ContentLayout>
+        <ProjectUsersPageClient
+          projectId={id}
+          projectName={project?.name || "Project"}
+          projectOwnerId={project?.userId}
+        />
+      </ContentLayout>
     </SetBreadcrumbs>
   );
 }

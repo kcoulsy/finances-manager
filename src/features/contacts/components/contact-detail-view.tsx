@@ -1,10 +1,14 @@
 "use client";
 
 import type { Address, Contact } from "@prisma/client";
-import { Archive, RotateCcw, Trash2 } from "lucide-react";
+import { Archive, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import { QuickNoteModal } from "@/features/notes/components/quick-note-modal";
+import { useDeleteNote } from "@/features/notes/hooks/use-delete-note";
+import { useNotes } from "@/features/notes/hooks/use-notes";
+import { useUpdateNote } from "@/features/notes/hooks/use-update-note";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -40,9 +44,28 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [quickNoteModalOpen, setQuickNoteModalOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [deleteNoteDialogOpen, setDeleteNoteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
   const archiveContact = useArchiveContact();
   const restoreContact = useRestoreContact();
   const deleteContact = useDeleteContact();
+  const updateNote = useUpdateNote();
+  const deleteNote = useDeleteNote();
+
+  const { data: notesData, isLoading: notesLoading } = useNotes({
+    contactId: contact.id,
+    status: "ACTIVE",
+    sortBy: "updated_at",
+    sortDirection: "desc",
+    limit: 100,
+    offset: 0,
+    includeDeleted: false,
+  });
+
+  const notes = notesData?.notes || [];
 
   const isArchived = contact.deletedAt !== null;
 
@@ -75,6 +98,50 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
       // Error is handled by toast
     }
   }, [contact.id, deleteContact, router]);
+
+  const handleStartEditingNote = useCallback(
+    (noteId: string, content: string) => {
+      setEditingNoteId(noteId);
+      setEditingContent(content);
+    },
+    [],
+  );
+
+  const handleCancelEditingNote = useCallback(() => {
+    setEditingNoteId(null);
+    setEditingContent("");
+  }, []);
+
+  const handleSaveNote = useCallback(async () => {
+    if (!editingNoteId || !editingContent.trim()) return;
+
+    try {
+      await updateNote.mutateAsync({
+        noteId: editingNoteId,
+        content: editingContent.trim(),
+      });
+      handleCancelEditingNote();
+    } catch {
+      // Error is handled by toast
+    }
+  }, [editingNoteId, editingContent, updateNote, handleCancelEditingNote]);
+
+  const handleDeleteNoteClick = useCallback((noteId: string) => {
+    setNoteToDelete(noteId);
+    setDeleteNoteDialogOpen(true);
+  }, []);
+
+  const handleDeleteNoteConfirm = useCallback(async () => {
+    if (!noteToDelete) return;
+
+    try {
+      await deleteNote.mutateAsync({ noteId: noteToDelete });
+      setDeleteNoteDialogOpen(false);
+      setNoteToDelete(null);
+    } catch {
+      // Error is handled by toast
+    }
+  }, [noteToDelete, deleteNote]);
 
   if (isEditing) {
     return (
@@ -447,6 +514,139 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
             </div>
           )}
 
+          {/* Contact Notes */}
+          <div className="space-y-4 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Contact Notes</h3>
+              <Button size="sm" onClick={() => setQuickNoteModalOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Note
+              </Button>
+            </div>
+            {notesLoading ? (
+              <p className="text-sm text-muted-foreground">Loading notes...</p>
+            ) : notes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No notes for this contact yet.
+              </p>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="text-left p-3 text-sm font-medium">
+                        Content
+                      </th>
+                      <th className="text-left p-3 text-sm font-medium">
+                        Priority
+                      </th>
+                      <th className="text-left p-3 text-sm font-medium">
+                        Updated
+                      </th>
+                      <th className="text-right p-3 text-sm font-medium">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notes.map((note) => (
+                      <tr key={note.id} className="border-t">
+                        <td className="p-3">
+                          {editingNoteId === note.id ? (
+                            <div className="space-y-2">
+                              <textarea
+                                value={editingContent}
+                                onChange={(e) =>
+                                  setEditingContent(e.target.value)
+                                }
+                                rows={3}
+                                className="w-full p-2 border rounded-md text-sm"
+                                placeholder="Note content..."
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={handleSaveNote}
+                                  disabled={
+                                    updateNote.isPending ||
+                                    !editingContent.trim()
+                                  }
+                                >
+                                  {updateNote.isPending ? "Saving..." : "Save"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={handleCancelEditingNote}
+                                  disabled={updateNote.isPending}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-sm">
+                              <p className="whitespace-pre-wrap line-clamp-3">
+                                {note.content}
+                              </p>
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={cn(
+                              "text-xs px-2 py-1 rounded font-medium",
+                              note.priority === "URGENT" &&
+                                "bg-red-100 text-red-800",
+                              note.priority === "HIGH" &&
+                                "bg-orange-100 text-orange-800",
+                              note.priority === "NORMAL" &&
+                                "bg-blue-100 text-blue-800",
+                              note.priority === "LOW" &&
+                                "bg-gray-100 text-gray-800",
+                            )}
+                          >
+                            {note.priority}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm text-muted-foreground">
+                          {new Date(note.updatedAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center justify-end gap-2">
+                            {editingNoteId !== note.id && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleStartEditingNote(
+                                      note.id,
+                                      note.content,
+                                    )
+                                  }
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDeleteNoteClick(note.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* Addresses */}
           <div className="space-y-4 pt-2 border-t">
             <AddressesSection
@@ -541,6 +741,48 @@ export function ContactDetailView({ contact }: ContactDetailViewProps) {
               disabled={deleteContact.isPending}
             >
               {deleteContact.isPending ? "Deleting..." : "Delete Permanently"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Note Modal */}
+      <QuickNoteModal
+        open={quickNoteModalOpen}
+        onOpenChange={setQuickNoteModalOpen}
+        contactId={contact.id}
+      />
+
+      {/* Delete Note Confirmation Dialog */}
+      <Dialog
+        open={deleteNoteDialogOpen}
+        onOpenChange={setDeleteNoteDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Note</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this note? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteNoteDialogOpen(false);
+                setNoteToDelete(null);
+              }}
+              disabled={deleteNote.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteNoteConfirm}
+              disabled={deleteNote.isPending}
+            >
+              {deleteNote.isPending ? "Deleting..." : "Delete Note"}
             </Button>
           </DialogFooter>
         </DialogContent>

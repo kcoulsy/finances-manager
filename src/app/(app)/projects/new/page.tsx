@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProjectForm } from "@/features/projects/components/project-form";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 import { getSession } from "@/features/shared/lib/auth/get-session";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
@@ -9,7 +10,7 @@ export default async function NewProjectPage() {
   const session = await getSession();
 
   return (
-    <div className="space-y-8">
+    <ContentLayout className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">New Project</h1>
@@ -24,6 +25,6 @@ export default async function NewProjectPage() {
         currentUserId={session?.user?.id}
         currentUserEmail={session?.user?.email}
       />
-    </div>
+    </ContentLayout>
   );
 }

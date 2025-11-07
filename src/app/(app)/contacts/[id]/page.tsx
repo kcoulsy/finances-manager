@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getContactAction } from "@/features/contacts/actions/get-contact.action";
 import { ContactDetail } from "@/features/contacts/components/contact-detail";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
 import { Button } from "@/features/shared/components/ui/button";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
@@ -32,7 +33,7 @@ export default async function ContactDetailPage({
         { label: "Details" },
       ]}
     >
-      <div className="space-y-8">
+      <ContentLayout className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Contact Details</h1>
@@ -46,7 +47,7 @@ export default async function ContactDetailPage({
         </div>
 
         <ContactDetail contactId={id} />
-      </div>
+      </ContentLayout>
     </SetBreadcrumbs>
   );
 }

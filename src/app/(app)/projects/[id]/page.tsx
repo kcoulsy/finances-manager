@@ -1,4 +1,5 @@
 import { getProjectAction } from "@/features/projects/actions/get-project.action";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { SetBreadcrumbs } from "@/features/shared/components/layout/set-breadcrumbs";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
@@ -24,7 +25,7 @@ export default async function ProjectDashboardPage({
         { label: "Dashboard" },
       ]}
     >
-      <div className="space-y-8">
+      <ContentLayout className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">Project Dashboard</h1>
           <p className="text-muted-foreground mt-2">
@@ -35,7 +36,7 @@ export default async function ProjectDashboardPage({
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Dashboard content will go here */}
         </div>
-      </div>
+      </ContentLayout>
     </SetBreadcrumbs>
   );
 }

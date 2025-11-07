@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
+import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
   const session = await requireAuth();
 
   return (
-    <div className="space-y-8">
+    <ContentLayout className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-2">
@@ -71,6 +72,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </ContentLayout>
   );
 }
