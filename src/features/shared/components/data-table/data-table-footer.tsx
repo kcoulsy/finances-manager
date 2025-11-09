@@ -16,6 +16,7 @@ interface DataTablePagination {
   limit: number;
   totalCount: number;
   totalPages: number;
+  visibleCount?: number; // Actual number of visible items on current page (for client-side filtering)
 }
 
 interface DataTableFooterProps {
@@ -29,13 +30,23 @@ export function DataTableFooter({
   onPageChange,
   className,
 }: DataTableFooterProps) {
-  if (!pagination || pagination.totalPages <= 1) {
+  if (!pagination) {
     return null;
   }
 
-  const { page, totalPages, totalCount, limit } = pagination;
-  const start = (page - 1) * limit + 1;
-  const end = Math.min(page * limit, totalCount);
+  // Hide pagination if there's only one page and no visibleCount (meaning no client-side filtering)
+  // But show it if visibleCount is provided (meaning we have filtered results to show)
+  if (pagination.totalPages <= 1 && pagination.visibleCount === undefined) {
+    return null;
+  }
+
+  const { page, totalPages, totalCount, limit, visibleCount } = pagination;
+  // Use visibleCount if provided (for client-side filtering like search)
+  // When visibleCount is provided, it means we're showing all filtered results on one page
+  const start = visibleCount !== undefined ? 1 : (page - 1) * limit + 1;
+  const end = visibleCount !== undefined 
+    ? visibleCount 
+    : Math.min(page * limit, totalCount);
 
   // Generate page numbers to display
   const getPageNumbers = () => {

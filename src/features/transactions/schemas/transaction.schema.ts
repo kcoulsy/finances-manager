@@ -54,6 +54,23 @@ export const detectTransfersSchema = z.object({
   accountId: z.string().optional(),
 });
 
+export const bulkUpdateTransactionsSchema = z.object({
+  transactionIds: z.array(z.string().min(1)).optional(),
+  // Filter criteria for "select all" mode
+  filters: z
+    .object({
+      accountId: z.string().optional(),
+      categoryId: z.string().optional(),
+      type: transactionTypeSchema.optional(),
+      isTransfer: z.boolean().optional(),
+      startDate: z.coerce.date().optional(),
+      endDate: z.coerce.date().optional(),
+    })
+    .optional(),
+  categoryId: z.string().optional().nullable(),
+  // Add more fields as needed for bulk updates
+});
+
 export type TransactionType = z.infer<typeof transactionTypeSchema>;
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
@@ -61,4 +78,5 @@ export type DeleteTransactionInput = z.infer<typeof deleteTransactionSchema>;
 export type GetTransactionsInput = z.infer<typeof getTransactionsSchema>;
 export type ImportTransactionsInput = z.infer<typeof importTransactionsSchema>;
 export type DetectTransfersInput = z.infer<typeof detectTransfersSchema>;
+export type BulkUpdateTransactionsInput = z.infer<typeof bulkUpdateTransactionsSchema>;
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/features/shared/components/ui/button";
+import { Checkbox } from "@/features/shared/components/ui/checkbox";
 import {
   CompactTable,
   CompactTableBody,
@@ -50,6 +52,12 @@ interface DataTableProps<T> {
   pagination?: DataTablePagination;
   onPageChange?: (page: number) => void;
 
+  // Selection
+  selectedIds?: string[];
+  onSelectionChange?: (selectedIds: string[]) => void;
+  getRowId?: (row: T) => string;
+  enableSelection?: boolean;
+
   // Empty state
   emptyMessage?: string;
 
@@ -72,9 +80,53 @@ export function DataTable<T extends Record<string, unknown>>({
   onSortChange,
   pagination,
   onPageChange,
+  selectedIds = [],
+  onSelectionChange,
+  getRowId,
+  enableSelection = false,
   emptyMessage = "No data found",
   className,
 }: DataTableProps<T>) {
+  const [internalSelectedIds, setInternalSelectedIds] =
+    useState<string[]>(selectedIds);
+
+  // Sync internal state with external prop
+  useEffect(() => {
+    setInternalSelectedIds(selectedIds);
+  }, [selectedIds]);
+
+  const getRowIdValue = (row: T): string => {
+    if (getRowId) {
+      return getRowId(row);
+    }
+    // Default: try to use 'id' field
+    return (
+      (row as { id?: string } | undefined)?.id ??
+      String(row[columns[0]?.key ?? ""] ?? Math.random())
+    );
+  };
+
+  const handleSelectRow = (rowId: string, checked: boolean) => {
+    const newSelectedIds = checked
+      ? [...internalSelectedIds, rowId]
+      : internalSelectedIds.filter((id) => id !== rowId);
+
+    setInternalSelectedIds(newSelectedIds);
+    onSelectionChange?.(newSelectedIds);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    const allRowIds = data.map((row) => getRowIdValue(row));
+    const newSelectedIds = checked ? allRowIds : [];
+
+    setInternalSelectedIds(newSelectedIds);
+    onSelectionChange?.(newSelectedIds);
+  };
+
+  const isAllSelected =
+    data.length > 0 &&
+    data.every((row) => internalSelectedIds.includes(getRowIdValue(row)));
+  const isSomeSelected = internalSelectedIds.length > 0 && !isAllSelected;
   const handleSort = (columnKey: string) => {
     if (!onSortChange) return;
 
@@ -118,6 +170,11 @@ export function DataTable<T extends Record<string, unknown>>({
       const rowKey = `skeleton-${Date.now()}-${index}`;
       return (
         <CompactTableRow key={rowKey}>
+          {enableSelection && (
+            <CompactTableCell className="w-12">
+              <Skeleton className="h-4 w-4" />
+            </CompactTableCell>
+          )}
           {columns.map((column) => (
             <CompactTableCell
               key={`${rowKey}-${column.key}`}
@@ -149,6 +206,17 @@ export function DataTable<T extends Record<string, unknown>>({
       <CompactTable>
         <CompactTableHeader className="border-b border-border">
           <CompactTableRow>
+            {enableSelection && (
+              <CompactTableHead className="w-12">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={(checked) =>
+                    handleSelectAll(checked === true)
+                  }
+                  aria-label="Select all"
+                />
+              </CompactTableHead>
+            )}
             {columns.map((column) => (
               <CompactTableHead key={column.key} className={column.className}>
                 {column.sortable ? (
@@ -172,7 +240,7 @@ export function DataTable<T extends Record<string, unknown>>({
           {error ? (
             <CompactTableRow>
               <CompactTableCell
-                colSpan={columns.length}
+                colSpan={enableSelection ? columns.length + 1 : columns.length}
                 className="text-center py-12"
               >
                 <p className="text-destructive">
@@ -187,7 +255,7 @@ export function DataTable<T extends Record<string, unknown>>({
           ) : data.length === 0 ? (
             <CompactTableRow>
               <CompactTableCell
-                colSpan={columns.length}
+                colSpan={enableSelection ? columns.length + 1 : columns.length}
                 className="text-center py-12"
               >
                 <p className="text-muted-foreground">{emptyMessage}</p>
@@ -195,15 +263,23 @@ export function DataTable<T extends Record<string, unknown>>({
             </CompactTableRow>
           ) : (
             data.map((row) => {
-              // Try to use an 'id' field if available, otherwise generate a key from the first column
-              const rowKey =
-                (row as { id?: string } | undefined)?.id ??
-                String(row[columns[0]?.key ?? ""] ?? Math.random());
+              const rowId = getRowIdValue(row);
               return (
-                <CompactTableRow key={rowKey}>
+                <CompactTableRow key={rowId}>
+                  {enableSelection && (
+                    <CompactTableCell className="w-12">
+                      <Checkbox
+                        checked={internalSelectedIds.includes(rowId)}
+                        onCheckedChange={(checked) =>
+                          handleSelectRow(rowId, checked === true)
+                        }
+                        aria-label={`Select row ${rowId}`}
+                      />
+                    </CompactTableCell>
+                  )}
                   {columns.map((column) => (
                     <CompactTableCell
-                      key={`${rowKey}-${column.key}`}
+                      key={`${rowId}-${column.key}`}
                       className={column.className}
                     >
                       {column.render
