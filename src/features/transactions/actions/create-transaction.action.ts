@@ -53,6 +53,10 @@ export const createTransactionAction = actionClient
           financialAccountId: parsedInput.financialAccountId,
           userId: session.user.id,
           notes: parsedInput.notes || null,
+          tags:
+            parsedInput.tags && parsedInput.tags.length > 0
+              ? JSON.stringify(parsedInput.tags)
+              : null,
         },
         include: {
           financialAccount: true,

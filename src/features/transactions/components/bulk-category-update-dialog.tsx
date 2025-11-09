@@ -36,6 +36,7 @@ interface BulkCategoryUpdateDialogProps {
     isTransfer?: boolean;
     startDate?: Date;
     endDate?: Date;
+    tags?: string[];
   };
   onSuccess?: () => void;
 }

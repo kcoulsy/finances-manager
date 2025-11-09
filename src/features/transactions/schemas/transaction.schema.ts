@@ -10,6 +10,7 @@ export const createTransactionSchema = z.object({
   categoryId: z.string().optional(),
   financialAccountId: z.string().min(1, "Account is required"),
   notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 export const updateTransactionSchema = z.object({
@@ -21,6 +22,7 @@ export const updateTransactionSchema = z.object({
   categoryId: z.string().optional().nullable(),
   financialAccountId: z.string().optional(),
   notes: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(),
 });
 
 export const deleteTransactionSchema = z.object({
@@ -35,6 +37,7 @@ export const getTransactionsSchema = z
     endDate: z.coerce.date().optional(),
     type: transactionTypeSchema.optional(),
     isTransfer: z.boolean().optional(),
+    tags: z.array(z.string()).optional(), // Filter by tags (transaction must have all specified tags)
     limit: z.number().min(1).max(1000).optional(),
     offset: z.number().min(0).default(0),
     getAll: z.boolean().optional(), // When true, fetch all transactions without limit
@@ -76,9 +79,12 @@ export const bulkUpdateTransactionsSchema = z.object({
       isTransfer: z.boolean().optional(),
       startDate: z.coerce.date().optional(),
       endDate: z.coerce.date().optional(),
+      tags: z.array(z.string()).optional(),
     })
     .optional(),
   categoryId: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().nullable(), // Set tags (replaces existing tags)
+  notes: z.string().optional().nullable(), // Set notes (replaces existing notes)
   // Add more fields as needed for bulk updates
 });
 

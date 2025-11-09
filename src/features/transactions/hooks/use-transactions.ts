@@ -9,6 +9,8 @@ type TransactionWithRelations = {
   description: string;
   type: "DEBIT" | "CREDIT" | "TRANSFER";
   isTransfer: boolean;
+  notes: string | null;
+  tags: string[] | null;
   financialAccount: { id: string; name: string; currency: string | null };
   category: { id: string; name: string; color: string | null } | null;
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tag } from "lucide-react";
+import { FileText, Tag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { useCategories } from "@/features/categories/hooks/use-categories";
@@ -14,6 +14,8 @@ import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
 import { getTransactionsAction } from "../actions/get-transactions.action";
 import { useTransactions } from "../hooks/use-transactions";
 import { BulkCategoryUpdateDialog } from "./bulk-category-update-dialog";
+import { BulkNotesUpdateDialog } from "./bulk-notes-update-dialog";
+import { BulkTagsUpdateDialog } from "./bulk-tags-update-dialog";
 
 type TransactionWithRelations = {
   id: string;
@@ -22,6 +24,8 @@ type TransactionWithRelations = {
   description: string;
   type: "DEBIT" | "CREDIT" | "TRANSFER";
   isTransfer: boolean;
+  notes: string | null;
+  tags: string[] | null;
   financialAccount: { id: string; name: string; currency: string | null };
   category: { id: string; name: string; color: string | null } | null;
 };
@@ -46,6 +50,8 @@ export function TransactionsList({
   >([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [bulkCategoryDialogOpen, setBulkCategoryDialogOpen] = useState(false);
+  const [bulkTagsDialogOpen, setBulkTagsDialogOpen] = useState(false);
+  const [bulkNotesDialogOpen, setBulkNotesDialogOpen] = useState(false);
   const limit = 50 as const;
 
   // Query for accounts and categories
@@ -64,6 +70,9 @@ export function TransactionsList({
           : filterValues.isTransfer === "false"
             ? false
             : undefined,
+      tags: filterValues.tags
+        ? (filterValues.tags.split(",").filter((t) => t.trim()) as string[])
+        : undefined,
       limit,
       offset: (currentPage - 1) * limit,
     }),
@@ -89,6 +98,9 @@ export function TransactionsList({
           : filterValues.isTransfer === "false"
             ? false
             : undefined,
+      tags: filterValues.tags
+        ? (filterValues.tags.split(",").filter((t) => t.trim()) as string[])
+        : undefined,
       getAll: true as const,
     }),
     [filterValues],
@@ -280,19 +292,71 @@ export function TransactionsList({
       header: "Category",
       render: (transaction) =>
         transaction.category ? (
-          <span
-            className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+          <button
+            type="button"
+            onClick={() => {
+              if (transaction.category) {
+                handleFilterChange("categoryId", transaction.category.id);
+              }
+            }}
+            className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium hover:opacity-80 cursor-pointer transition-opacity"
             style={{
               backgroundColor: transaction.category.color
                 ? `${transaction.category.color}20`
                 : undefined,
               color: transaction.category.color || undefined,
             }}
+            title={`Click to filter by "${transaction.category.name}"`}
           >
             {transaction.category.name}
-          </span>
+          </button>
         ) : (
           <span className="text-muted-foreground text-xs">Uncategorized</span>
+        ),
+    },
+    {
+      key: "tags",
+      header: "Tags",
+      render: (transaction) =>
+        transaction.tags && transaction.tags.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {transaction.tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => {
+                  const currentTags = filterValues.tags
+                    ? filterValues.tags
+                        .split(",")
+                        .map((t) => t.trim())
+                        .filter(Boolean)
+                    : [];
+                  if (!currentTags.includes(tag)) {
+                    const newTags = [...currentTags, tag].join(", ");
+                    handleFilterChange("tags", newTags);
+                  }
+                }}
+                className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 cursor-pointer transition-colors"
+                title={`Click to filter by "${tag}"`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">No tags</span>
+        ),
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      render: (transaction) =>
+        transaction.notes ? (
+          <span className="text-sm text-muted-foreground line-clamp-2">
+            {transaction.notes}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-xs">No notes</span>
         ),
     },
     {
@@ -372,6 +436,22 @@ export function TransactionsList({
               Update Category
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkTagsDialogOpen(true)}
+            >
+              <Tag className="mr-2 h-4 w-4" />
+              Update Tags
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkNotesDialogOpen(true)}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Update Notes
+            </Button>
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => {
@@ -435,6 +515,12 @@ export function TransactionsList({
               { value: "false", label: "No" },
             ],
           },
+          {
+            key: "tags",
+            label: "Tags",
+            type: "text",
+            placeholder: "Comma-separated tags (e.g., food, travel)",
+          },
         ]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
@@ -463,7 +549,7 @@ export function TransactionsList({
         emptyMessage="No transactions found"
       />
 
-      {/* Bulk Category Update Dialog */}
+      {/* Bulk Update Dialogs */}
       <BulkCategoryUpdateDialog
         open={bulkCategoryDialogOpen}
         onOpenChange={setBulkCategoryDialogOpen}
@@ -485,6 +571,75 @@ export function TransactionsList({
                     : filterValues.isTransfer === "false"
                       ? false
                       : undefined,
+                tags: filterValues.tags
+                  ? (filterValues.tags
+                      .split(",")
+                      .filter((t) => t.trim()) as string[])
+                  : undefined,
+              }
+            : undefined
+        }
+        onSuccess={handleBulkUpdateSuccess}
+      />
+
+      <BulkTagsUpdateDialog
+        open={bulkTagsDialogOpen}
+        onOpenChange={setBulkTagsDialogOpen}
+        selectedTransactionIds={isSelectAll ? [] : selectedTransactionIds}
+        totalCount={isSelectAll ? filteredTotal : undefined}
+        filters={
+          isSelectAll
+            ? {
+                accountId: filterValues.accountId,
+                categoryId: filterValues.categoryId,
+                type: filterValues.type as
+                  | "DEBIT"
+                  | "CREDIT"
+                  | "TRANSFER"
+                  | undefined,
+                isTransfer:
+                  filterValues.isTransfer === "true"
+                    ? true
+                    : filterValues.isTransfer === "false"
+                      ? false
+                      : undefined,
+                tags: filterValues.tags
+                  ? (filterValues.tags
+                      .split(",")
+                      .filter((t) => t.trim()) as string[])
+                  : undefined,
+              }
+            : undefined
+        }
+        onSuccess={handleBulkUpdateSuccess}
+      />
+
+      <BulkNotesUpdateDialog
+        open={bulkNotesDialogOpen}
+        onOpenChange={setBulkNotesDialogOpen}
+        selectedTransactionIds={isSelectAll ? [] : selectedTransactionIds}
+        totalCount={isSelectAll ? filteredTotal : undefined}
+        filters={
+          isSelectAll
+            ? {
+                accountId: filterValues.accountId,
+                categoryId: filterValues.categoryId,
+                type: filterValues.type as
+                  | "DEBIT"
+                  | "CREDIT"
+                  | "TRANSFER"
+                  | undefined,
+                isTransfer:
+                  filterValues.isTransfer === "true"
+                    ? true
+                    : filterValues.isTransfer === "false"
+                      ? false
+                      : undefined,
+                tags: filterValues.tags
+                  ? (filterValues.tags
+                      .split(",")
+                      .filter((t) => t.trim()) as string[])
+                  : undefined,
               }
             : undefined
         }

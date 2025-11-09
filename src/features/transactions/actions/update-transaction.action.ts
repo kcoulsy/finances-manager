@@ -112,6 +112,7 @@ export const updateTransactionAction = actionClient
         categoryId?: string | null;
         financialAccountId?: string;
         notes?: string | null;
+        tags?: string | null;
       } = {};
 
       if (parsedInput.date !== undefined) updateData.date = parsedInput.date;
@@ -126,6 +127,11 @@ export const updateTransactionAction = actionClient
         updateData.financialAccountId = parsedInput.financialAccountId;
       if (parsedInput.notes !== undefined)
         updateData.notes = parsedInput.notes || null;
+      if (parsedInput.tags !== undefined)
+        updateData.tags =
+          parsedInput.tags && parsedInput.tags.length > 0
+            ? JSON.stringify(parsedInput.tags)
+            : null;
 
       const transaction = await db.transaction.update({
         where: { id: parsedInput.transactionId },

@@ -118,6 +118,7 @@ model Transaction {
   importSource      String?           // "CSV", "MANUAL", etc.
   externalId        String?           // ID from imported statement
   notes             String?
+  tags              String?           // JSON array of tag strings
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

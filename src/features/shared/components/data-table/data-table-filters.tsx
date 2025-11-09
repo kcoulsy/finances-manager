@@ -11,8 +11,9 @@ import { cn } from "@/features/shared/lib/utils/index";
 export interface DataTableFilter {
   key: string;
   label: string;
-  type: "select";
-  options: SelectOption[];
+  type: "select" | "text";
+  options?: SelectOption[]; // Required for "select" type
+  placeholder?: string; // For "text" type
 }
 
 interface DataTableFiltersProps {
@@ -58,15 +59,24 @@ export function DataTableFilters({
       {/* Filter Dropdowns */}
       {filters.map((filter) => (
         <div key={filter.key} className="min-w-[150px]">
-          <Select
-            value={filterValues[filter.key] ?? ""}
-            onValueChange={(value) => onFilterChange?.(filter.key, value)}
-            options={[
-              { value: "", label: `All ${filter.label}` },
-              ...filter.options,
-            ]}
-            placeholder={`Filter by ${filter.label}`}
-          />
+          {filter.type === "text" ? (
+            <Input
+              type="text"
+              value={filterValues[filter.key] ?? ""}
+              onChange={(e) => onFilterChange?.(filter.key, e.target.value)}
+              placeholder={filter.placeholder || `Filter by ${filter.label}`}
+            />
+          ) : (
+            <Select
+              value={filterValues[filter.key] ?? ""}
+              onValueChange={(value) => onFilterChange?.(filter.key, value)}
+              options={[
+                { value: "", label: `All ${filter.label}` },
+                ...(filter.options || []),
+              ]}
+              placeholder={`Filter by ${filter.label}`}
+            />
+          )}
         </div>
       ))}
     </div>

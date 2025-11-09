@@ -52,7 +52,8 @@ export const getTransactionsAction = actionClient
         where.isTransfer = parsedInput.isTransfer;
       }
 
-      const [transactions, total] = await Promise.all([
+      // Fetch all transactions first (we'll filter by tags in application layer)
+      let [transactions, total] = await Promise.all([
         db.transaction.findMany({
           where,
           include: {
@@ -80,9 +81,49 @@ export const getTransactionsAction = actionClient
         db.transaction.count({ where }),
       ]);
 
+      // Filter by tags if provided (tags are stored as JSON string)
+      if (parsedInput.tags && parsedInput.tags.length > 0) {
+        transactions = transactions.filter((tx) => {
+          if (!tx.tags) return false;
+          try {
+            const txTags: string[] = JSON.parse(tx.tags);
+            // Transaction must have all specified tags
+            return parsedInput.tags!.every((tag) => txTags.includes(tag));
+          } catch {
+            return false;
+          }
+        });
+        // Recalculate total after tag filtering
+        if (parsedInput.getAll) {
+          total = transactions.length;
+        } else {
+          // For paginated queries, we need to fetch all and count
+          const allTransactions = await db.transaction.findMany({
+            where,
+            select: { id: true, tags: true },
+          });
+          const filtered = allTransactions.filter((tx) => {
+            if (!tx.tags) return false;
+            try {
+              const txTags: string[] = JSON.parse(tx.tags);
+              return parsedInput.tags!.every((tag) => txTags.includes(tag));
+            } catch {
+              return false;
+            }
+          });
+          total = filtered.length;
+        }
+      }
+
+      // Parse tags JSON for each transaction
+      const transactionsWithParsedTags = transactions.map((tx) => ({
+        ...tx,
+        tags: tx.tags ? (JSON.parse(tx.tags) as string[]) : null,
+      }));
+
       return {
         success: true,
-        transactions,
+        transactions: transactionsWithParsedTags,
         total,
       };
     } catch (error) {

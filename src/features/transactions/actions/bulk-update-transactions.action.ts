@@ -32,6 +32,7 @@ export const bulkUpdateTransactionsAction = actionClient
         type?: string;
         isTransfer?: boolean;
         date?: { gte?: Date; lte?: Date };
+        tags?: { contains: string };
       } = {
         userId: session.user.id,
       };
@@ -62,6 +63,8 @@ export const bulkUpdateTransactionsAction = actionClient
             where.date.lte = parsedInput.filters.endDate;
           }
         }
+        // Note: Tag filtering in bulk updates is complex with JSON storage
+        // For now, we'll handle it in the application layer if needed
       } else {
         throw new Error("Either transactionIds or filters must be provided.");
       }
@@ -87,10 +90,24 @@ export const bulkUpdateTransactionsAction = actionClient
       // Bulk update transactions
       const updateData: {
         categoryId?: string | null;
+        tags?: string | null;
+        notes?: string | null;
       } = {};
 
       if (parsedInput.categoryId !== undefined) {
         updateData.categoryId = parsedInput.categoryId || null;
+      }
+
+      if (parsedInput.tags !== undefined) {
+        // Store tags as JSON string
+        updateData.tags =
+          parsedInput.tags && parsedInput.tags.length > 0
+            ? JSON.stringify(parsedInput.tags)
+            : null;
+      }
+
+      if (parsedInput.notes !== undefined) {
+        updateData.notes = parsedInput.notes || null;
       }
 
       const result = await db.transaction.updateMany({
