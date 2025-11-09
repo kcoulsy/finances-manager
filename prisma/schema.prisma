@@ -82,6 +82,7 @@ model FinancialAccount {
   bankName    String?
   accountNumber String?    // Last 4 digits or masked
   balance     Float        @default(0)
+  balanceAsOfDate DateTime? // Date when balance was last set/verified
   currency    String       @default("USD")
   isActive    Boolean      @default(true)
   userId      String

@@ -25,8 +25,15 @@ export const updateAccountSchema = z.object({
   bankName: z.string().optional(),
   accountNumber: z.string().optional(),
   balance: z.number().optional(),
+  balanceAsOfDate: z.coerce.date().optional().nullable(),
   currency: z.string().optional(),
   isActive: z.boolean().optional(),
+});
+
+export const setBalanceAsOfDateSchema = z.object({
+  accountId: z.string().min(1, "Account ID is required"),
+  balance: z.number(),
+  balanceAsOfDate: z.coerce.date(),
 });
 
 export const deleteAccountSchema = z.object({
@@ -42,4 +49,5 @@ export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 export type GetAccountInput = z.infer<typeof getAccountSchema>;
+export type SetBalanceAsOfDateInput = z.infer<typeof setBalanceAsOfDateSchema>;
 

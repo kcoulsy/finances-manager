@@ -34,6 +34,7 @@ export const updateAccountAction = actionClient
         bankName?: string | null;
         accountNumber?: string | null;
         balance?: number;
+        balanceAsOfDate?: Date | null;
         currency?: string;
         isActive?: boolean;
       } = {};
@@ -46,6 +47,8 @@ export const updateAccountAction = actionClient
         updateData.accountNumber = parsedInput.accountNumber || null;
       if (parsedInput.balance !== undefined)
         updateData.balance = parsedInput.balance;
+      if (parsedInput.balanceAsOfDate !== undefined)
+        updateData.balanceAsOfDate = parsedInput.balanceAsOfDate || null;
       if (parsedInput.currency !== undefined)
         updateData.currency = parsedInput.currency;
       if (parsedInput.isActive !== undefined)
