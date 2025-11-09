@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Tag } from "lucide-react";
+import { FileText, Plus, Tag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { useCategories } from "@/features/categories/hooks/use-categories";
@@ -10,8 +10,15 @@ import {
   type DataTableColumn,
 } from "@/features/shared/components/data-table/data-table";
 import { Button } from "@/features/shared/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/features/shared/components/ui/popover";
+import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
 import { getTransactionsAction } from "../actions/get-transactions.action";
+import { updateTransactionAction } from "../actions/update-transaction.action";
 import { useTransactions } from "../hooks/use-transactions";
 import { BulkCategoryUpdateDialog } from "./bulk-category-update-dialog";
 import { BulkNotesUpdateDialog } from "./bulk-notes-update-dialog";
@@ -263,6 +270,76 @@ export function TransactionsList({
     });
   };
 
+  // Component for quick category add popover
+  function CategoryQuickAddPopover({
+    transactionId,
+    categories,
+    onSuccess,
+  }: {
+    transactionId: string;
+    categories: Array<{ id: string; name: string; color: string | null }>;
+    onSuccess: () => void;
+  }) {
+    const { execute, status } = useActionWithToast(updateTransactionAction, {
+      onSuccess: () => {
+        onSuccess();
+      },
+    });
+
+    const handleCategorySelect = async (categoryId: string) => {
+      await execute({
+        transactionId,
+        categoryId,
+      });
+    };
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+            title="Add category"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2" align="start">
+          <div className="space-y-1">
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-2 py-1.5">
+                No categories available
+              </p>
+            ) : (
+              categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => handleCategorySelect(category.id)}
+                  disabled={status === "executing"}
+                  className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{
+                      backgroundColor: category.color
+                        ? `${category.color}20`
+                        : undefined,
+                      color: category.color || undefined,
+                    }}
+                  >
+                    {category.name}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   const columns: DataTableColumn<TransactionWithRelations>[] = [
     {
       key: "date",
@@ -278,6 +355,11 @@ export function TransactionsList({
           <span className="font-medium">{transaction.description}</span>
           {transaction.isTransfer && (
             <span className="text-xs text-muted-foreground">Transfer</span>
+          )}
+          {transaction.notes && (
+            <span className="text-xs italic text-muted-foreground mt-1">
+              {transaction.notes}
+            </span>
           )}
         </div>
       ),
@@ -311,7 +393,11 @@ export function TransactionsList({
             {transaction.category.name}
           </button>
         ) : (
-          <span className="text-muted-foreground text-xs">Uncategorized</span>
+          <CategoryQuickAddPopover
+            transactionId={transaction.id}
+            categories={categories}
+            onSuccess={handleBulkUpdateSuccess}
+          />
         ),
     },
     {
@@ -345,18 +431,6 @@ export function TransactionsList({
           </div>
         ) : (
           <span className="text-muted-foreground text-xs">No tags</span>
-        ),
-    },
-    {
-      key: "notes",
-      header: "Notes",
-      render: (transaction) =>
-        transaction.notes ? (
-          <span className="text-sm text-muted-foreground line-clamp-2">
-            {transaction.notes}
-          </span>
-        ) : (
-          <span className="text-muted-foreground text-xs">No notes</span>
         ),
     },
     {
