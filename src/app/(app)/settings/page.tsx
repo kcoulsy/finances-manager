@@ -4,6 +4,8 @@ import { CurrencySelector } from "@/features/settings/components/currency-select
 import { CategoriesManager } from "@/features/settings/components/categories-manager";
 import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import { AccountsExportImport } from "@/features/accounts/components/accounts-export-import";
+import { TransactionsExportImport } from "@/features/transactions/components/transactions-export-import";
 
 export default async function SettingsPage() {
   await requireAuth();
@@ -20,6 +22,8 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         <CurrencySelector />
         <CategoriesManager />
+        <AccountsExportImport />
+        <TransactionsExportImport />
         <ChangePasswordForm />
         <DeleteAccountForm />
       </div>
