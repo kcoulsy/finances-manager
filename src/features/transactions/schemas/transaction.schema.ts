@@ -27,16 +27,27 @@ export const deleteTransactionSchema = z.object({
   transactionId: z.string().min(1, "Transaction ID is required"),
 });
 
-export const getTransactionsSchema = z.object({
-  accountId: z.string().optional(),
-  categoryId: z.string().optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
-  type: transactionTypeSchema.optional(),
-  isTransfer: z.boolean().optional(),
-  limit: z.number().min(1).max(1000).default(100),
-  offset: z.number().min(0).default(0),
-});
+export const getTransactionsSchema = z
+  .object({
+    accountId: z.string().optional(),
+    categoryId: z.string().optional(),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+    type: transactionTypeSchema.optional(),
+    isTransfer: z.boolean().optional(),
+    limit: z.number().min(1).max(1000).optional(),
+    offset: z.number().min(0).default(0),
+    getAll: z.boolean().optional(), // When true, fetch all transactions without limit
+  })
+  .refine(
+    (data) => {
+      // Either getAll is true, or limit is provided
+      return data.getAll === true || data.limit !== undefined;
+    },
+    {
+      message: "Either getAll must be true or limit must be provided",
+    },
+  );
 
 export const importTransactionsSchema = z.object({
   accountId: z.string().min(1, "Account is required"),
@@ -78,5 +89,6 @@ export type DeleteTransactionInput = z.infer<typeof deleteTransactionSchema>;
 export type GetTransactionsInput = z.infer<typeof getTransactionsSchema>;
 export type ImportTransactionsInput = z.infer<typeof importTransactionsSchema>;
 export type DetectTransfersInput = z.infer<typeof detectTransfersSchema>;
-export type BulkUpdateTransactionsInput = z.infer<typeof bulkUpdateTransactionsSchema>;
-
+export type BulkUpdateTransactionsInput = z.infer<
+  typeof bulkUpdateTransactionsSchema
+>;

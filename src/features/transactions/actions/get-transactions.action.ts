@@ -69,8 +69,13 @@ export const getTransactionsAction = actionClient
           orderBy: {
             date: "desc",
           },
-          take: parsedInput.limit,
-          skip: parsedInput.offset,
+          // Only apply limit/offset if getAll is not true
+          ...(parsedInput.getAll
+            ? {}
+            : {
+                take: parsedInput.limit ?? 100,
+                skip: parsedInput.offset,
+              }),
         }),
         db.transaction.count({ where }),
       ]);
@@ -89,4 +94,3 @@ export const getTransactionsAction = actionClient
       );
     }
   });
-

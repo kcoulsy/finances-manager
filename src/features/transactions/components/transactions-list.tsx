@@ -1,10 +1,10 @@
 "use client";
 
-import type { Transaction } from "@prisma/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tag } from "lucide-react";
-import { useEffect, useState } from "react";
-import { getAccountsAction } from "@/features/accounts/actions/get-accounts.action";
-import { getCategoriesAction } from "@/features/categories/actions/get-categories.action";
+import { useMemo, useState } from "react";
+import { useAccounts } from "@/features/accounts/hooks/use-accounts";
+import { useCategories } from "@/features/categories/hooks/use-categories";
 import {
   DataTable,
   type DataTableColumn,
@@ -12,9 +12,16 @@ import {
 import { Button } from "@/features/shared/components/ui/button";
 import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
 import { getTransactionsAction } from "../actions/get-transactions.action";
+import { useTransactions } from "../hooks/use-transactions";
 import { BulkCategoryUpdateDialog } from "./bulk-category-update-dialog";
 
-type TransactionWithRelations = Transaction & {
+type TransactionWithRelations = {
+  id: string;
+  date: Date | string;
+  amount: number;
+  description: string;
+  type: "DEBIT" | "CREDIT" | "TRANSFER";
+  isTransfer: boolean;
   financialAccount: { id: string; name: string; currency: string | null };
   category: { id: string; name: string; color: string | null } | null;
 };
@@ -26,11 +33,7 @@ interface TransactionsListProps {
 export function TransactionsList({
   defaultCurrency = "USD",
 }: TransactionsListProps) {
-  const [transactions, setTransactions] = useState<TransactionWithRelations[]>(
-    [],
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
   const [searchValue, setSearchValue] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [sortColumn, setSortColumn] = useState<string>("date");
@@ -38,162 +41,121 @@ export function TransactionsList({
     "desc",
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [filteredTotal, setFilteredTotal] = useState(0); // Total after filters and search
-  const [accounts, setAccounts] = useState<Array<{ id: string; name: string }>>(
-    [],
-  );
-  const [categories, setCategories] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<
     string[]
   >([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [bulkCategoryDialogOpen, setBulkCategoryDialogOpen] = useState(false);
-  const limit = 50;
+  const limit = 50 as const;
 
-  const fetchTransactions = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Query for accounts and categories
+  const { data: accounts = [] } = useAccounts();
+  const { data: categories = [] } = useCategories();
 
-    try {
-      const result = await getTransactionsAction({
-        accountId: filterValues.accountId || undefined,
-        categoryId: filterValues.categoryId || undefined,
-        type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
-        isTransfer:
-          filterValues.isTransfer === "true"
-            ? true
-            : filterValues.isTransfer === "false"
-              ? false
-              : undefined,
-        limit,
-        offset: (currentPage - 1) * limit,
-      });
+  // Build query input for main transactions query
+  const transactionsQueryInput = useMemo(
+    () => ({
+      accountId: filterValues.accountId || undefined,
+      categoryId: filterValues.categoryId || undefined,
+      type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
+      isTransfer:
+        filterValues.isTransfer === "true"
+          ? true
+          : filterValues.isTransfer === "false"
+            ? false
+            : undefined,
+      limit,
+      offset: (currentPage - 1) * limit,
+    }),
+    [filterValues, currentPage, limit],
+  );
 
-      if (result?.data?.success) {
-        let filteredTransactions = result.data
-          .transactions as TransactionWithRelations[];
+  // Main transactions query
+  const {
+    data: transactionsData,
+    isLoading,
+    error: transactionsError,
+  } = useTransactions(transactionsQueryInput);
 
-        // Apply search filter client-side (since server action doesn't support search yet)
-        if (searchValue.trim()) {
-          const searchLower = searchValue.toLowerCase();
-          filteredTransactions = filteredTransactions.filter(
-            (tx) =>
-              tx.description.toLowerCase().includes(searchLower) ||
-              tx.financialAccount.name.toLowerCase().includes(searchLower) ||
-              tx.category?.name.toLowerCase().includes(searchLower),
-          );
-        }
+  // Query for filtered count (when search is active)
+  const filteredCountQueryInput = useMemo(
+    () => ({
+      accountId: filterValues.accountId || undefined,
+      categoryId: filterValues.categoryId || undefined,
+      type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
+      isTransfer:
+        filterValues.isTransfer === "true"
+          ? true
+          : filterValues.isTransfer === "false"
+            ? false
+            : undefined,
+      getAll: true as const,
+    }),
+    [filterValues],
+  );
 
-        setTransactions(filteredTransactions);
-        // Ensure total is a valid number
-        const totalCount =
-          typeof result.data.total === "number" ? result.data.total : 0;
-        setTotal(totalCount);
-
-        // Calculate filtered total (after search)
-        if (searchValue.trim()) {
-          // When search is active, use the visible count immediately
-          // Then fetch all matching transactions to get accurate total count
-          setFilteredTotal(filteredTransactions.length);
-          // Fetch all matching transactions to get accurate count (updates filteredTotal when done)
-          fetchFilteredCount();
-        } else {
-          // No search - filtered total equals server total (which respects filters)
-          setFilteredTotal(totalCount);
-        }
-      } else if (result?.serverError) {
-        setError(new Error(result.serverError));
+  const { data: filteredCountData } = useQuery({
+    queryKey: [
+      "transactions",
+      "filtered-count",
+      filteredCountQueryInput,
+      searchValue,
+    ],
+    queryFn: async () => {
+      const result = await getTransactionsAction(filteredCountQueryInput);
+      if (result?.serverError) {
+        throw new Error(result.serverError);
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to load transactions"),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch filtered count (all matching transactions for accurate count with search)
-  const fetchFilteredCount = async () => {
-    try {
-      const result = await getTransactionsAction({
-        accountId: filterValues.accountId || undefined,
-        categoryId: filterValues.categoryId || undefined,
-        type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
-        isTransfer:
-          filterValues.isTransfer === "true"
-            ? true
-            : filterValues.isTransfer === "false"
-              ? false
-              : undefined,
-        limit: 10000, // Large limit to get all matching
-        offset: 0,
-      });
-
-      if (result?.data?.success) {
-        let allFiltered = result.data
-          .transactions as TransactionWithRelations[];
-
-        // Apply search filter
-        if (searchValue.trim()) {
-          const searchLower = searchValue.toLowerCase();
-          allFiltered = allFiltered.filter(
-            (tx) =>
-              tx.description.toLowerCase().includes(searchLower) ||
-              tx.financialAccount.name.toLowerCase().includes(searchLower) ||
-              tx.category?.name.toLowerCase().includes(searchLower),
-          );
-        }
-
-        setFilteredTotal(allFiltered.length);
+      if (!result?.data?.success) {
+        throw new Error("Failed to fetch filtered count");
       }
-    } catch (error) {
-      console.error("Failed to fetch filtered count:", error);
-      // Fallback to total if fetch fails
-      setFilteredTotal(total);
+      let allFiltered = result.data.transactions as TransactionWithRelations[];
+
+      // Apply search filter
+      if (searchValue.trim()) {
+        const searchLower = searchValue.toLowerCase();
+        allFiltered = allFiltered.filter(
+          (tx) =>
+            tx.description.toLowerCase().includes(searchLower) ||
+            tx.financialAccount.name.toLowerCase().includes(searchLower) ||
+            tx.category?.name.toLowerCase().includes(searchLower),
+        );
+      }
+
+      return allFiltered.length;
+    },
+    enabled: !!searchValue.trim(), // Only fetch when search is active
+  });
+
+  // Process transactions data
+  const { transactions, filteredTotal } = useMemo(() => {
+    if (!transactionsData) {
+      return { transactions: [], filteredTotal: 0 };
     }
-  };
 
-  useEffect(() => {
-    fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filterValues, sortColumn, sortDirection, searchValue]);
+    let filteredTransactions = transactionsData.transactions;
 
-  // Update filtered total when search or filters change (but not on every render)
-  // This effect only runs when search or filters change, not when total changes from fetchTransactions
-  useEffect(() => {
-    // Only update if search is active - otherwise filteredTotal is set in fetchTransactions
+    // Apply search filter client-side
     if (searchValue.trim()) {
-      fetchFilteredCount();
+      const searchLower = searchValue.toLowerCase();
+      filteredTransactions = filteredTransactions.filter(
+        (tx) =>
+          tx.description.toLowerCase().includes(searchLower) ||
+          tx.financialAccount.name.toLowerCase().includes(searchLower) ||
+          tx.category?.name.toLowerCase().includes(searchLower),
+      );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchValue, filterValues]);
 
-  // Load accounts and categories for filters
-  useEffect(() => {
-    const loadFilters = async () => {
-      try {
-        const [accountsResult, categoriesResult] = await Promise.all([
-          getAccountsAction({}),
-          getCategoriesAction({}),
-        ]);
+    const totalCount = transactionsData.total;
+    const filteredCount = searchValue.trim()
+      ? (filteredCountData ?? filteredTransactions.length)
+      : totalCount;
 
-        if (accountsResult?.data?.success) {
-          setAccounts(accountsResult.data.accounts);
-        }
-        if (categoriesResult?.data?.success) {
-          setCategories(categoriesResult.data.categories);
-        }
-      } catch (err) {
-        console.error("Failed to load filters:", err);
-      }
+    return {
+      transactions: filteredTransactions,
+      filteredTotal: filteredCount,
     };
-
-    loadFilters();
-  }, []);
+  }, [transactionsData, searchValue, filteredCountData]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => {
@@ -235,8 +197,7 @@ export function TransactionsList({
             : filterValues.isTransfer === "false"
               ? false
               : undefined,
-        limit: 10000, // Large limit to get all matching
-        offset: 0,
+        getAll: true, // Fetch all matching transactions without limit
       });
 
       if (result?.data?.success) {
@@ -269,7 +230,8 @@ export function TransactionsList({
   const handleBulkUpdateSuccess = () => {
     setSelectedTransactionIds([]);
     setIsSelectAll(false);
-    fetchTransactions();
+    // Invalidate queries to refetch data
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
   };
 
   // Get the actual count of selected transactions
@@ -368,21 +330,37 @@ export function TransactionsList({
             <span className="text-sm font-medium">
               {getSelectedCount()} transaction
               {getSelectedCount() !== 1 ? "s" : ""} selected
+              {selectedTransactionIds.length > 0 &&
+                selectedTransactionIds.length === filteredTotal &&
+                !isSelectAll && (
+                  <span className="ml-2 text-muted-foreground">
+                    (all {filteredTotal} results)
+                  </span>
+                )}
               {isSelectAll && filteredTotal > transactions.length && (
                 <span className="ml-2 text-muted-foreground">
                   (including {filteredTotal - transactions.length} not shown)
                 </span>
               )}
             </span>
-            {!isSelectAll && filteredTotal > transactions.length && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSelectAllNotShown}
-              >
-                Select all {filteredTotal} results
-              </Button>
-            )}
+            {!isSelectAll &&
+              selectedTransactionIds.length < filteredTotal &&
+              filteredTotal > transactions.length && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllNotShown}
+                >
+                  Select all {filteredTotal} results
+                </Button>
+              )}
+            {selectedTransactionIds.length > 0 &&
+              selectedTransactionIds.length === filteredTotal &&
+              !isSelectAll && (
+                <span className="text-sm text-muted-foreground">
+                  All {filteredTotal} results selected
+                </span>
+              )}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -411,7 +389,7 @@ export function TransactionsList({
         data={transactions}
         columns={columns}
         isLoading={isLoading}
-        error={error}
+        error={transactionsError}
         searchValue={searchValue}
         onSearchChange={setSearchValue}
         searchPlaceholder="Search transactions..."
@@ -424,7 +402,7 @@ export function TransactionsList({
             key: "accountId",
             label: "Account",
             type: "select",
-            options: accounts.map((account) => ({
+            options: accounts.map((account: { id: string; name: string }) => ({
               value: account.id,
               label: account.name,
             })),

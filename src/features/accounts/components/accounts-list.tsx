@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/features/shared/components/ui/button";
 import {
   Card,
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/features/shared/components/ui/card";
-import { getAccountsAction } from "../actions/get-accounts.action";
 import { SetBalanceDialog } from "./set-balance-dialog";
 import { EditAccountDialog } from "./edit-account-dialog";
 import { CreateAccountDialog } from "./create-account-dialog";
@@ -17,42 +17,20 @@ import { AccountBalanceChart } from "./account-balance-chart";
 import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
 import { Wallet, Plus, Pencil } from "lucide-react";
 import type { FinancialAccount } from "@prisma/client";
+import { useAccounts } from "../hooks/use-accounts";
 
 interface AccountsListProps {
   defaultCurrency?: string;
 }
 
 export function AccountsList({ defaultCurrency = "USD" }: AccountsListProps) {
-  const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { data: accounts = [], isLoading, error } = useAccounts();
   const [selectedAccount, setSelectedAccount] = useState<FinancialAccount | null>(null);
   const [showBalanceDialog, setShowBalanceDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [accountToEdit, setAccountToEdit] = useState<FinancialAccount | null>(null);
-
-  const fetchAccounts = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await getAccountsAction({});
-      if (result?.data?.success) {
-        setAccounts(result.data.accounts);
-      } else if (result?.serverError) {
-        setError(new Error(result.serverError));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load accounts"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
 
 
   const getAccountTypeLabel = (type: string) => {
@@ -216,7 +194,7 @@ export function AccountsList({ defaultCurrency = "USD" }: AccountsListProps) {
         onOpenChange={setShowBalanceDialog}
         account={selectedAccount}
         onSuccess={() => {
-          fetchAccounts();
+          queryClient.invalidateQueries({ queryKey: ["accounts"] });
           setShowBalanceDialog(false);
         }}
       />
@@ -226,7 +204,7 @@ export function AccountsList({ defaultCurrency = "USD" }: AccountsListProps) {
         onOpenChange={setShowEditDialog}
         account={accountToEdit}
         onSuccess={() => {
-          fetchAccounts();
+          queryClient.invalidateQueries({ queryKey: ["accounts"] });
           setShowEditDialog(false);
           setAccountToEdit(null);
         }}
@@ -237,7 +215,7 @@ export function AccountsList({ defaultCurrency = "USD" }: AccountsListProps) {
         onOpenChange={setShowCreateDialog}
         defaultCurrency={defaultCurrency}
         onAccountCreated={() => {
-          fetchAccounts();
+          queryClient.invalidateQueries({ queryKey: ["accounts"] });
           setShowCreateDialog(false);
         }}
       />
