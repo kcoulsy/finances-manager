@@ -93,30 +93,6 @@ export function PublicHeader({ user }: PublicHeaderProps) {
     return email[0].toUpperCase();
   };
 
-  const servicesItems = [
-    { label: "Overview", href: "/services", icon: ChartBar },
-    {
-      label: "Fund Control",
-      href: "/services/fund-control",
-      icon: ShieldCheck,
-    },
-    { label: "Legal Agreements", href: "/services/legal", icon: FileText },
-    { label: "Arbitration", href: "/services/arbitration", icon: Scale },
-  ];
-
-  const resourcesItems = [
-    { label: "News", href: "/news", icon: Newspaper },
-    { label: "Journals", href: "/journals", icon: BookOpen },
-    { label: "FAQ", href: "/faq", icon: HelpCircle },
-  ];
-
-  const companyItems = [
-    { label: "About", href: "/about", icon: Info },
-    { label: "Privacy", href: "/privacy", icon: Lock },
-    { label: "Terms", href: "/terms", icon: File },
-    { label: "Contact", href: "/contact", icon: Mail },
-  ];
-
   return (
     <header className="bg-background/80 backdrop-blur-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -129,7 +105,7 @@ export function PublicHeader({ user }: PublicHeaderProps) {
               </div>
               <div className="hidden sm:block">
                 <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Trade Service
+                  Finances Management
                 </span>
                 <p className="text-sm text-muted-foreground -mt-1">
                   Professional Solutions
@@ -143,85 +119,6 @@ export function PublicHeader({ user }: PublicHeaderProps) {
             className="hidden lg:flex items-center space-x-6"
             aria-label="Main navigation"
           >
-            <ul className="flex items-center space-x-6">
-              {/* Business Directory */}
-              <Link
-                href="/businesses"
-                className="text-muted-foreground hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Find Businesses
-              </Link>
-
-              {/* Services Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    Services
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {servicesItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center">
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Resources Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    Resources
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {resourcesItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center">
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Company Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    Company
-                    <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {companyItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="flex items-center">
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </ul>
-
             {/* User Profile Section */}
             {user ? (
               <div className="ml-4">
@@ -279,9 +176,6 @@ export function PublicHeader({ user }: PublicHeaderProps) {
                 <Button asChild variant="ghost">
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button asChild>
-                  <Link href="/register">List Your Business</Link>
-                </Button>
               </div>
             )}
           </nav>
@@ -309,99 +203,6 @@ export function PublicHeader({ user }: PublicHeaderProps) {
               </SheetHeader>
 
               <div className="mt-6 space-y-4">
-                {/* Services Section */}
-                <Collapsible open={servicesOpen} onOpenChange={setServicesOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between">
-                      Services
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          servicesOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4">
-                    {servicesItems.map((item) => (
-                      <Button
-                        key={item.href}
-                        variant="ghost"
-                        asChild
-                        className="w-full justify-start"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Link href={item.href} className="flex items-center">
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {item.label}
-                        </Link>
-                      </Button>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Resources Section */}
-                <Collapsible
-                  open={resourcesOpen}
-                  onOpenChange={setResourcesOpen}
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between">
-                      Resources
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          resourcesOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4">
-                    {resourcesItems.map((item) => (
-                      <Button
-                        key={item.href}
-                        variant="ghost"
-                        asChild
-                        className="w-full justify-start"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Link href={item.href} className="flex items-center">
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {item.label}
-                        </Link>
-                      </Button>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-
-                {/* Company Section */}
-                <Collapsible open={companyOpen} onOpenChange={setCompanyOpen}>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between">
-                      Company
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          companyOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-1 pl-4">
-                    {companyItems.map((item) => (
-                      <Button
-                        key={item.href}
-                        variant="ghost"
-                        asChild
-                        className="w-full justify-start"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Link href={item.href} className="flex items-center">
-                          <item.icon className="mr-2 h-4 w-4" />
-                          {item.label}
-                        </Link>
-                      </Button>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-
                 {/* Auth Section */}
                 {user ? (
                   <div className="pt-4 border-t space-y-2">

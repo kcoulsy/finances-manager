@@ -6,7 +6,6 @@ import {
   sendVerificationEmail,
 } from "@/features/auth/lib/email";
 import { db } from "../db/client";
-import { getUserRoles } from "./get-user-roles";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -37,17 +36,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    customSession(async ({ user, session }) => {
-      // Use cached roles fetcher - caches per userId for 5 minutes
-      // This significantly reduces database queries when session is checked
-      const roles = await getUserRoles(user.id);
-
-      return {
-        user,
-        session,
-        roles,
-      };
-    }),
     // mcp({
     //   loginPage: "/sign-in", // path to your login page
     // }),

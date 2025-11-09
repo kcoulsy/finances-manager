@@ -1,6 +1,0 @@
-First Name,Last Name,Email,Status,Mobile Phone,Home Phone,Work Phone,Business Name,Business Position,Business Phone,Business Website,Business Address Line 1,Business City,Business County,Business Postcode,Business Country,Personal Address Line 1,Personal City,Personal County,Personal Postcode,Personal Country,Notes
-John,Doe,john@example.com,client,07123456789,,,Acme Ltd,Manager,02071234567,www.acme.com,123 Business Rd,London,Greater London,EC1A 1AA,UK,456 Home St,London,Greater London,EC1A 1BB,UK,Test note
-Sarah,Williams,sarah@test.com,CLIENT,07123456790,07123456791,07123456792,Tech Corp,Director,02071234568,techcorp.com,789 Office Ave,Manchester,Greater Manchester,M1 1AA,UK,321 Living St,Birmingham,West Midlands,B1 1BB,UK,Primary contact
-Michael,Brown,mike@biz.com,PERSONAL,07123456793,,,,,,,,,,,,,Personal contact only
-Jane,Smith,jane@supplier.co.uk,SUPPLIER,07123456794,,07123456795,Supply Co,Vendor,02071234569,supplyco.co.uk,456 Warehouse Rd,Birmingham,West Midlands,B2 2AA,UK,,,,,Key supplier
-

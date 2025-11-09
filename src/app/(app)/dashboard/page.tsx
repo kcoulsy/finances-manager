@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TestNotificationButton } from "@/features/notifications/components/test-notification-button";
 import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { Button } from "@/features/shared/components/ui/button";
 import {
@@ -59,16 +58,6 @@ export default async function DashboardPage() {
             <Button asChild variant="outline" className="w-full">
               <Link href="/settings">Change Password</Link>
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Notifications</CardTitle>
-            <CardDescription>Send yourself a test notification</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TestNotificationButton />
           </CardContent>
         </Card>
       </div>

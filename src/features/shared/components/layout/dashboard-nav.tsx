@@ -1,4 +1,3 @@
-import { NotificationIcon } from "@/features/notifications/components/notification-icon";
 import { Separator } from "@/features/shared/components/ui/separator";
 import { SidebarTrigger } from "@/features/shared/components/ui/sidebar";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
@@ -15,7 +14,6 @@ export async function DashboardNav() {
       <div className="flex flex-1 items-center gap-4">
         <AppBreadcrumbs />
         <div className="flex flex-1 items-center justify-end gap-4">
-          <NotificationIcon />
           <UserNav
             user={{
               name: session.user.name,
