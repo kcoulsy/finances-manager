@@ -56,7 +56,13 @@ export const getTransactionsAction = actionClient
         db.transaction.findMany({
           where,
           include: {
-            financialAccount: true,
+            financialAccount: {
+              select: {
+                id: true,
+                name: true,
+                currency: true,
+              },
+            },
             category: true,
             transferPair: true,
           },

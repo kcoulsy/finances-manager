@@ -1,11 +1,13 @@
 import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
+import { getUserCurrency } from "@/features/shared/lib/utils/get-user-currency";
 import { DetectTransfersButton } from "@/features/transactions/components/detect-transfers-button";
 import { ImportTransactionsDialog } from "@/features/transactions/components/import-transactions-dialog";
 import { TransactionsList } from "@/features/transactions/components/transactions-list";
 
 export default async function DashboardPage() {
   const session = await requireAuth();
+  const currency = await getUserCurrency();
 
   return (
     <ContentLayout className="space-y-8">
@@ -22,7 +24,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <TransactionsList />
+      <TransactionsList defaultCurrency={currency} />
     </ContentLayout>
   );
 }

@@ -1,5 +1,6 @@
 import { ChangePasswordForm } from "@/features/auth/components/change-password-form";
 import { DeleteAccountForm } from "@/features/auth/components/delete-account-form";
+import { CurrencySelector } from "@/features/settings/components/currency-selector";
 import { ContentLayout } from "@/features/shared/components/layout/content-layout";
 import { requireAuth } from "@/features/shared/lib/auth/require-auth";
 
@@ -16,6 +17,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-6">
+        <CurrencySelector />
         <ChangePasswordForm />
         <DeleteAccountForm />
       </div>

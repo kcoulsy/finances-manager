@@ -380,6 +380,7 @@ export function ImportTransactionsDialog() {
         open={showCreateAccount}
         onOpenChange={setShowCreateAccount}
         accountNumber={csvAccountNumber || undefined}
+        defaultCurrency="USD"
         onAccountCreated={handleAccountCreated}
       />
     </Dialog>

@@ -1,0 +1,23 @@
+export const CURRENCIES = [
+  { value: "USD", label: "US Dollar (USD)" },
+  { value: "EUR", label: "Euro (EUR)" },
+  { value: "GBP", label: "British Pound (GBP)" },
+  { value: "JPY", label: "Japanese Yen (JPY)" },
+  { value: "AUD", label: "Australian Dollar (AUD)" },
+  { value: "CAD", label: "Canadian Dollar (CAD)" },
+  { value: "CHF", label: "Swiss Franc (CHF)" },
+  { value: "CNY", label: "Chinese Yuan (CNY)" },
+  { value: "INR", label: "Indian Rupee (INR)" },
+  { value: "BRL", label: "Brazilian Real (BRL)" },
+  { value: "ZAR", label: "South African Rand (ZAR)" },
+  { value: "MXN", label: "Mexican Peso (MXN)" },
+  { value: "SGD", label: "Singapore Dollar (SGD)" },
+  { value: "HKD", label: "Hong Kong Dollar (HKD)" },
+  { value: "NZD", label: "New Zealand Dollar (NZD)" },
+  { value: "SEK", label: "Swedish Krona (SEK)" },
+  { value: "NOK", label: "Norwegian Krone (NOK)" },
+  { value: "DKK", label: "Danish Krone (DKK)" },
+  { value: "PLN", label: "Polish Zloty (PLN)" },
+  { value: "RUB", label: "Russian Ruble (RUB)" },
+];
+

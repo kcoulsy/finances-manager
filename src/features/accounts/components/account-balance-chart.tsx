@@ -2,13 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { getAccountBalanceHistoryAction } from "../actions/get-account-balance-history.action";
+import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
 import { Skeleton } from "@/features/shared/components/ui/skeleton";
 
 interface AccountBalanceChartProps {
   accountId: string;
+  defaultCurrency?: string;
 }
 
-export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
+export function AccountBalanceChart({
+  accountId,
+  defaultCurrency = "USD",
+}: AccountBalanceChartProps) {
   const [balanceHistory, setBalanceHistory] = useState<
     Array<{
       date: Date;
@@ -19,6 +24,7 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [accountCurrency, setAccountCurrency] = useState<string>(defaultCurrency);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -29,6 +35,10 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
         const result = await getAccountBalanceHistoryAction({ accountId });
         if (result?.data?.success) {
           setBalanceHistory(result.data.balanceHistory);
+          // Get currency from account if available
+          if (result.data.accountCurrency) {
+            setAccountCurrency(result.data.accountCurrency);
+          }
         } else if (result?.serverError) {
           setError(new Error(result.serverError));
         }
@@ -63,15 +73,6 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
   const minBalance = Math.min(...balanceHistory.map((h) => h.balance));
   const range = maxBalance - minBalance || 1;
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
     <div className="space-y-4">
       <div className="h-64 flex items-end gap-1 border-b border-l border-border">
@@ -82,7 +83,7 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
               key={point.transactionId || index}
               className="flex-1 bg-primary/20 hover:bg-primary/40 transition-colors rounded-t"
               style={{ height: `${Math.max(height, 2)}%` }}
-              title={`${formatCurrency(point.balance)} - ${new Date(point.date).toLocaleDateString()}`}
+              title={`${formatCurrency(point.balance, accountCurrency)} - ${new Date(point.date).toLocaleDateString()}`}
             />
           );
         })}
@@ -91,13 +92,16 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
         <div>
           <p className="text-muted-foreground">Starting Balance</p>
           <p className="font-semibold">
-            {formatCurrency(balanceHistory[0]?.balance || 0)}
+            {formatCurrency(balanceHistory[0]?.balance || 0, accountCurrency)}
           </p>
         </div>
         <div>
           <p className="text-muted-foreground">Current Balance</p>
           <p className="font-semibold">
-            {formatCurrency(balanceHistory[balanceHistory.length - 1]?.balance || 0)}
+            {formatCurrency(
+              balanceHistory[balanceHistory.length - 1]?.balance || 0,
+              accountCurrency,
+            )}
           </p>
         </div>
         <div>
@@ -114,6 +118,7 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
             {formatCurrency(
               (balanceHistory[balanceHistory.length - 1]?.balance || 0) -
                 (balanceHistory[0]?.balance || 0),
+              accountCurrency,
             )}
           </p>
         </div>

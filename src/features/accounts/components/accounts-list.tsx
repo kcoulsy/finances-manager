@@ -11,17 +11,26 @@ import {
 } from "@/features/shared/components/ui/card";
 import { getAccountsAction } from "../actions/get-accounts.action";
 import { SetBalanceDialog } from "./set-balance-dialog";
+import { EditAccountDialog } from "./edit-account-dialog";
+import { CreateAccountDialog } from "./create-account-dialog";
 import { AccountBalanceChart } from "./account-balance-chart";
-import { Wallet, Plus } from "lucide-react";
-import Link from "next/link";
+import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
+import { Wallet, Plus, Pencil } from "lucide-react";
 import type { FinancialAccount } from "@prisma/client";
 
-export function AccountsList() {
+interface AccountsListProps {
+  defaultCurrency?: string;
+}
+
+export function AccountsList({ defaultCurrency = "USD" }: AccountsListProps) {
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<FinancialAccount | null>(null);
   const [showBalanceDialog, setShowBalanceDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState<FinancialAccount | null>(null);
 
   const fetchAccounts = async () => {
     setIsLoading(true);
@@ -45,12 +54,6 @@ export function AccountsList() {
     fetchAccounts();
   }, []);
 
-  const formatCurrency = (amount: number, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-    }).format(amount);
-  };
 
   const getAccountTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -101,11 +104,9 @@ export function AccountsList() {
             <p className="text-muted-foreground mb-4">
               Create your first account to start tracking your finances
             </p>
-            <Button asChild>
-              <Link href="/accounts/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Account
-              </Link>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Account
             </Button>
           </div>
         </CardContent>
@@ -115,6 +116,13 @@ export function AccountsList() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Your Accounts</h2>
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Account
+        </Button>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {accounts.map((account) => (
           <Card key={account.id} className="hover:shadow-md transition-shadow">
@@ -135,7 +143,10 @@ export function AccountsList() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(account.balance, account.currency)}
+                  {formatCurrency(
+                    account.balance,
+                    account.currency || defaultCurrency,
+                  )}
                 </p>
                 {account.balanceAsOfDate && (
                   <p className="text-xs text-muted-foreground mt-1">
@@ -154,6 +165,18 @@ export function AccountsList() {
                   }}
                 >
                   Set Balance
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    setAccountToEdit(account);
+                    setShowEditDialog(true);
+                  }}
+                >
+                  <Pencil className="mr-2 h-3 w-3" />
+                  Edit
                 </Button>
                 <Button
                   variant="outline"
@@ -180,7 +203,10 @@ export function AccountsList() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <AccountBalanceChart accountId={selectedAccount.id} />
+            <AccountBalanceChart
+              accountId={selectedAccount.id}
+              defaultCurrency={defaultCurrency}
+            />
           </CardContent>
         </Card>
       )}
@@ -192,6 +218,27 @@ export function AccountsList() {
         onSuccess={() => {
           fetchAccounts();
           setShowBalanceDialog(false);
+        }}
+      />
+
+      <EditAccountDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        account={accountToEdit}
+        onSuccess={() => {
+          fetchAccounts();
+          setShowEditDialog(false);
+          setAccountToEdit(null);
+        }}
+      />
+
+      <CreateAccountDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        defaultCurrency={defaultCurrency}
+        onAccountCreated={() => {
+          fetchAccounts();
+          setShowCreateDialog(false);
         }}
       />
     </div>

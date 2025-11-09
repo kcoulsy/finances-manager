@@ -15,6 +15,16 @@ export const createAccountAction = actionClient
         throw new Error("You must be signed in to create an account.");
       }
 
+      // Get user's default currency if account currency not specified
+      let accountCurrency = parsedInput.currency;
+      if (!accountCurrency) {
+        const user = await db.user.findUnique({
+          where: { id: session.user.id },
+          select: { currency: true },
+        });
+        accountCurrency = user?.currency || "USD";
+      }
+
       const account = await db.financialAccount.create({
         data: {
           name: parsedInput.name,
@@ -22,7 +32,7 @@ export const createAccountAction = actionClient
           bankName: parsedInput.bankName,
           accountNumber: parsedInput.accountNumber,
           balance: parsedInput.balance,
-          currency: parsedInput.currency,
+          currency: accountCurrency,
           isActive: parsedInput.isActive,
           userId: session.user.id,
         },

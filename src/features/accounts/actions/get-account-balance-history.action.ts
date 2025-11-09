@@ -120,6 +120,7 @@ export const getAccountBalanceHistoryAction = actionClient
         balanceHistory,
         currentBalance: account.balance,
         balanceAsOfDate: account.balanceAsOfDate,
+        accountCurrency: account.currency || null,
       };
     } catch (error) {
       console.error("Get account balance history error:", error);

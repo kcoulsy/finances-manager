@@ -12,75 +12,79 @@ import {
 } from "@/features/shared/components/ui/dialog";
 import { Input } from "@/features/shared/components/ui/input";
 import { Select } from "@/features/shared/components/ui/select";
-import { createAccountAction } from "../actions/create-account.action";
+import { updateAccountAction } from "../actions/update-account.action";
 import { useActionWithToast } from "@/features/shared/lib/actions/use-action-with-toast";
 import { CURRENCIES } from "@/features/shared/lib/constants/currencies";
 import type { AccountType } from "../schemas/account.schema";
+import type { FinancialAccount } from "@prisma/client";
 
-interface CreateAccountDialogProps {
+interface EditAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  accountNumber?: string;
-  defaultCurrency?: string;
-  onAccountCreated: (accountId: string) => void;
+  account: FinancialAccount | null;
+  onSuccess?: () => void;
 }
 
-export function CreateAccountDialog({
+export function EditAccountDialog({
   open,
   onOpenChange,
-  accountNumber,
-  defaultCurrency = "USD",
-  onAccountCreated,
-}: CreateAccountDialogProps) {
+  account,
+  onSuccess,
+}: EditAccountDialogProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<AccountType>("CHECKING");
   const [bankName, setBankName] = useState("");
-  const [currency, setCurrency] = useState<string>(defaultCurrency);
+  const [accountNumber, setAccountNumber] = useState("");
+  const [currency, setCurrency] = useState<string>("USD");
+  const [isActive, setIsActive] = useState(true);
 
-  // Reset currency when defaultCurrency changes
-  useEffect(() => {
-    if (open) {
-      setCurrency(defaultCurrency);
-    }
-  }, [defaultCurrency, open]);
-
-  const { execute, status } = useActionWithToast(createAccountAction, {
-    onSuccess: ({ data }) => {
-      if (data?.success && data?.account) {
-        onAccountCreated(data.account.id);
-        setName("");
-        setBankName("");
-        setType("CHECKING");
-        setCurrency(defaultCurrency);
-        onOpenChange(false);
-      }
+  const { execute, status } = useActionWithToast(updateAccountAction, {
+    onSuccess: () => {
+      onSuccess?.();
+      onOpenChange(false);
     },
   });
 
+  // Reset form when account changes
+  useEffect(() => {
+    if (account && open) {
+      setName(account.name);
+      setType(account.type as AccountType);
+      setBankName(account.bankName || "");
+      setAccountNumber(account.accountNumber || "");
+      setCurrency(account.currency || "USD");
+      setIsActive(account.isActive);
+    }
+  }, [account, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    if (!account || !name.trim()) {
       return;
     }
 
     await execute({
+      accountId: account.id,
       name: name.trim(),
       type,
       bankName: bankName.trim() || undefined,
-      accountNumber: accountNumber || undefined,
-      balance: 0,
+      accountNumber: accountNumber.trim() || undefined,
       currency,
+      isActive,
     });
   };
+
+  if (!account) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Account</DialogTitle>
+          <DialogTitle>Edit Account</DialogTitle>
           <DialogDescription>
-            Create a new account to import transactions into. The account number from your CSV will
-            be saved.
+            Update account details and settings
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -127,6 +131,18 @@ export function CreateAccountDialog({
               />
             </div>
             <div className="space-y-2">
+              <label htmlFor="accountNumber" className="text-sm font-medium">
+                Account Number
+              </label>
+              <Input
+                id="accountNumber"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                placeholder="Last 4 digits or masked"
+                disabled={status === "executing"}
+              />
+            </div>
+            <div className="space-y-2">
               <label htmlFor="currency" className="text-sm font-medium">
                 Currency <span className="text-destructive">*</span>
               </label>
@@ -137,12 +153,19 @@ export function CreateAccountDialog({
                 placeholder="Select currency"
               />
             </div>
-            {accountNumber && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Account Number</label>
-                <p className="text-sm text-muted-foreground">{accountNumber}</p>
-              </div>
-            )}
+            <div className="flex items-center space-x-2">
+              <input
+                id="isActive"
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                disabled={status === "executing"}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <label htmlFor="isActive" className="text-sm font-medium">
+                Active Account
+              </label>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -154,7 +177,7 @@ export function CreateAccountDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={status === "executing" || !name.trim()}>
-              {status === "executing" ? "Creating..." : "Create Account"}
+              {status === "executing" ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

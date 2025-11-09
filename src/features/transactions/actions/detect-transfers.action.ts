@@ -38,94 +38,82 @@ export const detectTransfersAction = actionClient
 
       let detectedCount = 0;
 
-      // Group transactions by date and amount (potential transfers)
-      const potentialTransfers = new Map<
-        string,
-        Array<{ id: string; accountId: string; date: Date; amount: number }>
-      >();
+      // Amount tolerance for matching (to handle floating point precision)
+      const AMOUNT_TOLERANCE = 0.01;
+      // Date tolerance: 1 day in milliseconds
+      const DATE_TOLERANCE = 24 * 60 * 60 * 1000;
 
-      for (const transaction of transactions) {
-        // Create a key based on date (same day) and absolute amount
-        const dateKey = transaction.date.toISOString().split("T")[0];
-        const amountKey = Math.abs(transaction.amount).toFixed(2);
-        const key = `${dateKey}_${amountKey}`;
+      // Track which transactions have been paired in this run
+      const pairedTransactionIds = new Set<string>();
 
-        if (!potentialTransfers.has(key)) {
-          potentialTransfers.set(key, []);
+      // Compare all transactions with each other to find transfer pairs
+      for (let i = 0; i < transactions.length; i++) {
+        const t1 = transactions[i];
+
+        // Skip if already marked as transfer or already paired in this run
+        if (
+          t1.isTransfer ||
+          t1.transferPairId ||
+          pairedTransactionIds.has(t1.id)
+        ) {
+          continue;
         }
 
-        potentialTransfers.get(key)!.push({
-          id: transaction.id,
-          accountId: transaction.financialAccountId,
-          date: transaction.date,
-          amount: transaction.amount,
-        });
-      }
+        for (let j = i + 1; j < transactions.length; j++) {
+          const t2 = transactions[j];
 
-      // Find pairs where:
-      // 1. Same absolute amount
-      // 2. Same date (or within 1 day)
-      // 3. Different accounts
-      // 4. One is DEBIT, one is CREDIT (or both are opposite signs)
-      for (const [key, group] of potentialTransfers.entries()) {
-        if (group.length < 2) continue;
-
-        // Try to find pairs
-        for (let i = 0; i < group.length; i++) {
-          for (let j = i + 1; j < group.length; j++) {
-            const t1 = group[i];
-            const t2 = group[j];
-
-            // Must be different accounts
-            if (t1.accountId === t2.accountId) continue;
-
-            // Must be opposite signs (one positive, one negative)
-            if (Math.sign(t1.amount) === Math.sign(t2.amount)) continue;
-
-            // Check if dates are within 1 day
-            const dateDiff = Math.abs(
-              t1.date.getTime() - t2.date.getTime(),
-            );
-            if (dateDiff > 24 * 60 * 60 * 1000) continue; // More than 1 day
-
-            // Check if already paired
-            const existingT1 = await db.transaction.findUnique({
-              where: { id: t1.id },
-            });
-            const existingT2 = await db.transaction.findUnique({
-              where: { id: t2.id },
-            });
-
-            if (
-              existingT1?.isTransfer ||
-              existingT2?.isTransfer ||
-              existingT1?.transferPairId ||
-              existingT2?.transferPairId
-            ) {
-              continue;
-            }
-
-            // Mark as transfer pair
-            await db.transaction.update({
-              where: { id: t1.id },
-              data: {
-                isTransfer: true,
-                type: "TRANSFER",
-                transferPairId: t2.id,
-              },
-            });
-
-            await db.transaction.update({
-              where: { id: t2.id },
-              data: {
-                isTransfer: true,
-                type: "TRANSFER",
-                transferPairId: t1.id,
-              },
-            });
-
-            detectedCount++;
+          // Skip if already marked as transfer or already paired in this run
+          if (
+            t2.isTransfer ||
+            t2.transferPairId ||
+            pairedTransactionIds.has(t2.id)
+          ) {
+            continue;
           }
+
+          // Must be different accounts
+          if (t1.financialAccountId === t2.financialAccountId) continue;
+
+          // Must be opposite types (one DEBIT, one CREDIT)
+          // Note: amounts are stored as absolute values, so we check the type field
+          if (t1.type === t2.type) continue;
+
+          // Check if absolute amounts match (within tolerance)
+          const absAmount1 = Math.abs(t1.amount);
+          const absAmount2 = Math.abs(t2.amount);
+          const amountDiff = Math.abs(absAmount1 - absAmount2);
+          if (amountDiff > AMOUNT_TOLERANCE) continue;
+
+          // Check if dates are within tolerance (1 day)
+          const dateDiff = Math.abs(t1.date.getTime() - t2.date.getTime());
+          if (dateDiff > DATE_TOLERANCE) continue;
+
+          // Mark as transfer pair
+          await db.transaction.update({
+            where: { id: t1.id },
+            data: {
+              isTransfer: true,
+              type: "TRANSFER",
+              transferPairId: t2.id,
+            },
+          });
+
+          await db.transaction.update({
+            where: { id: t2.id },
+            data: {
+              isTransfer: true,
+              type: "TRANSFER",
+              transferPairId: t1.id,
+            },
+          });
+
+          // Track that these transactions are now paired
+          pairedTransactionIds.add(t1.id);
+          pairedTransactionIds.add(t2.id);
+
+          detectedCount++;
+          // Break inner loop since t1 is now paired
+          break;
         }
       }
 
@@ -147,4 +135,3 @@ export const detectTransfersAction = actionClient
       );
     }
   });
-

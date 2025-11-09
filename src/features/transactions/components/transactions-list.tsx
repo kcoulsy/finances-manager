@@ -1,29 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { DataTable, type DataTableColumn } from "@/features/shared/components/data-table/data-table";
-import { getTransactionsAction } from "../actions/get-transactions.action";
+import type { Transaction } from "@prisma/client";
+import { useEffect, useState } from "react";
 import { getAccountsAction } from "@/features/accounts/actions/get-accounts.action";
 import { getCategoriesAction } from "@/features/categories/actions/get-categories.action";
-import type { Transaction } from "@prisma/client";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@/features/shared/components/data-table/data-table";
+import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
+import { getTransactionsAction } from "../actions/get-transactions.action";
 
 type TransactionWithRelations = Transaction & {
-  financialAccount: { id: string; name: string };
+  financialAccount: { id: string; name: string; currency: string | null };
   category: { id: string; name: string; color: string | null } | null;
 };
 
-export function TransactionsList() {
-  const [transactions, setTransactions] = useState<TransactionWithRelations[]>([]);
+interface TransactionsListProps {
+  defaultCurrency?: string;
+}
+
+export function TransactionsList({
+  defaultCurrency = "USD",
+}: TransactionsListProps) {
+  const [transactions, setTransactions] = useState<TransactionWithRelations[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [sortColumn, setSortColumn] = useState<string>("date");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>("desc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
+    "desc",
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [accounts, setAccounts] = useState<Array<{ id: string; name: string }>>([]);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [accounts, setAccounts] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const limit = 50;
 
   const fetchTransactions = async () => {
@@ -35,33 +53,43 @@ export function TransactionsList() {
         accountId: filterValues.accountId || undefined,
         categoryId: filterValues.categoryId || undefined,
         type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
-        isTransfer: filterValues.isTransfer === "true" ? true : filterValues.isTransfer === "false" ? false : undefined,
+        isTransfer:
+          filterValues.isTransfer === "true"
+            ? true
+            : filterValues.isTransfer === "false"
+              ? false
+              : undefined,
         limit,
         offset: (currentPage - 1) * limit,
       });
 
       if (result?.data?.success) {
-        let filteredTransactions = result.data.transactions as TransactionWithRelations[];
-        
+        let filteredTransactions = result.data
+          .transactions as TransactionWithRelations[];
+
         // Apply search filter client-side (since server action doesn't support search yet)
         if (searchValue.trim()) {
           const searchLower = searchValue.toLowerCase();
-          filteredTransactions = filteredTransactions.filter((tx) =>
-            tx.description.toLowerCase().includes(searchLower) ||
-            tx.financialAccount.name.toLowerCase().includes(searchLower) ||
-            tx.category?.name.toLowerCase().includes(searchLower)
+          filteredTransactions = filteredTransactions.filter(
+            (tx) =>
+              tx.description.toLowerCase().includes(searchLower) ||
+              tx.financialAccount.name.toLowerCase().includes(searchLower) ||
+              tx.category?.name.toLowerCase().includes(searchLower),
           );
         }
-        
+
         setTransactions(filteredTransactions);
         // Ensure total is a valid number
-        const totalCount = typeof result.data.total === "number" ? result.data.total : 0;
+        const totalCount =
+          typeof result.data.total === "number" ? result.data.total : 0;
         setTotal(totalCount);
       } else if (result?.serverError) {
         setError(new Error(result.serverError));
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load transactions"));
+      setError(
+        err instanceof Error ? err : new Error("Failed to load transactions"),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -102,17 +130,13 @@ export function TransactionsList() {
     setCurrentPage(1);
   };
 
-  const handleSortChange = (column: string, direction: "asc" | "desc" | null) => {
+  const handleSortChange = (
+    column: string,
+    direction: "asc" | "desc" | null,
+  ) => {
     setSortColumn(column);
     setSortDirection(direction);
     setCurrentPage(1);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
   };
 
   const formatDate = (date: Date | string) => {
@@ -175,12 +199,19 @@ export function TransactionsList() {
       className: "text-right",
       render: (transaction) => {
         const isDebit = transaction.type === "DEBIT";
+        // Use account currency if available, otherwise use default currency
+        const currency =
+          transaction.financialAccount.currency || defaultCurrency;
         return (
           <span
-            className={isDebit ? "text-destructive" : "text-green-600 dark:text-green-400"}
+            className={
+              isDebit
+                ? "text-destructive"
+                : "text-green-600 dark:text-green-400"
+            }
           >
             {isDebit ? "-" : "+"}
-            {formatCurrency(Math.abs(transaction.amount))}
+            {formatCurrency(Math.abs(transaction.amount), currency)}
           </span>
         );
       },
@@ -255,4 +286,3 @@ export function TransactionsList() {
     />
   );
 }
-
