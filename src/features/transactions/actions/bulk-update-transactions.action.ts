@@ -27,8 +27,8 @@ export const bulkUpdateTransactionsAction = actionClient
       const where: {
         userId: string;
         id?: { in: string[] };
-        financialAccountId?: string;
-        categoryId?: string | null;
+        financialAccountId?: string | { in: string[] };
+        categoryId?: string | null | { in: string[] };
         type?: string;
         isTransfer?: boolean;
         date?: { gte?: Date; lte?: Date };
@@ -43,10 +43,26 @@ export const bulkUpdateTransactionsAction = actionClient
       } else if (parsedInput.filters) {
         // Update all transactions matching filters
         if (parsedInput.filters.accountId) {
-          where.financialAccountId = parsedInput.filters.accountId;
+          // Handle both single account ID and array of account IDs
+          if (Array.isArray(parsedInput.filters.accountId)) {
+            if (parsedInput.filters.accountId.length > 0) {
+              where.financialAccountId = { in: parsedInput.filters.accountId };
+            }
+          } else {
+            where.financialAccountId = parsedInput.filters.accountId;
+          }
         }
         if (parsedInput.filters.categoryId !== undefined) {
-          where.categoryId = parsedInput.filters.categoryId || null;
+          // Handle both single category ID and array of category IDs
+          if (Array.isArray(parsedInput.filters.categoryId)) {
+            if (parsedInput.filters.categoryId.length > 0) {
+              where.categoryId = { in: parsedInput.filters.categoryId };
+            } else {
+              where.categoryId = null;
+            }
+          } else {
+            where.categoryId = parsedInput.filters.categoryId || null;
+          }
         }
         if (parsedInput.filters.type) {
           where.type = parsedInput.filters.type;

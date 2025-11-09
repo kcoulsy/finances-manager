@@ -30,8 +30,8 @@ interface BulkCategoryUpdateDialogProps {
   selectedTransactionIds: string[];
   totalCount?: number; // Total count if "select all" is used
   filters?: {
-    accountId?: string;
-    categoryId?: string;
+    accountId?: string | string[];
+    categoryId?: string | string[];
     type?: "DEBIT" | "CREDIT" | "TRANSFER";
     isTransfer?: boolean;
     startDate?: Date;

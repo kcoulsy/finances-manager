@@ -31,8 +31,8 @@ export const deleteTransactionSchema = z.object({
 
 export const getTransactionsSchema = z
   .object({
-    accountId: z.string().optional(),
-    categoryId: z.string().optional(),
+    accountId: z.union([z.string(), z.array(z.string())]).optional(), // Support single or multiple account IDs
+    categoryId: z.union([z.string(), z.array(z.string())]).optional(), // Support single or multiple category IDs
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional(),
     type: transactionTypeSchema.optional(),
@@ -73,8 +73,8 @@ export const bulkUpdateTransactionsSchema = z.object({
   // Filter criteria for "select all" mode
   filters: z
     .object({
-      accountId: z.string().optional(),
-      categoryId: z.string().optional(),
+      accountId: z.union([z.string(), z.array(z.string())]).optional(),
+      categoryId: z.union([z.string(), z.array(z.string())]).optional(),
       type: transactionTypeSchema.optional(),
       isTransfer: z.boolean().optional(),
       startDate: z.coerce.date().optional(),

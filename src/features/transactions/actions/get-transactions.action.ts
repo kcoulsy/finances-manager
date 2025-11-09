@@ -27,11 +27,25 @@ export const getTransactionsAction = actionClient
       };
 
       if (parsedInput.accountId) {
-        where.financialAccountId = parsedInput.accountId;
+        // Handle both single account ID and array of account IDs
+        if (Array.isArray(parsedInput.accountId)) {
+          if (parsedInput.accountId.length > 0) {
+            where.financialAccountId = { in: parsedInput.accountId };
+          }
+        } else {
+          where.financialAccountId = parsedInput.accountId;
+        }
       }
 
       if (parsedInput.categoryId) {
-        where.categoryId = parsedInput.categoryId;
+        // Handle both single category ID and array of category IDs
+        if (Array.isArray(parsedInput.categoryId)) {
+          if (parsedInput.categoryId.length > 0) {
+            where.categoryId = { in: parsedInput.categoryId };
+          }
+        } else {
+          where.categoryId = parsedInput.categoryId;
+        }
       }
 
       if (parsedInput.startDate || parsedInput.endDate) {

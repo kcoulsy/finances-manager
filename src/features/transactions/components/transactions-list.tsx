@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Plus, Tag } from "lucide-react";
+import { FileText, Plus, StickyNote, Tag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { useCategories } from "@/features/categories/hooks/use-categories";
@@ -23,6 +23,8 @@ import { useTransactions } from "../hooks/use-transactions";
 import { BulkCategoryUpdateDialog } from "./bulk-category-update-dialog";
 import { BulkNotesUpdateDialog } from "./bulk-notes-update-dialog";
 import { BulkTagsUpdateDialog } from "./bulk-tags-update-dialog";
+import { SingleTransactionNotesDialog } from "./single-transaction-notes-dialog";
+import { SingleTransactionTagsDialog } from "./single-transaction-tags-dialog";
 
 type TransactionWithRelations = {
   id: string;
@@ -46,7 +48,9 @@ export function TransactionsList({
 }: TransactionsListProps) {
   const queryClient = useQueryClient();
   const [searchValue, setSearchValue] = useState("");
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<
+    Record<string, string | string[]>
+  >({});
   const [sortColumn, setSortColumn] = useState<string>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     "desc",
@@ -59,17 +63,71 @@ export function TransactionsList({
   const [bulkCategoryDialogOpen, setBulkCategoryDialogOpen] = useState(false);
   const [bulkTagsDialogOpen, setBulkTagsDialogOpen] = useState(false);
   const [bulkNotesDialogOpen, setBulkNotesDialogOpen] = useState(false);
+  const [singleNotesDialogOpen, setSingleNotesDialogOpen] = useState(false);
+  const [singleTagsDialogOpen, setSingleTagsDialogOpen] = useState(false);
+  const [selectedTransactionForEdit, setSelectedTransactionForEdit] =
+    useState<TransactionWithRelations | null>(null);
   const limit = 50 as const;
 
   // Query for accounts and categories
   const { data: accounts = [] } = useAccounts();
   const { data: categories = [] } = useCategories();
 
+  // Get all unique tags for multiselect - fetch from all transactions
+  const { data: allTagsData } = useQuery({
+    queryKey: ["transactions", "all-tags"],
+    queryFn: async () => {
+      const result = await getTransactionsAction({
+        getAll: true,
+      });
+      if (result?.serverError) {
+        throw new Error(result.serverError);
+      }
+      if (!result?.data?.success) {
+        throw new Error("Failed to fetch tags");
+      }
+      const transactions = result.data
+        .transactions as TransactionWithRelations[];
+      const uniqueTags = new Set<string>();
+      transactions.forEach((tx) => {
+        if (tx.tags && Array.isArray(tx.tags)) {
+          tx.tags.forEach((tag) => {
+            uniqueTags.add(tag);
+          });
+        }
+      });
+      return Array.from(uniqueTags).sort();
+    },
+  });
+
+  const allTags = allTagsData || [];
+
   // Build query input for main transactions query
-  const transactionsQueryInput = useMemo(
-    () => ({
-      accountId: filterValues.accountId || undefined,
-      categoryId: filterValues.categoryId || undefined,
+  const transactionsQueryInput = useMemo(() => {
+    // Handle categoryId - can be string (single) or array (multiple)
+    const categoryIdValue = filterValues.categoryId;
+    const categoryId = Array.isArray(categoryIdValue)
+      ? categoryIdValue.length > 0
+        ? categoryIdValue // Pass array to action
+        : undefined
+      : categoryIdValue || undefined;
+
+    // Handle tags - can be string (comma-separated) or array
+    const tagsValue = filterValues.tags;
+    const tags = Array.isArray(tagsValue)
+      ? tagsValue.length > 0
+        ? tagsValue
+        : undefined
+      : tagsValue
+        ? (tagsValue.split(",").filter((t) => t.trim()) as string[])
+        : undefined;
+
+    return {
+      accountId:
+        typeof filterValues.accountId === "string"
+          ? filterValues.accountId || undefined
+          : undefined,
+      categoryId,
       type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
       isTransfer:
         filterValues.isTransfer === "true"
@@ -77,14 +135,11 @@ export function TransactionsList({
           : filterValues.isTransfer === "false"
             ? false
             : undefined,
-      tags: filterValues.tags
-        ? (filterValues.tags.split(",").filter((t) => t.trim()) as string[])
-        : undefined,
+      tags,
       limit,
       offset: (currentPage - 1) * limit,
-    }),
-    [filterValues, currentPage, limit],
-  );
+    };
+  }, [filterValues, currentPage, limit]);
 
   // Main transactions query
   const {
@@ -94,10 +149,33 @@ export function TransactionsList({
   } = useTransactions(transactionsQueryInput);
 
   // Query for filtered count (when search is active)
-  const filteredCountQueryInput = useMemo(
-    () => ({
-      accountId: filterValues.accountId || undefined,
-      categoryId: filterValues.categoryId || undefined,
+  const filteredCountQueryInput = useMemo(() => {
+    const categoryIdValue = filterValues.categoryId;
+    const categoryId = Array.isArray(categoryIdValue)
+      ? categoryIdValue.length > 0
+        ? categoryIdValue
+        : undefined
+      : categoryIdValue || undefined;
+
+    const tagsValue = filterValues.tags;
+    const tags = Array.isArray(tagsValue)
+      ? tagsValue.length > 0
+        ? tagsValue
+        : undefined
+      : typeof tagsValue === "string" && tagsValue
+        ? (tagsValue.split(",").filter((t: string) => t.trim()) as string[])
+        : undefined;
+
+    const accountIdValue = filterValues.accountId;
+    const accountId = Array.isArray(accountIdValue)
+      ? accountIdValue.length > 0
+        ? accountIdValue
+        : undefined
+      : accountIdValue || undefined;
+
+    return {
+      accountId,
+      categoryId,
       type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
       isTransfer:
         filterValues.isTransfer === "true"
@@ -105,13 +183,10 @@ export function TransactionsList({
           : filterValues.isTransfer === "false"
             ? false
             : undefined,
-      tags: filterValues.tags
-        ? (filterValues.tags.split(",").filter((t) => t.trim()) as string[])
-        : undefined,
+      tags,
       getAll: true as const,
-    }),
-    [filterValues],
-  );
+    };
+  }, [filterValues]);
 
   const { data: filteredCountData } = useQuery({
     queryKey: [
@@ -176,16 +251,27 @@ export function TransactionsList({
     };
   }, [transactionsData, searchValue, filteredCountData]);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => {
       const newValues = { ...prev };
-      if (value) {
+      if (Array.isArray(value)) {
+        if (value.length > 0) {
+          newValues[key] = value;
+        } else {
+          delete newValues[key];
+        }
+      } else if (value) {
         newValues[key] = value;
       } else {
         delete newValues[key];
       }
       return newValues;
     });
+    setCurrentPage(1);
+  };
+
+  const handleClearAllFilters = () => {
+    setFilterValues({});
     setCurrentPage(1);
   };
 
@@ -206,9 +292,32 @@ export function TransactionsList({
   const handleSelectAllNotShown = async () => {
     // Fetch all matching transaction IDs (respecting filters and search)
     try {
+      const categoryIdValue = filterValues.categoryId;
+      const categoryId = Array.isArray(categoryIdValue)
+        ? categoryIdValue.length > 0
+          ? categoryIdValue
+          : undefined
+        : categoryIdValue || undefined;
+
+      const tagsValue = filterValues.tags;
+      const tags = Array.isArray(tagsValue)
+        ? tagsValue.length > 0
+          ? tagsValue
+          : undefined
+        : tagsValue
+          ? (tagsValue.split(",").filter((t) => t.trim()) as string[])
+          : undefined;
+
+      const accountIdValue = filterValues.accountId;
+      const accountId = Array.isArray(accountIdValue)
+        ? accountIdValue.length > 0
+          ? accountIdValue
+          : undefined
+        : accountIdValue || undefined;
+
       const result = await getTransactionsAction({
-        accountId: filterValues.accountId || undefined,
-        categoryId: filterValues.categoryId || undefined,
+        accountId,
+        categoryId,
         type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
         isTransfer:
           filterValues.isTransfer === "true"
@@ -216,6 +325,7 @@ export function TransactionsList({
             : filterValues.isTransfer === "false"
               ? false
               : undefined,
+        tags,
         getAll: true, // Fetch all matching transactions without limit
       });
 
@@ -411,15 +521,16 @@ export function TransactionsList({
                 key={tag}
                 type="button"
                 onClick={() => {
-                  const currentTags = filterValues.tags
+                  const currentTags = Array.isArray(filterValues.tags)
                     ? filterValues.tags
-                        .split(",")
-                        .map((t) => t.trim())
-                        .filter(Boolean)
-                    : [];
+                    : typeof filterValues.tags === "string" && filterValues.tags
+                      ? filterValues.tags
+                          .split(",")
+                          .map((t: string) => t.trim())
+                          .filter(Boolean)
+                      : [];
                   if (!currentTags.includes(tag)) {
-                    const newTags = [...currentTags, tag].join(", ");
-                    handleFilterChange("tags", newTags);
+                    handleFilterChange("tags", [...currentTags, tag]);
                   }
                 }}
                 className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 cursor-pointer transition-colors"
@@ -456,6 +567,39 @@ export function TransactionsList({
           </span>
         );
       },
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-20",
+      render: (transaction) => (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => {
+              setSelectedTransactionForEdit(transaction);
+              setSingleNotesDialogOpen(true);
+            }}
+            title="Add or edit notes"
+          >
+            <StickyNote className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => {
+              setSelectedTransactionForEdit(transaction);
+              setSingleTagsDialogOpen(true);
+            }}
+            title="Add or edit tags"
+          >
+            <Tag className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -564,11 +708,13 @@ export function TransactionsList({
           {
             key: "categoryId",
             label: "Category",
-            type: "select",
+            type: "multiselect",
             options: categories.map((category) => ({
               value: category.id,
               label: category.name,
+              color: category.color,
             })),
+            searchPlaceholder: "Search categories...",
           },
           {
             key: "type",
@@ -592,12 +738,17 @@ export function TransactionsList({
           {
             key: "tags",
             label: "Tags",
-            type: "text",
-            placeholder: "Comma-separated tags (e.g., food, travel)",
+            type: "multiselect",
+            options: allTags.map((tag) => ({
+              value: tag,
+              label: tag,
+            })),
+            searchPlaceholder: "Search tags...",
           },
         ]}
         filterValues={filterValues}
         onFilterChange={handleFilterChange}
+        onClearAllFilters={handleClearAllFilters}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSortChange={handleSortChange}
@@ -632,8 +783,16 @@ export function TransactionsList({
         filters={
           isSelectAll
             ? {
-                accountId: filterValues.accountId,
-                categoryId: filterValues.categoryId,
+                accountId: Array.isArray(filterValues.accountId)
+                  ? filterValues.accountId
+                  : typeof filterValues.accountId === "string"
+                    ? filterValues.accountId
+                    : undefined,
+                categoryId: Array.isArray(filterValues.categoryId)
+                  ? filterValues.categoryId
+                  : typeof filterValues.categoryId === "string"
+                    ? filterValues.categoryId
+                    : undefined,
                 type: filterValues.type as
                   | "DEBIT"
                   | "CREDIT"
@@ -645,11 +804,13 @@ export function TransactionsList({
                     : filterValues.isTransfer === "false"
                       ? false
                       : undefined,
-                tags: filterValues.tags
-                  ? (filterValues.tags
-                      .split(",")
-                      .filter((t) => t.trim()) as string[])
-                  : undefined,
+                tags: Array.isArray(filterValues.tags)
+                  ? filterValues.tags
+                  : typeof filterValues.tags === "string" && filterValues.tags
+                    ? (filterValues.tags
+                        .split(",")
+                        .filter((t: string) => t.trim()) as string[])
+                    : undefined,
               }
             : undefined
         }
@@ -664,8 +825,16 @@ export function TransactionsList({
         filters={
           isSelectAll
             ? {
-                accountId: filterValues.accountId,
-                categoryId: filterValues.categoryId,
+                accountId: Array.isArray(filterValues.accountId)
+                  ? filterValues.accountId
+                  : typeof filterValues.accountId === "string"
+                    ? filterValues.accountId
+                    : undefined,
+                categoryId: Array.isArray(filterValues.categoryId)
+                  ? filterValues.categoryId
+                  : typeof filterValues.categoryId === "string"
+                    ? filterValues.categoryId
+                    : undefined,
                 type: filterValues.type as
                   | "DEBIT"
                   | "CREDIT"
@@ -677,11 +846,13 @@ export function TransactionsList({
                     : filterValues.isTransfer === "false"
                       ? false
                       : undefined,
-                tags: filterValues.tags
-                  ? (filterValues.tags
-                      .split(",")
-                      .filter((t) => t.trim()) as string[])
-                  : undefined,
+                tags: Array.isArray(filterValues.tags)
+                  ? filterValues.tags
+                  : typeof filterValues.tags === "string" && filterValues.tags
+                    ? (filterValues.tags
+                        .split(",")
+                        .filter((t: string) => t.trim()) as string[])
+                    : undefined,
               }
             : undefined
         }
@@ -696,8 +867,16 @@ export function TransactionsList({
         filters={
           isSelectAll
             ? {
-                accountId: filterValues.accountId,
-                categoryId: filterValues.categoryId,
+                accountId: Array.isArray(filterValues.accountId)
+                  ? filterValues.accountId
+                  : typeof filterValues.accountId === "string"
+                    ? filterValues.accountId
+                    : undefined,
+                categoryId: Array.isArray(filterValues.categoryId)
+                  ? filterValues.categoryId
+                  : typeof filterValues.categoryId === "string"
+                    ? filterValues.categoryId
+                    : undefined,
                 type: filterValues.type as
                   | "DEBIT"
                   | "CREDIT"
@@ -709,16 +888,38 @@ export function TransactionsList({
                     : filterValues.isTransfer === "false"
                       ? false
                       : undefined,
-                tags: filterValues.tags
-                  ? (filterValues.tags
-                      .split(",")
-                      .filter((t) => t.trim()) as string[])
-                  : undefined,
+                tags: Array.isArray(filterValues.tags)
+                  ? filterValues.tags
+                  : typeof filterValues.tags === "string" && filterValues.tags
+                    ? (filterValues.tags
+                        .split(",")
+                        .filter((t: string) => t.trim()) as string[])
+                    : undefined,
               }
             : undefined
         }
         onSuccess={handleBulkUpdateSuccess}
       />
+
+      {/* Single Transaction Edit Dialogs */}
+      {selectedTransactionForEdit && (
+        <>
+          <SingleTransactionNotesDialog
+            open={singleNotesDialogOpen}
+            onOpenChange={setSingleNotesDialogOpen}
+            transactionId={selectedTransactionForEdit.id}
+            initialNotes={selectedTransactionForEdit.notes}
+            onSuccess={handleBulkUpdateSuccess}
+          />
+          <SingleTransactionTagsDialog
+            open={singleTagsDialogOpen}
+            onOpenChange={setSingleTagsDialogOpen}
+            transactionId={selectedTransactionForEdit.id}
+            initialTags={selectedTransactionForEdit.tags}
+            onSuccess={handleBulkUpdateSuccess}
+          />
+        </>
+      )}
     </div>
   );
 }

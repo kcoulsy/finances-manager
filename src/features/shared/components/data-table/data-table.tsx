@@ -40,8 +40,9 @@ interface DataTableProps<T> {
 
   // Filters
   filters?: DataTableFilter[];
-  filterValues?: Record<string, string>;
-  onFilterChange?: (key: string, value: string) => void;
+  filterValues?: Record<string, string | string[]>;
+  onFilterChange?: (key: string, value: string | string[]) => void;
+  onClearAllFilters?: () => void;
 
   // Sorting
   sortColumn?: string;
@@ -75,6 +76,7 @@ export function DataTable<T extends Record<string, unknown>>({
   filters,
   filterValues,
   onFilterChange,
+  onClearAllFilters,
   sortColumn,
   sortDirection,
   onSortChange,
@@ -199,6 +201,7 @@ export function DataTable<T extends Record<string, unknown>>({
           filters={filters}
           filterValues={filterValues}
           onFilterChange={onFilterChange}
+          onClearAllFilters={onClearAllFilters}
         />
       )}
 
@@ -265,7 +268,7 @@ export function DataTable<T extends Record<string, unknown>>({
             data.map((row) => {
               const rowId = getRowIdValue(row);
               return (
-                <CompactTableRow key={rowId}>
+                <CompactTableRow key={rowId} className="group">
                   {enableSelection && (
                     <CompactTableCell className="w-12">
                       <Checkbox

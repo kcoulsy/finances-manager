@@ -38,7 +38,7 @@ function Select({
         <Button
           variant="outline"
           className={cn(
-            "w-full justify-between text-left font-normal",
+            "w-full min-w-[180px] justify-between text-left font-normal",
             !value && "text-muted-foreground",
             className,
           )}

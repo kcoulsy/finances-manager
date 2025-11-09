@@ -20,8 +20,8 @@ interface BulkNotesUpdateDialogProps {
   selectedTransactionIds: string[];
   totalCount?: number;
   filters?: {
-    accountId?: string;
-    categoryId?: string;
+    accountId?: string | string[];
+    categoryId?: string | string[];
     type?: "DEBIT" | "CREDIT" | "TRANSFER";
     isTransfer?: boolean;
     startDate?: Date;
