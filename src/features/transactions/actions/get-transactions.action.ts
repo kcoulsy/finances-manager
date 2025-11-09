@@ -15,10 +15,10 @@ export const getTransactionsAction = actionClient
         throw new Error("You must be signed in to view transactions.");
       }
 
-      const where: {
+      // Build base where conditions
+      const baseWhere: {
         userId: string;
-        financialAccountId?: string;
-        categoryId?: string | null;
+        financialAccountId?: string | { in: string[] };
         date?: { gte?: Date; lte?: Date };
         type?: string;
         isTransfer?: boolean;
@@ -30,40 +30,88 @@ export const getTransactionsAction = actionClient
         // Handle both single account ID and array of account IDs
         if (Array.isArray(parsedInput.accountId)) {
           if (parsedInput.accountId.length > 0) {
-            where.financialAccountId = { in: parsedInput.accountId };
+            baseWhere.financialAccountId = { in: parsedInput.accountId };
           }
         } else {
-          where.financialAccountId = parsedInput.accountId;
-        }
-      }
-
-      if (parsedInput.categoryId) {
-        // Handle both single category ID and array of category IDs
-        if (Array.isArray(parsedInput.categoryId)) {
-          if (parsedInput.categoryId.length > 0) {
-            where.categoryId = { in: parsedInput.categoryId };
-          }
-        } else {
-          where.categoryId = parsedInput.categoryId;
+          baseWhere.financialAccountId = parsedInput.accountId;
         }
       }
 
       if (parsedInput.startDate || parsedInput.endDate) {
-        where.date = {};
+        baseWhere.date = {};
         if (parsedInput.startDate) {
-          where.date.gte = parsedInput.startDate;
+          baseWhere.date.gte = parsedInput.startDate;
         }
         if (parsedInput.endDate) {
-          where.date.lte = parsedInput.endDate;
+          baseWhere.date.lte = parsedInput.endDate;
         }
       }
 
       if (parsedInput.type) {
-        where.type = parsedInput.type;
+        baseWhere.type = parsedInput.type;
       }
 
       if (parsedInput.isTransfer !== undefined) {
-        where.isTransfer = parsedInput.isTransfer;
+        baseWhere.isTransfer = parsedInput.isTransfer;
+      }
+
+      // Handle categoryId with support for uncategorized
+      let where: typeof baseWhere & {
+        categoryId?: string | null | { in: string[] };
+        OR?: Array<{ categoryId: null } | { categoryId: { in: string[] } }>;
+      };
+
+      if (parsedInput.categoryId) {
+        // Handle both single category ID and array of category IDs
+        // Special value "__uncategorized__" means filter for null categoryId
+        if (Array.isArray(parsedInput.categoryId)) {
+          if (parsedInput.categoryId.length > 0) {
+            const hasUncategorized =
+              parsedInput.categoryId.includes("__uncategorized__");
+            const regularCategoryIds = parsedInput.categoryId.filter(
+              (id) => id !== "__uncategorized__",
+            );
+
+            if (hasUncategorized && regularCategoryIds.length > 0) {
+              // Both uncategorized and regular categories: use OR condition at top level
+              where = {
+                ...baseWhere,
+                OR: [
+                  { ...baseWhere, categoryId: null },
+                  { ...baseWhere, categoryId: { in: regularCategoryIds } },
+                ],
+              };
+            } else if (hasUncategorized) {
+              // Only uncategorized: filter for null
+              where = {
+                ...baseWhere,
+                categoryId: null,
+              };
+            } else if (regularCategoryIds.length > 0) {
+              // Only regular categories
+              where = {
+                ...baseWhere,
+                categoryId: { in: regularCategoryIds },
+              };
+            } else {
+              where = baseWhere;
+            }
+          } else {
+            where = baseWhere;
+          }
+        } else if (parsedInput.categoryId === "__uncategorized__") {
+          where = {
+            ...baseWhere,
+            categoryId: null,
+          };
+        } else {
+          where = {
+            ...baseWhere,
+            categoryId: parsedInput.categoryId,
+          };
+        }
+      } else {
+        where = baseWhere;
       }
 
       // Fetch all transactions first (we'll filter by tags in application layer)

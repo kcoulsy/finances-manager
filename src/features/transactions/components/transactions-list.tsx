@@ -25,6 +25,7 @@ import { BulkNotesUpdateDialog } from "./bulk-notes-update-dialog";
 import { BulkTagsUpdateDialog } from "./bulk-tags-update-dialog";
 import { SingleTransactionNotesDialog } from "./single-transaction-notes-dialog";
 import { SingleTransactionTagsDialog } from "./single-transaction-tags-dialog";
+import { TransactionsChart } from "./transactions-chart";
 
 type TransactionWithRelations = {
   id: string;
@@ -105,12 +106,35 @@ export function TransactionsList({
   // Build query input for main transactions query
   const transactionsQueryInput = useMemo(() => {
     // Handle categoryId - can be string (single) or array (multiple)
+    // Special value "__uncategorized__" means filter for null categoryId
     const categoryIdValue = filterValues.categoryId;
-    const categoryId = Array.isArray(categoryIdValue)
-      ? categoryIdValue.length > 0
-        ? categoryIdValue // Pass array to action
-        : undefined
-      : categoryIdValue || undefined;
+    let categoryId: string | string[] | undefined;
+
+    if (Array.isArray(categoryIdValue)) {
+      if (categoryIdValue.length > 0) {
+        // Filter out "__uncategorized__" from the array - it will be handled separately
+        const hasUncategorized = categoryIdValue.includes("__uncategorized__");
+        const regularCategoryIds = categoryIdValue.filter(
+          (id) => id !== "__uncategorized__",
+        );
+
+        if (hasUncategorized && regularCategoryIds.length > 0) {
+          // Both uncategorized and regular categories selected
+          // We'll need to handle this in the server action
+          categoryId = ["__uncategorized__", ...regularCategoryIds];
+        } else if (hasUncategorized) {
+          // Only uncategorized selected
+          categoryId = ["__uncategorized__"];
+        } else if (regularCategoryIds.length > 0) {
+          // Only regular categories selected
+          categoryId = regularCategoryIds;
+        }
+      }
+    } else if (categoryIdValue === "__uncategorized__") {
+      categoryId = "__uncategorized__";
+    } else if (categoryIdValue) {
+      categoryId = categoryIdValue;
+    }
 
     // Handle tags - can be string (comma-separated) or array
     const tagsValue = filterValues.tags;
@@ -122,12 +146,31 @@ export function TransactionsList({
         ? (tagsValue.split(",").filter((t) => t.trim()) as string[])
         : undefined;
 
+    // Handle startDate and endDate
+    const startDateValue = filterValues.startDate;
+    const startDate =
+      typeof startDateValue === "string"
+        ? new Date(startDateValue)
+        : startDateValue instanceof Date
+          ? startDateValue
+          : undefined;
+
+    const endDateValue = filterValues.endDate;
+    const endDate =
+      typeof endDateValue === "string"
+        ? new Date(endDateValue)
+        : endDateValue instanceof Date
+          ? endDateValue
+          : undefined;
+
     return {
       accountId:
         typeof filterValues.accountId === "string"
           ? filterValues.accountId || undefined
           : undefined,
       categoryId,
+      startDate,
+      endDate,
       type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
       isTransfer:
         filterValues.isTransfer === "true"
@@ -150,12 +193,30 @@ export function TransactionsList({
 
   // Query for filtered count (when search is active)
   const filteredCountQueryInput = useMemo(() => {
+    // Handle categoryId - same logic as main query
     const categoryIdValue = filterValues.categoryId;
-    const categoryId = Array.isArray(categoryIdValue)
-      ? categoryIdValue.length > 0
-        ? categoryIdValue
-        : undefined
-      : categoryIdValue || undefined;
+    let categoryId: string | string[] | undefined;
+
+    if (Array.isArray(categoryIdValue)) {
+      if (categoryIdValue.length > 0) {
+        const hasUncategorized = categoryIdValue.includes("__uncategorized__");
+        const regularCategoryIds = categoryIdValue.filter(
+          (id) => id !== "__uncategorized__",
+        );
+
+        if (hasUncategorized && regularCategoryIds.length > 0) {
+          categoryId = ["__uncategorized__", ...regularCategoryIds];
+        } else if (hasUncategorized) {
+          categoryId = ["__uncategorized__"];
+        } else if (regularCategoryIds.length > 0) {
+          categoryId = regularCategoryIds;
+        }
+      }
+    } else if (categoryIdValue === "__uncategorized__") {
+      categoryId = "__uncategorized__";
+    } else if (categoryIdValue) {
+      categoryId = categoryIdValue;
+    }
 
     const tagsValue = filterValues.tags;
     const tags = Array.isArray(tagsValue)
@@ -173,9 +234,27 @@ export function TransactionsList({
         : undefined
       : accountIdValue || undefined;
 
+    const startDateValue = filterValues.startDate;
+    const startDate =
+      typeof startDateValue === "string"
+        ? new Date(startDateValue)
+        : startDateValue instanceof Date
+          ? startDateValue
+          : undefined;
+
+    const endDateValue = filterValues.endDate;
+    const endDate =
+      typeof endDateValue === "string"
+        ? new Date(endDateValue)
+        : endDateValue instanceof Date
+          ? endDateValue
+          : undefined;
+
     return {
       accountId,
       categoryId,
+      startDate,
+      endDate,
       type: filterValues.type as "DEBIT" | "CREDIT" | "TRANSFER" | undefined,
       isTransfer:
         filterValues.isTransfer === "true"
@@ -605,6 +684,28 @@ export function TransactionsList({
 
   return (
     <div className="space-y-4">
+      {/* Chart */}
+      <TransactionsChart
+        defaultCurrency={defaultCurrency}
+        onDateRangeChange={(startDate, endDate) => {
+          setFilterValues((prev) => {
+            const newValues = { ...prev };
+            if (startDate) {
+              newValues.startDate = startDate.toISOString();
+            } else {
+              delete newValues.startDate;
+            }
+            if (endDate) {
+              newValues.endDate = endDate.toISOString();
+            } else {
+              delete newValues.endDate;
+            }
+            return newValues;
+          });
+          setCurrentPage(1);
+        }}
+      />
+
       {/* Bulk Actions Bar */}
       {(selectedTransactionIds.length > 0 || isSelectAll) && (
         <div className="flex items-center justify-between rounded-lg border bg-card p-4">
@@ -709,11 +810,18 @@ export function TransactionsList({
             key: "categoryId",
             label: "Category",
             type: "multiselect",
-            options: categories.map((category) => ({
-              value: category.id,
-              label: category.name,
-              color: category.color,
-            })),
+            options: [
+              {
+                value: "__uncategorized__",
+                label: "Uncategorized",
+                color: null,
+              },
+              ...categories.map((category) => ({
+                value: category.id,
+                label: category.name,
+                color: category.color,
+              })),
+            ],
             searchPlaceholder: "Search categories...",
           },
           {
