@@ -54,7 +54,7 @@ const getDateAdjustedForTimezone = (dateInput: Date | string): Date => {
 };
 
 interface DateRange {
-  from: Date;
+  from: Date | undefined;
   to: Date | undefined;
 }
 
@@ -65,15 +65,15 @@ interface Preset {
 
 // Define presets
 const PRESETS: Preset[] = [
-  { name: "today", label: "Today" },
-  { name: "yesterday", label: "Yesterday" },
   { name: "last7", label: "Last 7 days" },
   { name: "last14", label: "Last 14 days" },
   { name: "last30", label: "Last 30 days" },
-  { name: "thisWeek", label: "This Week" },
   { name: "lastWeek", label: "Last Week" },
-  { name: "thisMonth", label: "This Month" },
   { name: "lastMonth", label: "Last Month" },
+  { name: "last3m", label: "Last 3 months" },
+  { name: "last6m", label: "Last 6 months" },
+  { name: "last1y", label: "Last year" },
+  { name: "last5y", label: "Last 5 years" },
 ];
 
 /** The DateRangePicker component allows a user to select a range of dates */
@@ -90,10 +90,14 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const [range, setRange] = useState<DateRange>({
-    from: getDateAdjustedForTimezone(initialDateFrom),
+    from: initialDateFrom
+      ? getDateAdjustedForTimezone(initialDateFrom)
+      : undefined,
     to: initialDateTo
       ? getDateAdjustedForTimezone(initialDateTo)
-      : getDateAdjustedForTimezone(initialDateFrom),
+      : initialDateFrom
+        ? getDateAdjustedForTimezone(initialDateFrom)
+        : undefined,
   });
   const [rangeCompare, setRangeCompare] = useState<DateRange | undefined>(
     initialCompareFrom
@@ -136,19 +140,8 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
     if (!preset) throw new Error(`Unknown date range preset: ${presetName}`);
     const from = new Date();
     const to = new Date();
-    const first = from.getDate() - from.getDay();
 
     switch (preset.name) {
-      case "today":
-        from.setHours(0, 0, 0, 0);
-        to.setHours(23, 59, 59, 999);
-        break;
-      case "yesterday":
-        from.setDate(from.getDate() - 1);
-        from.setHours(0, 0, 0, 0);
-        to.setDate(to.getDate() - 1);
-        to.setHours(23, 59, 59, 999);
-        break;
       case "last7":
         from.setDate(from.getDate() - 6);
         from.setHours(0, 0, 0, 0);
@@ -164,19 +157,9 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
         from.setHours(0, 0, 0, 0);
         to.setHours(23, 59, 59, 999);
         break;
-      case "thisWeek":
-        from.setDate(first);
-        from.setHours(0, 0, 0, 0);
-        to.setHours(23, 59, 59, 999);
-        break;
       case "lastWeek":
         from.setDate(from.getDate() - 7 - from.getDay());
         to.setDate(to.getDate() - to.getDay() - 1);
-        from.setHours(0, 0, 0, 0);
-        to.setHours(23, 59, 59, 999);
-        break;
-      case "thisMonth":
-        from.setDate(1);
         from.setHours(0, 0, 0, 0);
         to.setHours(23, 59, 59, 999);
         break;
@@ -187,6 +170,26 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
         to.setDate(0);
         to.setHours(23, 59, 59, 999);
         break;
+      case "last3m":
+        from.setMonth(from.getMonth() - 3);
+        from.setHours(0, 0, 0, 0);
+        to.setHours(23, 59, 59, 999);
+        break;
+      case "last6m":
+        from.setMonth(from.getMonth() - 6);
+        from.setHours(0, 0, 0, 0);
+        to.setHours(23, 59, 59, 999);
+        break;
+      case "last1y":
+        from.setFullYear(from.getFullYear() - 1);
+        from.setHours(0, 0, 0, 0);
+        to.setHours(23, 59, 59, 999);
+        break;
+      case "last5y":
+        from.setFullYear(from.getFullYear() - 5);
+        from.setHours(0, 0, 0, 0);
+        to.setHours(23, 59, 59, 999);
+        break;
     }
 
     return { from, to };
@@ -195,7 +198,7 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
   const setPreset = (preset: string): void => {
     const range = getPresetRange(preset);
     setRange(range);
-    if (rangeCompare) {
+    if (rangeCompare && range.from) {
       const rangeCompare = {
         from: new Date(
           range.from.getFullYear() - 1,
@@ -215,8 +218,15 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
   };
 
   const checkPreset = useCallback((): void => {
+    if (!range.from) {
+      setSelectedPreset(undefined);
+      return;
+    }
+
     for (const preset of PRESETS) {
       const presetRange = getPresetRange(preset.name);
+
+      if (!presetRange.from) continue;
 
       const normalizedRangeFrom = new Date(range.from);
       normalizedRangeFrom.setHours(0, 0, 0, 0);
@@ -244,17 +254,20 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
 
   const resetValues = (): void => {
     setRange({
-      from:
-        typeof initialDateFrom === "string"
+      from: initialDateFrom
+        ? typeof initialDateFrom === "string"
           ? getDateAdjustedForTimezone(initialDateFrom)
-          : initialDateFrom,
+          : initialDateFrom
+        : undefined,
       to: initialDateTo
         ? typeof initialDateTo === "string"
           ? getDateAdjustedForTimezone(initialDateTo)
           : initialDateTo
-        : typeof initialDateFrom === "string"
-          ? getDateAdjustedForTimezone(initialDateFrom)
-          : initialDateFrom,
+        : initialDateFrom
+          ? typeof initialDateFrom === "string"
+            ? getDateAdjustedForTimezone(initialDateFrom)
+            : initialDateFrom
+          : undefined,
     });
     setRangeCompare(
       initialCompareFrom
@@ -326,11 +339,17 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
         <Button size={"lg"} variant="outline">
           <div className="text-right">
             <div className="py-1">
-              <div>{`${formatDate(range.from, locale)}${
-                range.to != null ? " - " + formatDate(range.to, locale) : ""
-              }`}</div>
+              <div>
+                {range.from
+                  ? `${formatDate(range.from, locale)}${
+                      range.to != null
+                        ? " - " + formatDate(range.to, locale)
+                        : ""
+                    }`
+                  : "Select date range"}
+              </div>
             </div>
-            {rangeCompare != null && (
+            {rangeCompare?.from && (
               <div className="opacity-60 text-xs -mt-1">
                 <>
                   vs. {formatDate(rangeCompare.from, locale)}
@@ -360,7 +379,7 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
                     <Switch
                       defaultChecked={Boolean(rangeCompare)}
                       onCheckedChange={(checked: boolean) => {
-                        if (checked) {
+                        if (checked && range.from) {
                           if (!range.to) {
                             setRange({
                               from: range.from,
@@ -412,7 +431,10 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
                     <DateInput
                       value={range.to}
                       onChange={(date: Date) => {
-                        const fromDate = date < range.from ? date : range.from;
+                        const fromDate =
+                          range.from && date < range.from
+                            ? date
+                            : (range.from ?? date);
                         setRange((prevRange) => ({
                           ...prevRange,
                           from: fromDate,
@@ -524,6 +546,20 @@ export const DateRangePicker: FC<DateRangePickerProps> = ({
             variant="ghost"
           >
             Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              setIsOpen(false);
+              // Clear the date range by setting both from and to to undefined
+              const clearedRange: DateRange = {
+                from: undefined as unknown as Date,
+                to: undefined,
+              };
+              onUpdate?.({ range: clearedRange, rangeCompare: undefined });
+            }}
+            variant="outline"
+          >
+            Clear
           </Button>
           <Button
             onClick={() => {

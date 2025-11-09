@@ -110,6 +110,13 @@ export function DataTableFilters({
                   const startDateKey = filter.startDateKey || "startDate";
                   const endDateKey = filter.endDateKey || "endDate";
                   
+                  // If both dates are undefined, clear the filters
+                  if (!values.range.from && !values.range.to) {
+                    onFilterChange?.(startDateKey, "");
+                    onFilterChange?.(endDateKey, "");
+                    return;
+                  }
+                  
                   // Always update both dates
                   const startDateStr = values.range.from
                     ? values.range.from.toISOString().split("T")[0]
@@ -187,6 +194,13 @@ export function DataTableFilters({
                 onUpdate={(values) => {
                   const startDateKey = filter.startDateKey || "startDate";
                   const endDateKey = filter.endDateKey || "endDate";
+                  
+                  // If both dates are undefined, clear the filters
+                  if (!values.range.from && !values.range.to) {
+                    onFilterChange?.(startDateKey, "");
+                    onFilterChange?.(endDateKey, "");
+                    return;
+                  }
                   
                   // Always update both dates
                   const startDateStr = values.range.from
