@@ -20,6 +20,9 @@ model User {
   updatedAt                 DateTime            @updatedAt
   accounts                  Account[]
   sessions                  Session[]
+  financialAccounts         FinancialAccount[]
+  transactions              Transaction[]
+  categories                Category[]
 
   @@map("user")
 }
@@ -70,4 +73,73 @@ model Verification {
 
   @@index([identifier, value])
   @@map("verification")
+}
+
+model FinancialAccount {
+  id          String       @id @default(cuid())
+  name        String
+  type        String       // "CHECKING", "SAVINGS", "CREDIT", "INVESTMENT", etc.
+  bankName    String?
+  accountNumber String?    // Last 4 digits or masked
+  balance     Float        @default(0)
+  currency    String       @default("USD")
+  isActive    Boolean      @default(true)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt   DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId])
+  @@map("financial_account")
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  date              DateTime
+  amount            Float
+  description       String
+  type              String            // "DEBIT", "CREDIT", "TRANSFER"
+  categoryId        String?
+  category          Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  financialAccountId String
+  financialAccount  FinancialAccount  @relation(fields: [financialAccountId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Transfer detection fields
+  isTransfer        Boolean           @default(false)
+  transferPairId    String?           // ID of the paired transaction (for transfers)
+  transferPair      Transaction?      @relation("TransferPairs", fields: [transferPairId], references: [id], onDelete: SetNull)
+  pairedTransactions Transaction[]    @relation("TransferPairs")
+  // Import tracking
+  importedAt        DateTime?
+  importSource      String?           // "CSV", "MANUAL", etc.
+  externalId        String?           // ID from imported statement
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([financialAccountId])
+  @@index([date])
+  @@index([categoryId])
+  @@index([isTransfer])
+  @@index([transferPairId])
+  @@map("transaction")
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  color       String?      // Hex color for UI
+  icon        String?      // Icon name
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isDefault   Boolean      @default(false) // System default categories
+  transactions Transaction[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([userId])
+  @@map("category")
 }

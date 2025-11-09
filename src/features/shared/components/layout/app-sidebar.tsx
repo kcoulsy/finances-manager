@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  Contact,
-  FolderKanban,
-  LayoutDashboard,
-  Settings,
-  StickyNote,
-} from "lucide-react";
+import { LayoutDashboard, Receipt, Settings, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type * as React from "react";
-import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +22,16 @@ const navItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Accounts",
+    url: "/accounts",
+    icon: Wallet,
+  },
+  {
+    title: "Transactions",
+    url: "/transactions",
+    icon: Receipt,
   },
   {
     title: "Settings",
@@ -83,19 +86,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => console.log("import")}>
-                  <Contact className="size-4" />
-                  <span>Import</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
