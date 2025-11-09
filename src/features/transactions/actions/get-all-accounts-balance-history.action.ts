@@ -10,6 +10,7 @@ export const getAllAccountsBalanceHistoryAction = actionClient
     z.object({
       startDate: z.coerce.date().optional(),
       endDate: z.coerce.date().optional(),
+      accountId: z.union([z.string(), z.array(z.string())]).optional(),
     }),
   )
   .action(async ({ parsedInput }) => {
@@ -22,11 +23,24 @@ export const getAllAccountsBalanceHistoryAction = actionClient
         );
       }
 
-      // Get all user accounts
+      // Build account filter
+      const accountWhere: { userId: string; id?: string | { in: string[] } } = {
+        userId: session.user.id,
+      };
+
+      if (parsedInput.accountId) {
+        if (Array.isArray(parsedInput.accountId)) {
+          if (parsedInput.accountId.length > 0) {
+            accountWhere.id = { in: parsedInput.accountId };
+          }
+        } else {
+          accountWhere.id = parsedInput.accountId;
+        }
+      }
+
+      // Get filtered user accounts
       const accounts = await db.financialAccount.findMany({
-        where: {
-          userId: session.user.id,
-        },
+        where: accountWhere,
         orderBy: {
           name: "asc",
         },

@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchIcon, X } from "lucide-react";
+import { CalendarIcon, SearchIcon, X } from "lucide-react";
 import { Input } from "@/features/shared/components/ui/input";
 import {
   Select,
@@ -11,15 +11,18 @@ import {
   type MultiSelectOption,
 } from "@/features/shared/components/ui/multi-select";
 import { Button } from "@/features/shared/components/ui/button";
+import { DateRangePicker } from "@/features/shared/components/ui/date-range-picker";
 import { cn } from "@/features/shared/lib/utils/index";
 
 export interface DataTableFilter {
   key: string;
   label: string;
-  type: "select" | "text" | "multiselect";
+  type: "select" | "text" | "multiselect" | "daterange";
   options?: SelectOption[] | MultiSelectOption[]; // Required for "select" and "multiselect" types
   placeholder?: string; // For "text" type
   searchPlaceholder?: string; // For "multiselect" type
+  startDateKey?: string; // For "daterange" type - key for start date
+  endDateKey?: string; // For "daterange" type - key for end date
 }
 
 interface DataTableFiltersProps {
@@ -49,8 +52,12 @@ export function DataTableFilters({
     if (Array.isArray(value)) {
       return value.length > 0;
     }
+    // Exclude date range keys from active filter check (they're handled separately)
+    if (key === "startDate" || key === "endDate") {
+      return false;
+    }
     return value && value !== "";
-  });
+  }) || (filterValues.startDate && filterValues.startDate !== "") || (filterValues.endDate && filterValues.endDate !== "");
 
   // Split filters into two rows
   // First row: Search + first half of filters
@@ -85,7 +92,38 @@ export function DataTableFilters({
         {/* First Row Filters */}
         {firstRowFilters.map((filter) => (
           <div key={filter.key} className="min-w-[180px]">
-            {filter.type === "text" ? (
+            {filter.type === "daterange" ? (
+              <DateRangePicker
+                key={`daterange-${filter.startDateKey || "startDate"}-${filter.endDateKey || "endDate"}-${filterValues[filter.startDateKey || "startDate"] || ""}-${filterValues[filter.endDateKey || "endDate"] || ""}`}
+                initialDateFrom={
+                  typeof filterValues[filter.startDateKey || "startDate"] === "string"
+                    ? filterValues[filter.startDateKey || "startDate"]
+                    : undefined
+                }
+                initialDateTo={
+                  typeof filterValues[filter.endDateKey || "endDate"] === "string"
+                    ? filterValues[filter.endDateKey || "endDate"]
+                    : undefined
+                }
+                showCompare={false}
+                onUpdate={(values) => {
+                  const startDateKey = filter.startDateKey || "startDate";
+                  const endDateKey = filter.endDateKey || "endDate";
+                  
+                  // Always update both dates
+                  const startDateStr = values.range.from
+                    ? values.range.from.toISOString().split("T")[0]
+                    : "";
+                  const endDateStr = values.range.to
+                    ? values.range.to.toISOString().split("T")[0]
+                    : startDateStr; // Use start date as end date if end date not set
+                  
+                  // Update both dates
+                  onFilterChange?.(startDateKey, startDateStr);
+                  onFilterChange?.(endDateKey, endDateStr);
+                }}
+              />
+            ) : filter.type === "text" ? (
               <Input
                 type="text"
                 value={
@@ -132,7 +170,38 @@ export function DataTableFilters({
         {/* Second Row Filters */}
         {secondRowFilters.map((filter) => (
           <div key={filter.key} className="min-w-[180px]">
-            {filter.type === "text" ? (
+            {filter.type === "daterange" ? (
+              <DateRangePicker
+                key={`daterange-${filter.startDateKey || "startDate"}-${filter.endDateKey || "endDate"}-${filterValues[filter.startDateKey || "startDate"] || ""}-${filterValues[filter.endDateKey || "endDate"] || ""}`}
+                initialDateFrom={
+                  typeof filterValues[filter.startDateKey || "startDate"] === "string"
+                    ? filterValues[filter.startDateKey || "startDate"]
+                    : undefined
+                }
+                initialDateTo={
+                  typeof filterValues[filter.endDateKey || "endDate"] === "string"
+                    ? filterValues[filter.endDateKey || "endDate"]
+                    : undefined
+                }
+                showCompare={false}
+                onUpdate={(values) => {
+                  const startDateKey = filter.startDateKey || "startDate";
+                  const endDateKey = filter.endDateKey || "endDate";
+                  
+                  // Always update both dates
+                  const startDateStr = values.range.from
+                    ? values.range.from.toISOString().split("T")[0]
+                    : "";
+                  const endDateStr = values.range.to
+                    ? values.range.to.toISOString().split("T")[0]
+                    : startDateStr; // Use start date as end date if end date not set
+                  
+                  // Update both dates
+                  onFilterChange?.(startDateKey, startDateStr);
+                  onFilterChange?.(endDateKey, endDateStr);
+                }}
+              />
+            ) : filter.type === "text" ? (
               <Input
                 type="text"
                 value={

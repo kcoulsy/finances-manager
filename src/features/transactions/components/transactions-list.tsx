@@ -682,21 +682,58 @@ export function TransactionsList({
     },
   ];
 
+  // Extract date filters for chart
+  const chartStartDate = useMemo(() => {
+    const startDateValue = filterValues.startDate;
+    if (typeof startDateValue === "string") {
+      return new Date(startDateValue);
+    }
+    if (startDateValue instanceof Date) {
+      return startDateValue;
+    }
+    return null;
+  }, [filterValues.startDate]);
+
+  const chartEndDate = useMemo(() => {
+    const endDateValue = filterValues.endDate;
+    if (typeof endDateValue === "string") {
+      return new Date(endDateValue);
+    }
+    if (endDateValue instanceof Date) {
+      return endDateValue;
+    }
+    return null;
+  }, [filterValues.endDate]);
+
+  const chartAccountId = useMemo(() => {
+    const accountIdValue = filterValues.accountId;
+    if (Array.isArray(accountIdValue)) {
+      return accountIdValue.length > 0 ? accountIdValue : undefined;
+    }
+    if (typeof accountIdValue === "string") {
+      return accountIdValue || undefined;
+    }
+    return undefined;
+  }, [filterValues.accountId]);
+
   return (
     <div className="space-y-4">
       {/* Chart */}
       <TransactionsChart
         defaultCurrency={defaultCurrency}
+        startDate={chartStartDate}
+        endDate={chartEndDate}
+        accountId={chartAccountId}
         onDateRangeChange={(startDate, endDate) => {
           setFilterValues((prev) => {
             const newValues = { ...prev };
             if (startDate) {
-              newValues.startDate = startDate.toISOString();
+              newValues.startDate = startDate.toISOString().split("T")[0];
             } else {
               delete newValues.startDate;
             }
             if (endDate) {
-              newValues.endDate = endDate.toISOString();
+              newValues.endDate = endDate.toISOString().split("T")[0];
             } else {
               delete newValues.endDate;
             }
@@ -797,6 +834,13 @@ export function TransactionsList({
         onSelectionChange={handleSelectionChange}
         getRowId={(row) => row.id}
         filters={[
+          {
+            key: "dateRange",
+            label: "Date Range",
+            type: "daterange",
+            startDateKey: "startDate",
+            endDateKey: "endDate",
+          },
           {
             key: "accountId",
             label: "Account",

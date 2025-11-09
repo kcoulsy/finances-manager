@@ -1,57 +1,220 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  LineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  ReferenceLine,
 } from "recharts";
-import { Calendar, CalendarIcon } from "lucide-react";
-import { Button } from "@/features/shared/components/ui/button";
-import { Input } from "@/features/shared/components/ui/input";
-import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
-import { useQuery } from "@tanstack/react-query";
-import { getAllAccountsBalanceHistoryAction } from "../actions/get-all-accounts-balance-history.action";
 import { useAccounts } from "@/features/accounts/hooks/use-accounts";
 import { Skeleton } from "@/features/shared/components/ui/skeleton";
-import { cn } from "@/features/shared/lib/utils/index";
+import { formatCurrency } from "@/features/shared/lib/utils/format-currency";
+import { getAllAccountsBalanceHistoryAction } from "../actions/get-all-accounts-balance-history.action";
 
 interface TransactionsChartProps {
   defaultCurrency?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  accountId?: string | string[] | undefined;
   onDateRangeChange?: (startDate: Date | null, endDate: Date | null) => void;
 }
 
-type TimeFrame = "7d" | "30d" | "6m" | "1y" | "lifetime";
+// Custom tooltip component to ensure "Overall" appears at the bottom
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    dataKey?: string;
+    value?: number | null;
+    name?: string;
+    color?: string;
+    payload?: Record<string, unknown>;
+  }>;
+  label?: string | number;
+  defaultCurrency: string;
+}
+
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  defaultCurrency,
+}: CustomTooltipProps) => {
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
+
+  // Get the actual date from the payload data (it has the full data point)
+  const dataPoint = payload[0]?.payload as
+    | { date?: string | Date; dateLabel?: string }
+    | undefined;
+  let formattedDate = label?.toString() || "";
+
+  // If we have the date in the data point, use it to format with year
+  if (dataPoint?.date) {
+    try {
+      const date =
+        typeof dataPoint.date === "string"
+          ? new Date(dataPoint.date)
+          : dataPoint.date;
+      if (!Number.isNaN(date.getTime())) {
+        formattedDate = date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+    } catch {
+      // Fall back to label if date parsing fails
+    }
+  }
+
+  // Separate "Overall" from other items
+  const overallItem = payload.find((item) => item.dataKey === "overall");
+  const otherItems = payload.filter((item) => item.dataKey !== "overall");
+
+  // Sort other items to maintain order (trend first, then accounts)
+  const sortedOtherItems = [...otherItems].sort((a, b) => {
+    if (a.dataKey === "trend") return -1;
+    if (b.dataKey === "trend") return 1;
+    return 0;
+  });
+
+  // Combine: other items first, then Overall at the bottom
+  const orderedPayload = [...sortedOtherItems];
+  if (overallItem) {
+    orderedPayload.push(overallItem);
+  }
+
+  return (
+    <div className="rounded-lg border bg-white/90 p-3 shadow-lg">
+      <p
+        className="mb-2 font-semibold"
+        style={{ color: "hsl(var(--popover-foreground))" }}
+      >
+        {formattedDate}
+      </p>
+      <div className="space-y-1">
+        {orderedPayload.map((entry, index) => {
+          if (!entry.value || entry.value === null) return null;
+          return (
+            <p
+              key={`${entry.dataKey}-${index}`}
+              className="text-sm"
+              style={{
+                color: entry.color || "hsl(var(--popover-foreground))",
+              }}
+            >
+              <span
+                className="inline-block w-3 h-3 mr-2 rounded-sm"
+                style={{
+                  backgroundColor: entry.color,
+                }}
+              />
+              {entry.name}:{" "}
+              {formatCurrency(entry.value as number, defaultCurrency)}
+            </p>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export function TransactionsChart({
   defaultCurrency = "USD",
+  startDate: propStartDate,
+  endDate: propEndDate,
+  accountId: propAccountId,
   onDateRangeChange,
 }: TransactionsChartProps) {
   const { data: accounts = [] } = useAccounts();
-  const [startDate, setStartDate] = useState<Date | null>(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  });
-  const [endDate, setEndDate] = useState<Date | null>(() => new Date());
+
+  // Use props if provided, otherwise use internal state
+  const [internalStartDate, setInternalStartDate] = useState<Date | null>(
+    () => {
+      const date = new Date();
+      date.setDate(date.getDate() - 30);
+      return date;
+    },
+  );
+  const [internalEndDate, setInternalEndDate] = useState<Date | null>(
+    () => new Date(),
+  );
+
+  const startDate =
+    propStartDate !== undefined ? propStartDate : internalStartDate;
+  const endDate = propEndDate !== undefined ? propEndDate : internalEndDate;
+
+  const setStartDate = useCallback(
+    (date: Date | null) => {
+      if (propStartDate === undefined) {
+        setInternalStartDate(date);
+      }
+      const currentEndDate =
+        propEndDate !== undefined ? propEndDate : internalEndDate;
+      onDateRangeChange?.(date, currentEndDate);
+    },
+    [propStartDate, propEndDate, internalEndDate, onDateRangeChange],
+  );
+
+  const setEndDate = useCallback(
+    (date: Date | null) => {
+      if (propEndDate === undefined) {
+        setInternalEndDate(date);
+      }
+      const currentStartDate =
+        propStartDate !== undefined ? propStartDate : internalStartDate;
+      onDateRangeChange?.(currentStartDate, date);
+    },
+    [propStartDate, propEndDate, internalStartDate, onDateRangeChange],
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragEnd, setDragEnd] = useState<number | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
-  // Query for balance history
+  // Filter accounts based on accountId prop
+  const filteredAccounts = useMemo(() => {
+    if (!propAccountId) return accounts;
+
+    const accountIds = Array.isArray(propAccountId)
+      ? propAccountId
+      : [propAccountId];
+    return accounts.filter((account: { id: string }) =>
+      accountIds.includes(account.id),
+    );
+  }, [accounts, propAccountId]);
+
+  // Query for balance history - always use dates (default to last 30 days if not provided)
+  const effectiveStartDate = useMemo(() => {
+    if (startDate) return startDate;
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, [startDate]);
+
+  const effectiveEndDate = useMemo(() => {
+    return endDate || new Date();
+  }, [endDate]);
+
   const { data: chartData, isLoading } = useQuery({
-    queryKey: ["all-accounts-balance-history", startDate, endDate],
+    queryKey: [
+      "all-accounts-balance-history",
+      effectiveStartDate,
+      effectiveEndDate,
+      propAccountId,
+    ],
     queryFn: async () => {
       const result = await getAllAccountsBalanceHistoryAction({
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: effectiveStartDate,
+        endDate: effectiveEndDate,
+        accountId: propAccountId,
       });
       if (result?.serverError) {
         throw new Error(result.serverError);
@@ -61,7 +224,7 @@ export function TransactionsChart({
       }
       return result.data;
     },
-    enabled: !!startDate && !!endDate,
+    enabled: true, // Always enabled, we have default dates
   });
 
   // Prepare chart data
@@ -78,14 +241,14 @@ export function TransactionsChart({
         overall: point.overall,
       };
 
-      // Add each account's balance
-      accounts.forEach((account) => {
+      // Add each account's balance (only for filtered accounts)
+      filteredAccounts.forEach((account: { id: string }) => {
         dataPoint[account.id] = point.accounts[account.id] ?? null;
       });
 
       return dataPoint;
     });
-  }, [chartData, accounts]);
+  }, [chartData, filteredAccounts]);
 
   // Calculate trend line (simple linear regression)
   const trendData = useMemo(() => {
@@ -123,7 +286,7 @@ export function TransactionsChart({
       if (typeof point.overall === "number") {
         allValues.push(point.overall);
       }
-      accounts.forEach((account) => {
+      filteredAccounts.forEach((account: { id: string }) => {
         const value = point[account.id];
         if (typeof value === "number") {
           allValues.push(value);
@@ -148,46 +311,16 @@ export function TransactionsChart({
     const padding = range * 0.1; // 10% padding on each side
 
     return [min - padding, max + padding];
-  }, [chartDataPoints, accounts, trendData]);
+  }, [chartDataPoints, filteredAccounts, trendData]);
 
-  const handleTimeFrameSelect = (timeFrame: TimeFrame) => {
-    const end = new Date();
-    const start = new Date();
-
-    switch (timeFrame) {
-      case "7d":
-        start.setDate(end.getDate() - 7);
-        break;
-      case "30d":
-        start.setDate(end.getDate() - 30);
-        break;
-      case "6m":
-        start.setMonth(end.getMonth() - 6);
-        break;
-      case "1y":
-        start.setFullYear(end.getFullYear() - 1);
-        break;
-      case "lifetime":
-        setStartDate(null);
-        setEndDate(null);
-        return;
-    }
-
-    setStartDate(start);
-    setEndDate(end);
-  };
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!chartContainerRef.current) return;
-      const rect = chartContainerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      setIsDragging(true);
-      setDragStart(x);
-      setDragEnd(x);
-    },
-    [],
-  );
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!chartContainerRef.current) return;
+    const rect = chartContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    setIsDragging(true);
+    setDragStart(x);
+    setDragEnd(x);
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -217,7 +350,9 @@ export function TransactionsChart({
       const endIndex = Math.ceil(endRatio * chartDataPoints.length);
 
       if (startIndex < chartDataPoints.length && endIndex > 0) {
-        const newStartDate = new Date(chartDataPoints[startIndex].date as string);
+        const newStartDate = new Date(
+          chartDataPoints[startIndex].date as string,
+        );
         const newEndDate = new Date(
           chartDataPoints[Math.min(endIndex - 1, chartDataPoints.length - 1)]
             .date as string,
@@ -232,7 +367,15 @@ export function TransactionsChart({
     setIsDragging(false);
     setDragStart(null);
     setDragEnd(null);
-  }, [isDragging, dragStart, dragEnd, chartDataPoints, onDateRangeChange]);
+  }, [
+    isDragging,
+    dragStart,
+    dragEnd,
+    chartDataPoints,
+    setStartDate,
+    setEndDate,
+    onDateRangeChange,
+  ]);
 
   // Generate colors for accounts
   const accountColors = useMemo(() => {
@@ -246,19 +389,14 @@ export function TransactionsChart({
       "#06b6d4", // cyan
       "#84cc16", // lime
     ];
-    return accounts.reduce(
-      (acc, account, index) => {
+    return filteredAccounts.reduce(
+      (acc: Record<string, string>, account: { id: string }, index: number) => {
         acc[account.id] = colors[index % colors.length];
         return acc;
       },
       {} as Record<string, string>,
     );
-  }, [accounts]);
-
-  const formatStartDate = startDate
-    ? startDate.toISOString().split("T")[0]
-    : "";
-  const formatEndDate = endDate ? endDate.toISOString().split("T")[0] : "";
+  }, [filteredAccounts]);
 
   if (isLoading) {
     return <Skeleton className="h-[300px] w-full" />;
@@ -266,101 +404,6 @@ export function TransactionsChart({
 
   return (
     <div className="space-y-4 rounded-lg border bg-card p-6">
-      {/* Date Range Controls */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          <Input
-            type="date"
-            value={formatStartDate}
-            onChange={(e) => {
-              const date = e.target.value ? new Date(e.target.value) : null;
-              setStartDate(date);
-              if (date && onDateRangeChange) {
-                onDateRangeChange(date, endDate);
-              }
-            }}
-            className="w-40"
-          />
-          <span className="text-muted-foreground">to</span>
-          <Input
-            type="date"
-            value={formatEndDate}
-            onChange={(e) => {
-              const date = e.target.value ? new Date(e.target.value) : null;
-              setEndDate(date);
-              if (startDate && date && onDateRangeChange) {
-                onDateRangeChange(startDate, date);
-              }
-            }}
-            className="w-40"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleTimeFrameSelect("7d")}
-            className={cn(
-              startDate &&
-                endDate &&
-                Math.abs(
-                  (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) -
-                    7,
-                ) < 1
-                ? "bg-primary text-primary-foreground"
-                : "",
-            )}
-          >
-            7 days
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleTimeFrameSelect("30d")}
-            className={cn(
-              startDate &&
-                endDate &&
-                Math.abs(
-                  (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) -
-                    30,
-                ) < 1
-                ? "bg-primary text-primary-foreground"
-                : "",
-            )}
-          >
-            30 days
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleTimeFrameSelect("6m")}
-          >
-            6 months
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleTimeFrameSelect("1y")}
-          >
-            1 year
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleTimeFrameSelect("lifetime")}
-            className={cn(
-              !startDate && !endDate
-                ? "bg-primary text-primary-foreground"
-                : "",
-            )}
-          >
-            Lifetime
-          </Button>
-        </div>
-      </div>
-
       {/* Chart */}
       <div
         ref={chartContainerRef}
@@ -370,6 +413,8 @@ export function TransactionsChart({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         style={{ cursor: isDragging ? "grabbing" : "grab" }}
+        role="application"
+        aria-label="Interactive chart for selecting date range"
       >
         {isDragging && dragStart !== null && dragEnd !== null && (
           <div
@@ -397,43 +442,21 @@ export function TransactionsChart({
               tick={{ fill: "currentColor" }}
               domain={yAxisDomain}
               tickFormatter={(value) => {
-                if (value >= 1000000) {
-                  return `$${(value / 1000000).toFixed(1)}M`;
-                }
-                if (value >= 1000) {
-                  return `$${(value / 1000).toFixed(1)}K`;
-                }
+                // Use formatCurrency for all values to respect currency setting
                 return formatCurrency(value, defaultCurrency);
               }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "0.5rem",
-              }}
-              formatter={(value: number) => formatCurrency(value, defaultCurrency)}
-              labelFormatter={(label) => {
-                const date = new Date(label);
-                return date.toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
+              content={({ active, payload, label }) => (
+                <CustomTooltip
+                  active={active}
+                  payload={payload}
+                  label={label || ""}
+                  defaultCurrency={defaultCurrency}
+                />
+              )}
             />
             <Legend />
-
-            {/* Overall line */}
-            <Line
-              type="monotone"
-              dataKey="overall"
-              stroke="#000000"
-              strokeWidth={3}
-              dot={false}
-              name="Overall"
-              strokeDasharray="5 5"
-            />
 
             {/* Trend line */}
             <Line
@@ -448,7 +471,7 @@ export function TransactionsChart({
             />
 
             {/* Individual account lines */}
-            {accounts.map((account) => (
+            {filteredAccounts.map((account: { id: string; name: string }) => (
               <Line
                 key={account.id}
                 type="monotone"
@@ -459,10 +482,20 @@ export function TransactionsChart({
                 name={account.name}
               />
             ))}
+
+            {/* Overall line - placed last so it appears at bottom of legend/tooltip */}
+            <Line
+              type="monotone"
+              dataKey="overall"
+              stroke="#000000"
+              strokeWidth={3}
+              dot={false}
+              name="Overall"
+              strokeDasharray="5 5"
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
-
