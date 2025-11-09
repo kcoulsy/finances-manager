@@ -163,7 +163,11 @@ export function TransactionsList({
           ? endDateValue
           : undefined;
 
-    return {
+    // When search is active, we need to fetch all transactions to filter client-side
+    // Otherwise, use server-side pagination
+    const hasSearch = searchValue.trim().length > 0;
+
+    const baseQuery = {
       accountId:
         typeof filterValues.accountId === "string"
           ? filterValues.accountId || undefined
@@ -179,10 +183,22 @@ export function TransactionsList({
             ? false
             : undefined,
       tags,
+    };
+
+    if (hasSearch) {
+      return {
+        ...baseQuery,
+        getAll: true as const,
+        offset: 0, // Not used when getAll is true, but required by type
+      };
+    }
+
+    return {
+      ...baseQuery,
       limit,
       offset: (currentPage - 1) * limit,
     };
-  }, [filterValues, currentPage, limit]);
+  }, [filterValues, currentPage, limit, searchValue]);
 
   // Main transactions query
   const {
@@ -324,11 +340,18 @@ export function TransactionsList({
       ? (filteredCountData ?? filteredTransactions.length)
       : totalCount;
 
+    // When search is active, paginate the filtered results client-side
+    if (searchValue.trim() && filteredTransactions.length > 0) {
+      const startIndex = (currentPage - 1) * limit;
+      const endIndex = startIndex + limit;
+      filteredTransactions = filteredTransactions.slice(startIndex, endIndex);
+    }
+
     return {
       transactions: filteredTransactions,
       filteredTotal: filteredCount,
     };
-  }, [transactionsData, searchValue, filteredCountData]);
+  }, [transactionsData, searchValue, filteredCountData, currentPage, limit]);
 
   const handleFilterChange = (key: string, value: string | string[]) => {
     setFilterValues((prev) => {
@@ -908,14 +931,11 @@ export function TransactionsList({
           filteredTotal > 0 && Number.isFinite(filteredTotal)
             ? {
                 page: currentPage,
-                // When search is active, we're showing all results on one page (client-side filtered)
-                // So totalPages should be 1 if search is active
-                totalPages: searchValue.trim()
-                  ? 1
-                  : Math.ceil(filteredTotal / limit) || 1,
+                // Calculate totalPages based on filtered count (works for both search and non-search)
+                totalPages: Math.ceil(filteredTotal / limit) || 1,
                 totalCount: filteredTotal,
                 limit,
-                // When search is active, pass the actual visible count
+                // When search is active, pass the actual visible count (client-side paginated)
                 visibleCount: searchValue.trim()
                   ? transactions.length
                   : undefined,
